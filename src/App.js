@@ -1,19 +1,21 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import routes from './routes'; // Import routes from a separate file
+import routes from './routes';
 
 const App = () => {
     return (
         <Router>
-            <Routes>
-                {routes.map((route, index) => (
-                    <Route
-                        key={index}
-                        path={route.path}
-                        element={<route.component />} // Use `element` instead of `component`
-                    />
-                ))}
-            </Routes>
+            <Suspense fallback={<div>Loading...</div>}>
+                <Routes>
+                    {routes.map(({ path, component: Component, exact }, index) => (
+                        <Route
+                            key={index}
+                            path={path}
+                            element={<Component />}
+                        />
+                    ))}
+                </Routes>
+            </Suspense>
         </Router>
     );
 };

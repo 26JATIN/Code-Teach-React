@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Book, Code, Video, FileText } from 'lucide-react';
-
+import Header from '../home/components/Header';
+import { ThemeProvider } from '../home/components/ThemeProvider';
 // Course data
 const COURSES = [
   {
@@ -32,7 +33,12 @@ const COURSES = [
 
 // Page component
 function CoursesPage() {
+  
   return (
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-200 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 bg-red-100">
+      <Header />
+    
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -59,13 +65,7 @@ function CoursesPage() {
         <div className="grid md:grid-cols-3 gap-8">
           {COURSES.map((course, index) => (
             <motion.div
-              key={course.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ 
-                duration: 0.5, 
-                delay: index * 0.2 
-              }}
+              
               className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 dark:border-gray-700"
             >
               <div className="flex items-center mb-4">
@@ -90,7 +90,10 @@ function CoursesPage() {
           ))}
         </div>
       </div>
-    </motion.div>
+      </motion.div>
+      </div>
+    </ThemeProvider>
+    
   );
 }
 export default CoursesPage;

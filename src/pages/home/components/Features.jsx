@@ -32,18 +32,22 @@ export default function Features() {
         >
           Powerful Features to Accelerate Your Learning
         </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6"
+              className="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300"
             >
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-300 mb-4">
+              <motion.div 
+                className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-300 mb-4"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
                 <feature.icon size={24} />
-              </div>
+              </motion.div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{feature.title}</h3>
               <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
             </motion.div>
@@ -53,4 +57,3 @@ export default function Features() {
     </section>
   );
 }
-

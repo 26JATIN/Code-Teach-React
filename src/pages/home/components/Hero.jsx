@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { ChevronRight, Code, Users, Zap } from 'lucide-react';
 
 const CodeBlock = () => (
-  <pre className="text-sm md:text-white overflow-x-auto">
+  <pre className="text-white white:text-white overflow-x-auto">
     <code>
       <span className="text-blue-400">function</span>{' '}
       <span className="text-green-400">learnToCode</span>() {'{'}

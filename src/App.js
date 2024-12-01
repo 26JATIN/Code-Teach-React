@@ -1,20 +1,19 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import routes from './routes'; // Import routes from a separate file
 
 const App = () => {
     return (
         <Router>
-            <Switch>
+            <Routes>
                 {routes.map((route, index) => (
                     <Route
                         key={index}
                         path={route.path}
-                        exact={route.exact}
-                        component={route.component}
+                        element={<route.component />} // Use `element` instead of `component`
                     />
                 ))}
-            </Switch>
+            </Routes>
         </Router>
     );
 };

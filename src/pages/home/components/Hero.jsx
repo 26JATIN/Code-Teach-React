@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from './ui/button';
-import { ChevronRight, Code, Users, Zap } from 'lucide-react';
+import { Code, Users, Zap } from 'lucide-react';
 
 const CodeBlock = () => (
   <pre className="text-white white:text-white overflow-x-auto">

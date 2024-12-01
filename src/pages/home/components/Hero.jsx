@@ -56,7 +56,7 @@ export default function Hero() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-4">
               <Button size="lg" className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-                Get Started <ChevronRight className="ml-2 h-4 w-4" />
+                Get Started
               </Button>
               <Button size="lg" variant="outline" className="rounded-full border-purple-600 text-purple-600 hover:bg-purple-100 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-900/30">
                 Learn More

@@ -3,8 +3,7 @@ import { useTheme } from './ThemeProvider';
 import { Moon, Sun, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, Link } from 'react-router-dom';
-import GitHubAuthButton from '../../Authentication/components/githubsignin';
-
+import GitHubAuthButton from '../../Authentication/components/GitHubAuthButton';
 // Memoize menu items to prevent unnecessary re-renders
 const MENU_ITEMS = [
   { name: 'Home', href: '/' },
@@ -139,7 +138,6 @@ export default function Header() {
 
             {/* Sign In Button */}
             <GitHubAuthButton/>
-
             {/* Mobile Menu Toggle */}
             <motion.button
               className="md:hidden p-2 rounded-full bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-200 transition-colors duration-200 hover:bg-purple-200 dark:hover:bg-purple-700"

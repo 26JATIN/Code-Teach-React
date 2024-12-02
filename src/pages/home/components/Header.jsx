@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from './ThemeProvider';
-import { Moon, Sun, Github, Menu, X } from 'lucide-react';
+import { Moon, Sun, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, Link } from 'react-router-dom';
+import GitHubAuthButton from '../../Authentication/components/githubsignin';
 
 // Memoize menu items to prevent unnecessary re-renders
 const MENU_ITEMS = [
@@ -137,16 +138,7 @@ export default function Header() {
             </motion.button>
 
             {/* Sign In Button */}
-            <motion.a
-              href="#"
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 text-white dark:from-purple-500 dark:to-blue-400 transition-all duration-200 flex items-center space-x-2 hover:shadow-md hover:from-purple-700 hover:to-blue-600"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label="Sign in with GitHub"
-            >
-              <Github size={18} />
-              <span className="text-sm font-medium">Sign In</span>
-            </motion.a>
+            <GitHubAuthButton/>
 
             {/* Mobile Menu Toggle */}
             <motion.button

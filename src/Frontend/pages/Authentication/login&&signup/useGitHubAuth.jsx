@@ -170,8 +170,8 @@ export const useGitHubAuth = () => {
             message: err.message,
             stack: err.stack,
           });
-          setError(`Authentication failed: ${err.message}`);
-          setTimeout(() => window.location.replace('/'), 3000);
+          // setError(`Authentication failed: ${err.message}`);
+          // setTimeout(() => window.location.replace('/'), 3000);
         }
       }
     };

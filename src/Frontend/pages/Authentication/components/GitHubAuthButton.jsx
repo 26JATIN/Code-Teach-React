@@ -106,7 +106,10 @@ const GitHubAuthButton = () => {
               </div>
               <button
                 onClick={signOut}
-                className="block w-full text-left px-2.5 py-1.5 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="block w-full text-left px-2.5 py-1.5 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 
+                hover:bg-gradient-to-r hover:from-purple-600/10 hover:to-purple-500/10 
+                dark:hover:from-purple-900/20 dark:hover:to-purple-800/20 
+                transition-all duration-200"
               >
                 Sign Out
               </button>

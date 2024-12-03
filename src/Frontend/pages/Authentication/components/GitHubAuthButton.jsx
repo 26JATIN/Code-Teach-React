@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Github, Loader } from 'lucide-react';
 import { useGitHubAuth } from '../login&&signup/useGitHubAuth';
+import { ThemeProvider } from '../../home/components/ThemeProvider';
 
 const GitHubAuthButton = () => {
   const {
@@ -14,80 +15,106 @@ const GitHubAuthButton = () => {
 
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const timeoutRef = useRef(null);
 
   const handleLogin = () => {
     setLoading(true);
     initiateLogin();
   };
 
-  const toggleMenu = () => setMenuOpen(!menuOpen);
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setMenuOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setMenuOpen(false);
+    }, 100);
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center p-2 sm:p-4">
-      {!isAuthenticated ? (
-        <>
-          <motion.button
-            onClick={handleLogin}
-            disabled={loading}
-            className={`
-              px-3 py-2 sm:px-4 sm:py-2
-              rounded-full
-              bg-gradient-to-r from-purple-600 to-blue-500
-              text-white
-              dark:from-purple-500 dark:to-blue-400
-              transition-all duration-200
-              flex items-center space-x-2
-              ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-md hover:from-purple-700 hover:to-blue-600'}
-              text-xs sm:text-sm
-            `}
-            whileHover={{ scale: loading ? 1 : 1.05 }}
-            whileTap={{ scale: loading ? 1 : 0.95 }}
-          >
-            {loading ? (
-              <Loader className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-            ) : (
-              <Github className="w-4 h-4 sm:w-5 sm:h-5" />
+    <ThemeProvider>
+      <div className="flex flex-col items-center justify-center p-2 sm:p-4">
+        {!isAuthenticated ? (
+          <>
+            <motion.button
+              onClick={handleLogin}
+              disabled={loading}
+              className={`
+                h-9
+                px-2 sm:px-3
+                rounded-full
+                bg-gradient-to-r from-purple-600 to-blue-500
+                text-white
+                dark:from-purple-500 dark:to-blue-400
+                transition-all duration-200
+                flex items-center space-x-1.5
+                ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-md hover:from-purple-700 hover:to-blue-600'}
+                text-[11px] sm:text-xs
+                whitespace-nowrap
+              `}
+              whileHover={{ scale: loading ? 1 : 1.05 }}
+              whileTap={{ scale: loading ? 1 : 0.95 }}
+            >
+              {loading ? (
+                <Loader className="w-4 h-4 animate-spin" />
+              ) : (
+                <Github className="w-4 h-4" />
+              )}
+              <span className="font-medium">
+                {loading ? 'Signing In...' : 'Sign In'}
+              </span>
+            </motion.button>
+            {error && (
+              <p className="text-red-500 text-sm mt-2">{error}</p>
             )}
-            <span className="font-medium">
-              {loading ? 'Signing In...' : 'Sign In'}
-            </span>
-          </motion.button>
-          {error && (
-            <p className="text-red-500 text-sm mt-2">{error}</p>
-          )}
-        </>
-      ) : (
-        <div className="relative">
-          <div className="flex flex-col items-center">
+          </>
+        ) : (
+          <div className="relative"
+               onMouseEnter={handleMouseEnter}
+               onMouseLeave={handleMouseLeave}>
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={toggleMenu}
             >
               <img
                 src={user?.avatar_url}
                 alt={`${user?.login}'s avatar`}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+                className="h-9 w-9 rounded-full cursor-pointer"
               />
             </motion.div>
-            <span className="text-sm mt-1">{user?.login}</span>
-          </div>
-          {menuOpen && (
-            <div className="absolute right-0 mt-2 bg-white shadow-md rounded-md">
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ 
+                opacity: menuOpen ? 1 : 0,
+                y: menuOpen ? 0 : -5 
+              }}
+              transition={{ duration: 0.15 }}
+              className={`
+                absolute right-1/2 translate-x-1/2 
+                mt-1 w-32 sm:w-36 
+                rounded-xl shadow-lg 
+                overflow-hidden
+                bg-white dark:bg-gray-800 
+                ring-1 ring-black ring-opacity-5
+                ${menuOpen ? 'pointer-events-auto' : 'pointer-events-none'}
+              `}
+            >
+              <div className="px-2.5 py-1.5 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 truncate">
+                {user?.login}
+              </div>
               <button
-                onClick={() => {
-                  signOut();
-                  toggleMenu();
-                }}
-                className="block px-4 py-2 text-sm text-gray-700"
+                onClick={signOut}
+                className="block w-full text-left px-2.5 py-1.5 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 Sign Out
               </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+            </motion.div>
+          </div>
+        )}
+      </div>
+    </ThemeProvider>
   );
 };
 

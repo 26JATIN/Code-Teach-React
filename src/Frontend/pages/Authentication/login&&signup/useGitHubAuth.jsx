@@ -99,7 +99,7 @@ export const useGitHubAuth = () => {
     localStorage.setItem('github_oauth_state', state);
     const githubOAuthUrl = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=repo&state=${state}`;
     window.location.href = githubOAuthUrl;
-  }, [CLIENT_ID, REDIRECT_URI]);
+  }, []); // Removed CLIENT_ID and REDIRECT_URI from dependencies
 
   // Sign out functionality
   const signOut = useCallback(() => {
@@ -177,7 +177,7 @@ export const useGitHubAuth = () => {
     };
 
     handleAuthentication();
-  }, [BACKEND_URL, manageRepository]);
+  }, [manageRepository]); // Removed BACKEND_URL from dependencies
 
   return {
     isAuthenticated,

@@ -1,6 +1,5 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
 import { useGitHubAuth } from './Frontend/pages/Authentication/login&&signup/useGitHubAuth';
 
 // Lazy load the components
@@ -23,7 +22,7 @@ const GitHubCallback = () => {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, []);
+  }, [timeoutId]); // Added timeoutId to dependencies
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">

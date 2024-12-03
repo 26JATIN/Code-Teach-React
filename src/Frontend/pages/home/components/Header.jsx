@@ -72,60 +72,57 @@ export default function Header() {
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <motion.div 
-            variants={itemVariants}
-            initial="initial"
-            animate="animate"
-            className="flex items-center"
-          >
-            <Link 
-              to="/" 
-              className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500 dark:from-purple-400 dark:to-blue-300 hover:opacity-80 transition-opacity duration-200"
+          {/* Left section - Logo */}
+          <div className="w-[200px] flex items-center">
+            <motion.div 
+              variants={itemVariants}
+              initial="initial"
+              animate="animate"
             >
-              CodeTeach
-            </Link>
-          </motion.div>
+              <Link 
+                to="/" 
+                className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500 dark:from-purple-400 dark:to-blue-300 hover:opacity-80 transition-opacity duration-200"
+              >
+                CodeTeach
+              </Link>
+            </motion.div>
+          </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:block">
-            <ul className="flex space-x-1">
-              {MENU_ITEMS.map((item, index) => (
-                <motion.li
-                  key={item.name}
-                  custom={index}
-                  variants={menuItemVariants}
-                  initial="initial"
-                  animate="animate"
-                >
-                  <Link
-                    to={item.href}
-                    className={`text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200 relative group ${
-                      location.pathname === item.href 
-                        ? 'text-purple-600 dark:text-purple-400 font-semibold' 
-                        : ''
-                    }`}
+          {/* Center section - Navigation */}
+          <div className="flex-1 flex justify-center">
+            <nav className="hidden md:block">
+              <ul className="flex space-x-1">
+                {MENU_ITEMS.map((item, index) => (
+                  <motion.li
+                    key={item.name}
+                    custom={index}
+                    variants={menuItemVariants}
+                    initial="initial"
+                    animate="animate"
                   >
-                    {item.name}
-                    <span className={`absolute inset-x-0 bottom-0 h-0.5 bg-purple-600 dark:bg-purple-400 transform ${
-                      location.pathname === item.href 
-                        ? 'scale-x-100' 
-                        : 'scale-x-0 group-hover:scale-x-100'
-                    } transition-transform duration-200 origin-left`}></span>
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-          </nav>
+                    <Link
+                      to={item.href}
+                      className={`text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200 relative group ${
+                        location.pathname === item.href 
+                          ? 'text-purple-600 dark:text-purple-400 font-semibold' 
+                          : ''
+                      }`}
+                    >
+                      {item.name}
+                      <span className={`absolute inset-x-0 bottom-0 h-0.5 bg-purple-600 dark:bg-purple-400 transform ${
+                        location.pathname === item.href 
+                          ? 'scale-x-100' 
+                          : 'scale-x-0 group-hover:scale-x-100'
+                      } transition-transform duration-200 origin-left`}></span>
+                    </Link>
+                  </motion.li>
+                ))}
+              </ul>
+            </nav>
+          </div>
 
-          {/* Action Buttons */}
-          <motion.div 
-            variants={itemVariants}
-            initial="initial"
-            animate="animate"
-            className="flex items-center space-x-2 sm:space-x-4"
-          >
-            {/* Theme Toggle */}
+          {/* Right section - Actions */}
+          <div className="w-[200px] flex items-center justify-end space-x-2 sm:space-x-4">
             <motion.button
               onClick={toggleTheme}
               className="p-2 rounded-full bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-200 transition-colors duration-200 hover:bg-purple-200 dark:hover:bg-purple-700"
@@ -136,9 +133,8 @@ export default function Header() {
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </motion.button>
 
-            {/* Sign In Button */}
             <GitHubAuthButton/>
-            {/* Mobile Menu Toggle */}
+
             <motion.button
               className="md:hidden p-2 rounded-full bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-200 transition-colors duration-200 hover:bg-purple-200 dark:hover:bg-purple-700"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -148,7 +144,7 @@ export default function Header() {
             >
               {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </motion.button>
-          </motion.div>
+          </div>
         </div>
       </div>
       

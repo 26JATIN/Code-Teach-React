@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 // Environment variables
 const CLIENT_ID = process.env.REACT_APP_GITHUB_CLIENT_ID;
@@ -6,51 +6,97 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const REDIRECT_URI = encodeURIComponent(process.env.REACT_APP_GITHUB_REDIRECT_URI);
 const REPO_NAME = 'codeteach';
 
+// Cache constants
+const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes
+const TOKEN_CACHE_KEY = 'githubAccessToken';
+
 export const useGitHubAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [error, setError] = useState(null);
 
-  const fetchUserInfo = useCallback(async (token) => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/github/user`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+  // Memoize API endpoints
+  const endpoints = useMemo(() => ({
+    user: `${BACKEND_URL}/github/user`,
+    oauth: `${BACKEND_URL}/github/oauth/callback`,
+    health: `${BACKEND_URL}/health`
+  }), []);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch user information');
+  // Enhanced request retry mechanism
+  const fetchWithRetry = useCallback(async (url, options, maxRetries = 3, delayMs = 1000) => {
+    let lastError;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response;
+      } catch (error) {
+        lastError = error;
+        if (i === maxRetries - 1) break;
+        await new Promise(resolve => setTimeout(resolve, delayMs * Math.pow(2, i)));
+      }
+    }
+    throw lastError;
+  }, []);
+
+  // Optimized user info fetching with improved caching
+  const fetchUserInfo = useCallback(async (token) => {
+    const cacheKey = `user_${token}`;
+    try {
+      const cachedData = sessionStorage.getItem(cacheKey);
+      if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        if (Date.now() - timestamp < CACHE_DURATION) {
+          setUser(data);
+          return data;
+        }
       }
 
+      const response = await fetchWithRetry(endpoints.user, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
       const userData = await response.json();
+      
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        data: userData,
+        timestamp: Date.now()
+      }));
+
       setUser(userData);
       return userData;
     } catch (err) {
       setError('Failed to retrieve user information');
       return null;
     }
-  }, []);
+  }, [endpoints.user, fetchWithRetry]);
 
+  // Optimized repository management
   const manageRepository = useCallback(async (token) => {
     try {
       const userData = await fetchUserInfo(token);
+      if (!userData) throw new Error('Failed to fetch user data');
 
-      if (!userData) {
-        throw new Error('Failed to fetch user data');
-      }
+      // Use Promise.race for timeout
+      const repoCheck = Promise.race([
+        fetch(`https://api.github.com/repos/${userData.login}/${REPO_NAME}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Repository check timeout')), 5000)
+        )
+      ]);
 
-      // Check repository existence
-      const repoResponse = await fetch(`https://api.github.com/repos/${userData.login}/${REPO_NAME}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      // Create repository if not exists
+      const repoResponse = await repoCheck;
+      
       if (repoResponse.status === 404) {
-        const createRepoResponse = await fetch('https://api.github.com/user/repos', {
+        await fetchWithRetry('https://api.github.com/user/repos', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -62,10 +108,6 @@ export const useGitHubAuth = () => {
             private: true,
           }),
         });
-
-        if (!createRepoResponse.ok) {
-          throw new Error('Failed to create repository');
-        }
       }
 
       setIsAuthenticated(true);
@@ -77,11 +119,11 @@ export const useGitHubAuth = () => {
       setError('Failed to authenticate or manage repository');
       return false;
     }
-  }, [fetchUserInfo]);
+  }, [fetchUserInfo, fetchWithRetry]);
 
-  // Move checkAuth to a separate useEffect
+  // Fixed checkAuth implementation
   const checkAuth = useCallback(async () => {
-    const storedToken = localStorage.getItem('githubAccessToken');
+    const storedToken = localStorage.getItem(TOKEN_CACHE_KEY);
     if (storedToken) {
       await manageRepository(storedToken);
     } else {
@@ -90,7 +132,17 @@ export const useGitHubAuth = () => {
   }, [manageRepository]);
 
   useEffect(() => {
-    checkAuth();
+    let mounted = true;
+    const debounceTimeout = setTimeout(() => {
+      if (mounted) {
+        checkAuth();
+      }
+    }, 100);
+
+    return () => {
+      mounted = false;
+      clearTimeout(debounceTimeout);
+    };
   }, [checkAuth]);
 
   // Initiate GitHub OAuth login

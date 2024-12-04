@@ -15,6 +15,7 @@ export const useGitHubAuth = () => {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
 
   // Memoize API endpoints
   const endpoints = useMemo(() => ({
@@ -121,27 +122,87 @@ export const useGitHubAuth = () => {
     }
   }, [fetchUserInfo, fetchWithRetry]);
 
-  // Fixed checkAuth implementation
+  // Enhanced checkAuth implementation
   const checkAuth = useCallback(async () => {
-    const storedToken = localStorage.getItem(TOKEN_CACHE_KEY);
-    if (storedToken) {
-      await manageRepository(storedToken);
-    } else {
-      setIsAuthenticated(false);
-    }
-  }, [manageRepository]);
+    try {
+      const storedToken = localStorage.getItem(TOKEN_CACHE_KEY);
+      if (!storedToken) {
+        setIsAuthenticated(false);
+        setUser(null);
+        return;
+      }
 
+      // First check with backend if token is valid
+      const validationResponse = await fetch(`${BACKEND_URL}/github/validate-token`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${storedToken}` }
+      });
+
+      const { valid } = await validationResponse.json();
+
+      if (!valid) {
+        throw new Error('Token is invalid or revoked');
+      }
+
+      // If token is valid, proceed with repository management
+      const success = await manageRepository(storedToken);
+      if (!success) {
+        throw new Error('Repository management failed');
+      }
+
+    } catch (err) {
+      console.error('Auth check failed:', err);
+      localStorage.removeItem(TOKEN_CACHE_KEY);
+      sessionStorage.clear(); // Clear all session data
+      setIsAuthenticated(false);
+      setUser(null);
+      setAccessToken(null);
+      window.location.replace('/'); // Redirect to home page on auth failure
+    }
+  }, [BACKEND_URL, manageRepository]);
+
+  // Modified useEffect to run checkAuth immediately and on focus
   useEffect(() => {
-    let mounted = true;
-    const debounceTimeout = setTimeout(() => {
-      if (mounted) {
+    checkAuth();
+
+    // Check auth when tab becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
         checkAuth();
       }
-    }, 100);
+    };
+
+    // Check auth when window regains focus
+    const handleFocus = () => {
+      checkAuth();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
 
     return () => {
-      mounted = false;
-      clearTimeout(debounceTimeout);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('focus', handleFocus);
+    };
+  }, [checkAuth]);
+
+  // Add offline detection
+  useEffect(() => {
+    const handleOffline = () => {
+      setError('You are offline. Please check your internet connection.');
+    };
+    
+    const handleOnline = () => {
+      setError(null);
+      checkAuth();
+    };
+    
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+    
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
     };
   }, [checkAuth]);
 
@@ -153,14 +214,29 @@ export const useGitHubAuth = () => {
     window.location.href = githubOAuthUrl;
   }, []); // Removed CLIENT_ID and REDIRECT_URI from dependencies
 
-  // Sign out functionality
-  const signOut = useCallback(() => {
-    localStorage.removeItem('githubAccessToken');
-    setIsAuthenticated(false);
-    setUser(null);
-    setAccessToken(null);
-    setError(null);
-  }, []);
+  // Enhanced sign out with backend notification
+  const signOut = useCallback(async () => {
+    try {
+      const token = localStorage.getItem(TOKEN_CACHE_KEY);
+      if (token) {
+        await fetch(`${BACKEND_URL}/github/logout`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      localStorage.removeItem(TOKEN_CACHE_KEY);
+      localStorage.removeItem('github_oauth_state');
+      sessionStorage.clear();
+      setIsAuthenticated(false);
+      setUser(null);
+      setAccessToken(null);
+      setError(null);
+      window.location.replace('/');
+    }
+  }, [BACKEND_URL]);
 
   // Ensure this useEffect is included once
   useEffect(() => {
@@ -236,6 +312,7 @@ export const useGitHubAuth = () => {
     user,
     accessToken,
     error,
+    isLoading,
     initiateLogin,
     signOut,
   };

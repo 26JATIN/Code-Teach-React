@@ -22,6 +22,12 @@ const cache = new NodeCache({
   deleteOnExpire: true
 });
 
+// Add token blacklist cache
+const tokenBlacklist = new NodeCache({ 
+  stdTTL: 24 * 60 * 60, // 24 hours
+  checkperiod: 600 // Clean up every 10 minutes
+});
+
 // Security and optimization middleware
 app.use(helmet());
 app.use(compression());
@@ -34,6 +40,28 @@ const limiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: true
 });
+
+// Endpoint-specific rate limiters
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30, // 30 requests per 15 minutes for auth endpoints
+  message: { error: 'Too many authentication attempts, please try again later' }
+});
+
+// Enhanced security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", 'https://api.github.com'],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  },
+  crossOriginEmbedderPolicy: true,
+  crossOriginOpenerPolicy: true,
+  crossOriginResourcePolicy: { policy: "same-site" }
+}));
 
 // Optimized CORS
 const corsOptions = {
@@ -61,8 +89,26 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Middleware to check token blacklist
+const checkTokenBlacklist = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token && tokenBlacklist.get(token)) {
+    return res.status(401).json({ error: 'Token is revoked' });
+  }
+  next();
+};
+
+// Add token to blacklist on logout
+app.post('/github/logout', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token) {
+    tokenBlacklist.set(token, true);
+  }
+  res.json({ success: true });
+});
+
 // Optimized OAuth callback route
-app.post('/github/oauth/callback', limiter, async (req, res) => {
+app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
   const { code, state } = req.body;
   
   if (!code || !state) {
@@ -111,7 +157,7 @@ app.post('/github/oauth/callback', limiter, async (req, res) => {
 });
 
 // Optimized user info endpoint
-app.get('/github/user', async (req, res) => {
+app.get('/github/user', checkTokenBlacklist, async (req, res) => {
   const authHeader = req.headers.authorization;
   
   if (!authHeader) {
@@ -141,6 +187,30 @@ app.get('/github/user', async (req, res) => {
   } catch (error) {
     console.error('Error fetching user info:', error);
     res.status(500).json({ error: 'Failed to fetch user information' });
+  }
+});
+
+// Add token validation endpoint
+app.post('/github/validate-token', checkTokenBlacklist, async (req, res) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({ valid: false });
+  }
+
+  try {
+    const response = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': authHeader }
+    });
+
+    if (response.status === 401) {
+      return res.json({ valid: false });
+    }
+
+    return res.json({ valid: true });
+  } catch (error) {
+    console.error('Token validation error:', error);
+    return res.status(500).json({ valid: false });
   }
 });
 

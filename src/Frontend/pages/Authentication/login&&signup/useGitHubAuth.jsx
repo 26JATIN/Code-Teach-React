@@ -15,7 +15,7 @@ export const useGitHubAuth = () => {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [isLoading, setIsLoading] = useState(false);
 
   // Memoize API endpoints
   const endpoints = useMemo(() => ({
@@ -124,6 +124,7 @@ export const useGitHubAuth = () => {
 
   // Enhanced checkAuth implementation
   const checkAuth = useCallback(async () => {
+    setIsLoading(true);
     try {
       const storedToken = localStorage.getItem(TOKEN_CACHE_KEY);
       if (!storedToken) {
@@ -158,8 +159,10 @@ export const useGitHubAuth = () => {
       setUser(null);
       setAccessToken(null);
       window.location.replace('/'); // Redirect to home page on auth failure
+    } finally {
+      setIsLoading(false);
     }
-  }, [BACKEND_URL, manageRepository]);
+  }, [manageRepository]);
 
   // Modified useEffect to run checkAuth immediately and on focus
   useEffect(() => {
@@ -216,6 +219,7 @@ export const useGitHubAuth = () => {
 
   // Enhanced sign out with backend notification
   const signOut = useCallback(async () => {
+    setIsLoading(true);
     try {
       const token = localStorage.getItem(TOKEN_CACHE_KEY);
       if (token) {
@@ -234,9 +238,10 @@ export const useGitHubAuth = () => {
       setUser(null);
       setAccessToken(null);
       setError(null);
+      setIsLoading(false);
       window.location.replace('/');
     }
-  }, [BACKEND_URL]);
+  }, []);
 
   // Ensure this useEffect is included once
   useEffect(() => {

@@ -4,6 +4,7 @@ import { Book, Code, Video, FileText, Eye, LogIn, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../home/components/Header';
 import { ThemeProvider } from '../home/components/ThemeProvider';
+import { useGitHubAuth } from '../Authentication/login&&signup/useGitHubAuth';
 
 // Memoized Courses Data
 const COURSES = [
@@ -68,6 +69,12 @@ const Button = React.memo(({ children, onClick, variant = 'default', className =
 const Dialog = React.memo(({ isOpen, onClose, title, description, children }) => {
   if (!isOpen) return null;
 
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
     <AnimatePresence>
       <motion.div 
@@ -75,6 +82,7 @@ const Dialog = React.memo(({ isOpen, onClose, title, description, children }) =>
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+        onClick={handleOverlayClick}  // Add click handler here
       >
         <motion.div 
           initial={{ scale: 0.9 }}
@@ -109,6 +117,7 @@ const Dialog = React.memo(({ isOpen, onClose, title, description, children }) =>
 // Page component with Performance Optimizations
 function CoursesPage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useGitHubAuth(); // Remove initiateLogin since it's no longer used
   const [isSignInDialogOpen, setIsSignInDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
@@ -118,9 +127,15 @@ function CoursesPage() {
   }, [navigate]);
 
   const handleEnrollCourse = useCallback((course) => {
-    setSelectedCourse(course);
-    setIsSignInDialogOpen(true);
-  }, []);
+    if (isAuthenticated) {
+      // If authenticated, navigate to the course
+      navigate(`${course.path}/enroll`);
+    } else {
+      // If not authenticated, show sign in dialog
+      setSelectedCourse(course);
+      setIsSignInDialogOpen(true);
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleCloseDialog = useCallback(() => {
     setIsSignInDialogOpen(false);
@@ -208,19 +223,10 @@ function CoursesPage() {
               isOpen={isSignInDialogOpen}
               onClose={handleCloseDialog}
               title="Sign In Required"
-              description={`To enroll in the course "${selectedCourse?.title}", you need to sign in first.`}
+              description={`To enroll in the course "${selectedCourse?.title}", please sign in or create an account first.`}
             >
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={handleCloseDialog}
-                  className="mr-2"
-                >
-                  Cancel
-                </Button>
-                <Button>
-                  Go to Sign In
-                </Button>
+              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                Click anywhere outside to close
               </div>
             </Dialog>
           </div>

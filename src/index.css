@@ -1,5 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@tailwindcss typography;
 
 /* You can add any custom styles here */
+

@@ -5,6 +5,7 @@ import { useGitHubAuth } from './Frontend/pages/Authentication/login&&signup/use
 // Lazy load the components
 const Home = lazy(() => import('./Frontend/pages/home/homepage'));
 const Courses = lazy(() => import('./Frontend/pages/Courses/Courses'));
+const LearnJava = lazy(() => import('./Content/Java/LearnJava'));
 
 // GitHub callback handler component
 const GitHubCallback = () => {
@@ -45,6 +46,7 @@ const routes = [
   { path: '/homepage', component: Home },
   { path: '/courses', component: Courses },
   { path: '/github/oauth/callback', component: GitHubCallback }, // Updated path
+  { path: '/modules/java/*', component: LearnJava },
 ];
 
 const App = () => {

@@ -291,7 +291,7 @@ export const useGitHubAuth = () => {
             if (success) {
               // Clear URL parameters and redirect
               window.history.replaceState({}, document.title, '/');
-              window.location.replace('/homepage');
+              window.location.replace('/courses');
             } else {
               throw new Error('Failed to manage repository');
             }

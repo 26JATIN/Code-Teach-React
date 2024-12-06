@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Editor from '@monaco-editor/react';
+import { debounce } from 'lodash';
 
 const CodeEditor = () => {
   const [code, setCode] = useState(
@@ -18,61 +19,117 @@ const CodeEditor = () => {
   const containerRef = useRef(null);
   const LINE_HEIGHT_FACTOR = 1.5; // line height multiplier for better spacing
   const [copySuccess, setCopySuccess] = useState(false);
+  const [input, setInput] = useState(''); // Add this new state
+  const [showInputModal, setShowInputModal] = useState(false);
+
+  // Add this function to check if code requires input
+  const needsInput = useMemo(() => {
+    const inputPatterns = [
+      'Scanner',
+      'System.in',
+      'BufferedReader',
+      'InputStreamReader',
+      'Console.readLine',
+      'console.readLine'
+    ];
+    return inputPatterns.some(pattern => code.includes(pattern));
+  }, [code]);
+
+  // Memoize expensive calculations
+  const calculateEditorHeight = useMemo(() => {
+    return (code, fontSize, LINE_HEIGHT_FACTOR) => {
+      const baseLineHeight = fontSize * LINE_HEIGHT_FACTOR;
+      const maxLines = 20;
+      const padding = 16;
+      const actualLines = code.split('\n').length;
+      return Math.min(actualLines * baseLineHeight + padding, maxLines * baseLineHeight + padding);
+    };
+  }, []);
+
+  // Memoize editor options
+  const editorOptions = useMemo(() => ({
+    minimap: { enabled: false },
+    fontSize: Math.max(12, fontSize - (window.innerWidth < 640 ? 2 : 0)),
+    scrollBeyondLastLine: false,
+    lineNumbers: 'on',
+    roundedSelection: false,
+    wordWrap: 'off',
+    renderLineHighlight: 'all',
+    lineHeight: Math.round(fontSize * LINE_HEIGHT_FACTOR),
+    padding: { top: 8, bottom: 8 },
+    scrollbar: {
+      vertical: 'auto',
+      horizontal: 'visible',
+      useShadows: true,
+      verticalScrollbarSize: 8,
+      horizontalScrollbarSize: 8
+    },
+    overviewRulerLanes: 0,
+    hideCursorInOverviewRuler: true,
+    automaticLayout: true,
+  }), [fontSize, LINE_HEIGHT_FACTOR]);
+
+  // Modify debouncedResize to use proper dependency handling
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedResize = useCallback(
+    debounce((editor) => {
+      if (editor) {
+        editor.layout();
+      }
+    }, 100),
+    [] // Empty dependency array is intentional as we want to create this function only once
+  );
+
+  // Alternative solution without eslint-disable:
+  /*
+  const debouncedResize = useMemo(
+    () =>
+      debounce((editor) => {
+        if (editor) {
+          editor.layout();
+        }
+      }, 100),
+    []
+  );
+  */
 
   useEffect(() => {
-    // Set initial line count
-    const initialLines = code.split('\n').length;
-    setLineCount(initialLines);
-
-    // Setup resize observer
     const resizeObserver = new ResizeObserver(() => {
       if (editorRef.current) {
-        editorRef.current.layout();
+        debouncedResize(editorRef.current);
       }
     });
-
+    
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
 
-    return () => resizeObserver.disconnect();
-  }, [code]); // Added code as a dependency
+    return () => {
+      resizeObserver.disconnect();
+      debouncedResize.cancel();
+    };
+  }, [debouncedResize]);
 
-  const calculateEditorHeight = () => {
-    const baseLineHeight = fontSize * LINE_HEIGHT_FACTOR;
-    const maxLines = 20;
-    const padding = 16; // top and bottom padding combined
-    const actualLines = code.split('\n').length;
-    
-    // Calculate height based on actual number of lines
-    const calculatedHeight = actualLines * baseLineHeight + padding;
-    
-    // Don't enforce minimum height, let it be exact
-    return Math.min(calculatedHeight, maxLines * baseLineHeight + padding);
-  };
-
-  const handleEditorDidMount = (editor) => {
+  // Memoize handlers
+  const handleEditorDidMount = useCallback((editor) => {
     editorRef.current = editor;
-    // Update line count on mount
     setLineCount(code.split('\n').length);
-  };
+  }, [code]);
 
-  const handleExecute = async () => {
+  const executeWithInput = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setShowInputModal(false);
     
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           language: 'java',
           version: '15.0.2',
-          files: [{
-            content: code,
-          }],
+          files: [{ content: code }],
+          stdin: needsInput ? input : '', // Only send input if needed
         }),
       });
 
@@ -83,17 +140,24 @@ const CodeEditor = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [code, input, needsInput]);
 
-  const handleEditorChange = (value) => {
+  // Move handleExecuteClick after executeWithInput and include it in dependencies
+  const handleExecuteClick = useCallback(() => {
+    if (needsInput) {
+      setShowInputModal(true);
+    } else {
+      executeWithInput(); // Execute directly if no input needed
+    }
+  }, [needsInput, executeWithInput]); // Add executeWithInput to dependencies
+
+  const handleEditorChange = useCallback((value) => {
     setCode(value);
-    const lines = (value || '').split('\n').length;
-    setLineCount(lines);
-  };
+    setLineCount((value || '').split('\n').length);
+  }, []);
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     try {
-      // Get the current value from editor instance
       const currentCode = editorRef.current.getValue();
       await navigator.clipboard.writeText(currentCode);
       setCopySuccess(true);
@@ -102,7 +166,20 @@ const CodeEditor = () => {
       console.error('Failed to copy code:', err);
       setCopySuccess(false);
     }
-  };
+  }, []);
+
+  // Memoize the Editor component
+  const MonacoEditor = useMemo(() => (
+    <Editor
+      height="100%"
+      defaultLanguage="java"
+      theme="vs-dark"
+      value={code}
+      onChange={handleEditorChange}
+      onMount={handleEditorDidMount}
+      options={editorOptions}
+    />
+  ), [code, handleEditorChange, handleEditorDidMount, editorOptions]);
 
   return (
     <div className="overflow-x-auto">
@@ -143,7 +220,7 @@ const CodeEditor = () => {
                 )}
               </button>
               <button
-                onClick={handleExecute}
+                onClick={handleExecuteClick}
                 disabled={isLoading}
                 className="px-3 sm:px-4 py-1 sm:py-1.5 bg-blue-600/80 text-white rounded-md hover:bg-blue-700/80 
                        transition-all duration-200 text-xs sm:text-sm font-medium flex items-center gap-2
@@ -188,39 +265,53 @@ const CodeEditor = () => {
           <div 
             ref={containerRef}
             className="border border-gray-800 rounded-lg overflow-hidden transition-height duration-200 ease-in-out"
-            style={{ height: `${calculateEditorHeight()}px` }}
+            style={{ height: `${calculateEditorHeight(code, fontSize, LINE_HEIGHT_FACTOR)}px` }}
           >
-            <Editor
-              height="100%"
-              defaultLanguage="java"
-              theme="vs-dark"
-              value={code}
-              onChange={handleEditorChange}
-              onMount={handleEditorDidMount}
-              options={{
-                minimap: { enabled: false },
-                fontSize: Math.max(12, fontSize - (window.innerWidth < 640 ? 2 : 0)),
-                scrollBeyondLastLine: false,
-                lineNumbers: 'on',
-                roundedSelection: false,
-                wordWrap: 'off', // Changed to allow horizontal scrolling in editor
-                renderLineHighlight: 'all',
-                lineHeight: Math.round(fontSize * LINE_HEIGHT_FACTOR),
-                padding: { top: 8, bottom: 8 },
-                scrollbar: {
-                  vertical: 'auto',
-                  horizontal: 'visible',
-                  useShadows: true,
-                  verticalScrollbarSize: 8,
-                  horizontalScrollbarSize: 8
-                },
-                overviewRulerLanes: 0,
-                hideCursorInOverviewRuler: true,
-                automaticLayout: true,
-              }}
-            />
+            {MonacoEditor}
           </div>
         </div>
+
+        {/* Replace the input section with this modal */}
+        {showInputModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-gray-900 rounded-lg border border-gray-700 p-4 max-w-lg w-full mx-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-white text-lg font-medium">Input Required</h3>
+                <button
+                  onClick={() => setShowInputModal(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-gray-400 text-sm mb-4">
+                Your code contains input operations. Please provide the required input:
+              </p>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Enter your program input here..."
+                className="w-full h-32 bg-gray-800 text-white rounded-md border border-gray-700 p-2 text-sm font-mono resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 mb-4"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowInputModal(false)}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeWithInput}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Run with Input
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Terminal Output */}
         <div className="bg-gray-950/90 rounded-lg border border-gray-800/50">
@@ -258,4 +349,5 @@ const CodeEditor = () => {
   );
 };
 
-export default CodeEditor;
+// Memoize the entire component
+export default React.memo(CodeEditor);

@@ -1,7 +1,7 @@
 import React from 'react';
 import NextButton from '../../Components/NextButton';
 
-const WhyJava = ({ nextModule }) => {
+const WhyJava = ({ nextModule, onNext }) => {
   return (
     <div className="space-y-6">
       <section>
@@ -112,7 +112,7 @@ const WhyJava = ({ nextModule }) => {
       </section>
       
       {/* Add Next Button */}
-      <NextButton nextModule={nextModule} />
+      <NextButton nextModule={nextModule} onNext={onNext} />
     </div>
   );
 };

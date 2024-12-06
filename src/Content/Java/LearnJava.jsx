@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, Grip, Menu, X } from 'lucide-react';
 import { useMediaQuery } from 'react-responsive';
 import History from './0.Intoduction To Java/1.History';
 import WhyJava from './0.Intoduction To Java/2.WhyJava';
+import TopicsCovered from './0.Intoduction To Java/3.TopicsCovered';
 
 const modules = [
   {
@@ -12,6 +13,7 @@ const modules = [
     subModules: [
       { id: '0.1', title: '1. History', component: History },
       { id: '0.2', title: '2. Why Java?', component: WhyJava },
+      { id: '0.3', title: '3. Topics Covered', component: TopicsCovered }
     ]
   }
   // For next module:

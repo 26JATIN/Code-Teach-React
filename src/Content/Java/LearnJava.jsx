@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Grip, Menu, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Grip, Menu, X, Sun, Moon } from 'lucide-react';
 import { useMediaQuery } from 'react-responsive';
 import History from './0.Intoduction To Java/1.History';
 import WhyJava from './0.Intoduction To Java/2.WhyJava';
 import TopicsCovered from './0.Intoduction To Java/3.TopicsCovered';
+import { useTheme } from '../Components/ThemeProvider';
 
 const modules = [
   {
@@ -43,6 +44,7 @@ const LearnJava = () => {
   const [isResizing, setIsResizing] = useState(false);
   const [activeModule, setActiveModule] = useState(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -174,7 +176,7 @@ const LearnJava = () => {
   }, []);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-950">
+    <div className={`flex flex-col md:flex-row h-screen ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
       {/* Mobile Menu - More Visible */}
       <button
         onClick={toggleSidebar}
@@ -188,8 +190,8 @@ const LearnJava = () => {
       {/* Sidebar - Improved Mobile */}
       <div 
         style={{ width: isSidebarOpen ? (isMobile ? '100%' : sidebarWidth) : 0 }} 
-        className={`fixed md:relative z-40 h-full bg-gray-900/95 backdrop-blur-xl
-          transition-all duration-300 transform border-r border-gray-800/50
+        className={`fixed md:relative z-40 h-full ${theme === 'dark' ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-xl
+          transition-all duration-300 transform border-r ${theme === 'dark' ? 'border-gray-800/50' : 'border-gray-200/50'}
           ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}
           md:transform-none md:transition-none overflow-hidden
           md:min-w-[280px] lg:min-w-[320px] w-full md:w-auto`}
@@ -198,14 +200,31 @@ const LearnJava = () => {
           {/* Header Area */}
           <div className="p-6 flex-shrink-0">
             <div className="relative pb-4">
-              <h2 className="text-xl md:text-2xl font-bold tracking-tight">
-                <span className="bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
-                  Learn Java
-                </span>
-                <span className="text-xs ml-2 text-slate-400 font-normal">Beta</span>
-              </h2>
-              <p className="text-sm text-slate-400 mt-1">Master Java Programming</p>
-              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-blue-500/50 via-slate-700/20 to-transparent"></div>
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight">
+                  <span className={`${theme === 'dark' ? 
+                    'bg-gradient-to-r from-slate-100 to-slate-300' : 
+                    'bg-gradient-to-r from-slate-800 to-slate-600'
+                  } bg-clip-text text-transparent`}>
+                    Learn Java
+                  </span>
+                  <span className={`text-xs ml-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'} font-normal`}>Beta</span>
+                </h2>
+                <button
+                  onClick={toggleTheme}
+                  className={`p-2 rounded-lg ${theme === 'dark' 
+                    ? 'bg-gray-800/30 hover:bg-gray-800/50 text-yellow-400' 
+                    : 'bg-gray-200/30 hover:bg-gray-200/50 text-blue-600'
+                  } transition-colors duration-200`}
+                >
+                  {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+              </div>
+              <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'} mt-1`}>Master Java Programming</p>
+              <div className={`absolute bottom-0 left-0 right-0 h-px ${theme === 'dark' 
+                ? 'bg-gradient-to-r from-blue-500/50 via-slate-700/20' 
+                : 'bg-gradient-to-r from-blue-500/30 via-slate-300/20'
+              } to-transparent`}></div>
             </div>
           </div>
 

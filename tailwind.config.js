@@ -3,7 +3,7 @@ module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
-  darkMode: 'class',
+  darkMode: 'class', // ensure this is set to 'class'
   theme: {
     extend: {
       keyframes: {

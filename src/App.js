@@ -1,11 +1,19 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useGitHubAuth } from './Frontend/pages/Authentication/login&&signup/useGitHubAuth';
+import { ThemeProvider as JavaThemeProvider } from './Content/Components/ThemeProvider';
 
 // Lazy load the components
 const Home = lazy(() => import('./Frontend/pages/home/homepage'));
 const Courses = lazy(() => import('./Frontend/pages/Courses/Courses'));
 const LearnJava = lazy(() => import('./Content/Java/LearnJava'));
+
+// Wrap LearnJava component with ThemeProvider
+const WrappedLearnJava = () => (
+  <JavaThemeProvider>
+    <LearnJava />
+  </JavaThemeProvider>
+);
 
 // GitHub callback handler component
 const GitHubCallback = () => {
@@ -45,8 +53,8 @@ const routes = [
   { path: '/', component: Home },
   { path: '/homepage', component: Home },
   { path: '/courses', component: Courses },
-  { path: '/github/oauth/callback', component: GitHubCallback }, // Updated path
-  { path: '/modules/java/*', component: LearnJava },
+  { path: '/github/oauth/callback', component: GitHubCallback },
+  { path: '/modules/java/*', component: WrappedLearnJava }, // Updated this line
 ];
 
 const App = () => {

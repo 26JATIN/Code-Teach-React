@@ -1,6 +1,6 @@
 import React from 'react';
 import NextButton from '../../Components/NextButton';
-
+import CodeEditor from '../../Components/CodeEditor';
 const TopicsCovered = ({ nextModule }) => {
   return (
     <div className="space-y-8">
@@ -136,7 +136,7 @@ const TopicsCovered = ({ nextModule }) => {
           reinforce your learning. Get ready to build a strong foundation in Java programming!
         </p>
       </div>
-
+        <CodeEditor/>
       <NextButton nextModule={nextModule} />
     </div>
   );

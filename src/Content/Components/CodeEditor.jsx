@@ -158,15 +158,37 @@ const CodeEditor = () => {
 
   const handleCopy = useCallback(async () => {
     try {
-      const currentCode = editorRef.current.getValue();
-      await navigator.clipboard.writeText(currentCode);
+      // Try to copy using the current code state
+      await navigator.clipboard.writeText(code);
+      
+      // Show success message
       setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
+      
+      // Reset success message after 2 seconds
+      const timer = setTimeout(() => {
+        setCopySuccess(false);
+      }, 2000);
+      
+      // Cleanup timer
+      return () => clearTimeout(timer);
     } catch (err) {
-      console.error('Failed to copy code:', err);
-      setCopySuccess(false);
+      console.error('Failed to copy:', err);
+      // If clipboard API fails, try fallback method
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = code;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed:', fallbackErr);
+        setCopySuccess(false);
+      }
     }
-  }, []);
+  }, [code]); // Add code as dependency since we're using it
 
   // Memoize the Editor component
   const MonacoEditor = useMemo(() => (

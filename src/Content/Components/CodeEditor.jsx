@@ -12,6 +12,7 @@ const CodeEditor = () => {
   const [output, setOutput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fontSize, setFontSize] = useState(14);
 
   const handleExecute = async () => {
     setIsLoading(true);
@@ -82,6 +83,20 @@ const CodeEditor = () => {
           </button>
         </div>
 
+        {/* Font Size Slider */}
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-sm text-gray-400">Font Size:</span>
+          <input
+            type="range"
+            min="12"
+            max="24"
+            value={fontSize}
+            onChange={(e) => setFontSize(Number(e.target.value))}
+            className="w-32 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          />
+          <span className="text-sm text-gray-400">{fontSize}px</span>
+        </div>
+
         <div className="h-[400px] border border-gray-800 rounded-lg overflow-hidden resize-y">
           <Editor
             height="100%"
@@ -91,7 +106,7 @@ const CodeEditor = () => {
             onChange={(value) => setCode(value)}
             options={{
               minimap: { enabled: false },
-              fontSize: 14,
+              fontSize: fontSize,
               scrollBeyondLastLine: false,
               lineNumbers: 'on',
               roundedSelection: false,

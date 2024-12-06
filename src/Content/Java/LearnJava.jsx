@@ -5,6 +5,12 @@ import { useMediaQuery } from 'react-responsive';
 import History from './0.Intoduction To Java/1.History';
 import WhyJava from './0.Intoduction To Java/2.WhyJava';
 import TopicsCovered from './0.Intoduction To Java/3.TopicsCovered';
+import WhatDoesWordSyntexmean from './2.Syntex And Structure/1.WhatDoesWordSyntexmean';
+import Syntexofjava from './2.Syntex And Structure/2.Syntexofjava';
+import WhatIsAProgram from './1.HowaprogramWorks/1.whatisaprogram';
+import HowDoesAProgramWork from './1.HowaprogramWorks/2.howdoesprogramworks';
+import WhatIsCompiler from './1.HowaprogramWorks/3.whatisacompiler';
+import WhatIsInterpreter from './1.HowaprogramWorks/4.whatisainterpreter';
 
 const modules = [
   {
@@ -15,15 +21,25 @@ const modules = [
       { id: '0.2', title: '2. Why Java?', component: WhyJava },
       { id: '0.3', title: '3. Topics Covered', component: TopicsCovered }
     ]
+  },
+  {
+    id: '1',
+    title: 'How Programs Work',
+    subModules: [
+      { id: '1.1', title: 'What is a Program?', component: WhatIsAProgram },
+      { id: '1.2', title: 'How Programs Run', component: HowDoesAProgramWork },
+      { id: '1.3', title: 'What is a Compiler?', component: WhatIsCompiler },
+      { id: '1.4', title: 'What is an Interpreter?', component: WhatIsInterpreter }
+    ]
+  },
+  {
+    id: '2',
+    title: 'Syntax And Structure',
+    subModules: [
+      { id: '2.1', title: '1. What Does Syntax Mean?', component: WhatDoesWordSyntexmean },
+      { id: '2.2', title: '2. Java Syntax', component: Syntexofjava }
+    ]
   }
-  // For next module:
-  // {
-  //   id: '1',
-  //   title: 'Module Name',
-  //   subModules: [
-  //     { id: '1.1', title: '1. SubmoduleName', component: ComponentName },
-  //   ]
-  // }
 ];
 
 const LearnJava = () => {

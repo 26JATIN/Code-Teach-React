@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Editor from '@monaco-editor/react';
 import { debounce } from 'lodash';
 
-const CodeEditor = () => {
-  const [code, setCode] = useState(
+const CodeEditor = ({ defaultCode }) => {
+  const [code, setCode] = useState(defaultCode || 
 `public class Main {
     public static void main(String[] args) {
         // Write your code here
     }
-}`);  // Removed extra spacing after the template
+}`);
   const [output, setOutput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);

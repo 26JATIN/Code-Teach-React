@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Editor from '@monaco-editor/react';
 import { debounce } from 'lodash';
+import CopyButton from './CopyButton';
 
 const CodeEditor = ({ defaultCode }) => {
   const [code, setCode] = useState(defaultCode || 
@@ -18,7 +19,6 @@ const CodeEditor = ({ defaultCode }) => {
   const editorRef = useRef(null);
   const containerRef = useRef(null);
   const LINE_HEIGHT_FACTOR = 1.5; // line height multiplier for better spacing
-  const [copySuccess, setCopySuccess] = useState(false);
   const [input, setInput] = useState(''); // Add this new state
   const [showInputModal, setShowInputModal] = useState(false);
 
@@ -156,40 +156,6 @@ const CodeEditor = ({ defaultCode }) => {
     setLineCount((value || '').split('\n').length);
   }, []);
 
-  const handleCopy = useCallback(async () => {
-    try {
-      // Try to copy using the current code state
-      await navigator.clipboard.writeText(code);
-      
-      // Show success message
-      setCopySuccess(true);
-      
-      // Reset success message after 2 seconds
-      const timer = setTimeout(() => {
-        setCopySuccess(false);
-      }, 2000);
-      
-      // Cleanup timer
-      return () => clearTimeout(timer);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-      // If clipboard API fails, try fallback method
-      try {
-        const textArea = document.createElement('textarea');
-        textArea.value = code;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
-      } catch (fallbackErr) {
-        console.error('Fallback copy failed:', fallbackErr);
-        setCopySuccess(false);
-      }
-    }
-  }, [code]); // Add code as dependency since we're using it
-
   // Memoize the Editor component
   const MonacoEditor = useMemo(() => (
     <Editor
@@ -218,29 +184,10 @@ const CodeEditor = ({ defaultCode }) => {
               <span className="text-xs sm:text-sm text-gray-400 ml-2">Main.java</span>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={handleCopy}
-                className="px-3 py-1 sm:py-1.5 bg-gray-700/50 text-white rounded-md hover:bg-gray-600/50 
-                       transition-all duration-200 text-xs sm:text-sm font-medium flex items-center gap-2
-                       focus:outline-none focus:ring-2 focus:ring-gray-500/50 w-full sm:w-auto justify-center"
-                title="Copy code"
-              >
-                {copySuccess ? (
-                  <>
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                    <span>Copy</span>
-                  </>
-                )}
-              </button>
+              <CopyButton 
+                textToCopy={code}
+                className="w-full sm:w-auto justify-center" 
+              />
               <button
                 onClick={handleExecuteClick}
                 disabled={isLoading}

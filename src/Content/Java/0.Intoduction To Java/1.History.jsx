@@ -1,92 +1,139 @@
 import React from 'react';
 import NextButton from '../../Components/NextButton';
 
+// Timeline component for better visualization
+const TimelineEvent = ({ year, title, description }) => (
+  <div className="relative pl-8 py-4 transition-all duration-300 hover:scale-[1.02]">
+    <div className="absolute left-0 top-0 mt-7 -ml-1.5 h-3 w-3 rounded-full border-2 border-blue-400 bg-gray-900"></div>
+    <div className="absolute left-0 top-0 mt-8 h-full w-px bg-gradient-to-b from-blue-500/50 to-transparent"></div>
+    <div className="text-blue-400 font-mono text-sm">{year}</div>
+    <h3 className="text-lg font-medium text-gray-200 mt-1">{title}</h3>
+    <p className="text-gray-300 mt-1">{description}</p>
+  </div>
+);
+
 const History = ({ nextModule, onNext }) => {
   return (
-    <div className="space-y-6">
-      <section>
-        <h1 className="text-2xl font-bold text-gray-100 mb-4">History of Java</h1>
+    <div className="max-w-4xl mx-auto">
+      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+        The Journey of Java ☕
+      </h1>
+
+      {/* Hero Section */}
+      <div className="mt-6 p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
+        <p className="text-gray-300 text-lg leading-relaxed">
+          Ever wondered how one of the world's most popular programming languages came to be? 
+          Let's travel back in time to 1991, when a small team at Sun Microsystems embarked on 
+          a journey that would revolutionize the world of programming! 🚀
+        </p>
+      </div>
+
+      {/* Birth of Java Section */}
+      <div className="mt-8 space-y-6">
+        <h2 className="text-2xl font-semibold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+          The Birth of a Programming Legend 🌟
+        </h2>
         
-        <div className="space-y-4">
-          {/* Birth of Java */}
-          <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700/50">
-            <h2 className="text-xl text-gray-100 mb-2">🌟 The Birth of Java (1991)</h2>
-            <p className="text-gray-300">
-              It all started when <span className="text-yellow-400 font-medium">James Gosling</span> and his team at 
-              <span className="text-blue-400 font-medium"> Sun Microsystems</span> began creating a language for digital devices 
-              like TVs and set-top boxes. They called this project <span className="text-green-400">"Green Project"</span>.
-            </p>
-          </div>
-
-          {/* Why Java Was Created */}
-          <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700/50">
-            <h2 className="text-xl text-gray-100 mb-2">🎯 Why Was Java Created?</h2>
-            <ul className="list-disc list-inside space-y-2 text-gray-300">
-              <li>To be <span className="text-blue-400 font-medium">simple and easy</span> to learn</li>
-              <li>To be <span className="text-blue-400 font-medium">secure and portable</span> (run anywhere)</li>
-              <li>To be <span className="text-blue-400 font-medium">object-oriented</span></li>
-              <li>To be <span className="text-blue-400 font-medium">robust and durable</span></li>
-            </ul>
-          </div>
-
-          {/* Evolution Timeline */}
-          <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700/50">
-            <h2 className="text-xl text-gray-100 mb-2">📅 Key Moments</h2>
-            <div className="space-y-3">
-              <div className="flex items-start gap-4">
-                <span className="text-yellow-400 font-mono">1995</span>
-                <p className="text-gray-300">First public version of Java was released</p>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="text-yellow-400 font-mono">1996</span>
-                <p className="text-gray-300">JDK 1.0 released with the promise: "Write Once, Run Anywhere"</p>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="text-yellow-400 font-mono">2010</span>
-                <p className="text-gray-300">Oracle bought Sun Microsystems and took over Java</p>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="text-yellow-400 font-mono">Today</span>
-                <p className="text-gray-300">Java is one of the world's most popular programming languages</p>
-              </div>
+        <div className="p-6 bg-gradient-to-br from-green-500/10 to-green-700/10 rounded-xl border border-green-500/20 
+          transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/10">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-green-500/20 rounded-lg">
+              <span className="text-3xl">👨‍💻</span>
             </div>
-          </div>
-
-          {/* Fun Facts */}
-          <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700/50">
-            <h2 className="text-xl text-gray-100 mb-2">🎈 Fun Facts</h2>
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <span className="text-green-400">☕</span>
-                <p className="text-gray-300">Java's logo is a coffee cup because Java island is known for its coffee!</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-green-400">📱</span>
-                <p className="text-gray-300">Android apps are primarily written in Java</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-green-400">🎮</span>
-                <p className="text-gray-300">Minecraft was originally written in Java</p>
-              </div>
+            <div>
+              <h3 className="text-xl font-medium text-green-400">The Green Team</h3>
+              <p className="mt-2 text-gray-300">
+                Led by James Gosling, the team set out to create a language for digital devices. 
+                Originally called "Oak" (after a tree outside Gosling's office), it later became Java!
+              </p>
             </div>
-          </div>
-
-          {/* Summary Box */}
-          <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-700/30">
-            <h2 className="text-xl text-blue-100 mb-2">📚 Quick Summary</h2>
-            <p className="text-gray-300">
-              Java was created to be a <span className="text-blue-400 font-medium">simple</span>, 
-              <span className="text-blue-400 font-medium"> portable</span>, and 
-              <span className="text-blue-400 font-medium"> secure</span> programming language. 
-              From TV boxes to Android phones, from web applications to games, Java has grown to 
-              become one of the most versatile and widely-used programming languages in the world.
-            </p>
           </div>
         </div>
-      </section>
-      
-      {/* Add Next Button */}
-      <NextButton nextModule={nextModule} onNext={onNext} />
+      </div>
+
+      {/* Timeline Section */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-semibold mb-6">Java Through the Years 📅</h2>
+        <div className="border-l border-blue-500/20 ml-4">
+          <TimelineEvent 
+            year="1991"
+            title="The Green Project Begins"
+            description="James Gosling and team start working on a new programming language for digital devices."
+          />
+          <TimelineEvent 
+            year="1995"
+            title="First Public Release"
+            description="Java 1.0 is released with the promise: Write Once, Run Anywhere!"
+          />
+          <TimelineEvent 
+            year="1996"
+            title="JavaScript Partnership"
+            description="Netscape and Sun form an alliance, bringing Java to web browsers."
+          />
+          <TimelineEvent 
+            year="2010"
+            title="Oracle Acquisition"
+            description="Oracle Corporation acquires Sun Microsystems and takes over Java development."
+          />
+          <TimelineEvent 
+            year="Present"
+            title="Java Today"
+            description="Powers Android apps, enterprise software, and remains one of the most popular programming languages."
+          />
+        </div>
+      </div>
+
+      {/* Fun Facts Section */}
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20 
+          transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10">
+          <h3 className="text-xl font-medium text-purple-400 flex items-center gap-2">
+            <span>☕</span> Why "Java"?
+          </h3>
+          <p className="mt-2 text-gray-300">
+            The name Java was inspired by Java coffee, a favorite among the language's creators. 
+            That's why the logo is a coffee cup!
+          </p>
+        </div>
+
+        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20 
+          transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/10">
+          <h3 className="text-xl font-medium text-blue-400 flex items-center gap-2">
+            <span>🎮</span> Famous Java Apps
+          </h3>
+          <p className="mt-2 text-gray-300">
+            Minecraft, Eclipse IDE, and most Android apps are built with Java. 
+            Even NASA has used Java for some of their projects!
+          </p>
+        </div>
+      </div>
+
+      {/* Summary Section */}
+      <div className="mt-8 p-6 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-xl border border-yellow-500/20">
+        <h3 className="text-xl font-medium text-yellow-400 mb-3">🎯 Why Java Succeeded</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
+          <div className="flex items-center gap-2">
+            <span className="text-green-400">✨</span>
+            <span>Simple and Easy to Learn</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-green-400">🔒</span>
+            <span>Secure and Robust</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-green-400">🌐</span>
+            <span>Platform Independent</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-green-400">🎯</span>
+            <span>Object-Oriented</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 flex justify-end">
+        <NextButton nextModule={nextModule} onNext={onNext} />
+      </div>
     </div>
   );
 };

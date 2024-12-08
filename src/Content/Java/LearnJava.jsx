@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Grip, Menu, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Menu } from 'lucide-react';
 import { useMediaQuery } from 'react-responsive';
 import History from './0.Intoduction To Java/1.History';
 import WhyJava from './0.Intoduction To Java/2.WhyJava';
@@ -46,28 +46,51 @@ const modules = [
   }
 ];
 
-const LearnJava = () => {
-  // Add responsive hooks
-  const isMobile = useMediaQuery({ maxWidth: 768 });
-  const isTablet = useMediaQuery({ minWidth: 769, maxWidth: 1024 });
-  
-  // Adjust initial sidebar width based on screen
-  const getInitialWidth = useCallback(() => {
-    if (isMobile) return 0;
-    if (isTablet) return 300;
-    return 320;
-  }, [isMobile, isTablet]);
+// Memoize the module and submodule buttons for better performance
+const ModuleButton = memo(({ module, isExpanded, toggleModule }) => (
+  <button
+    onClick={() => toggleModule(module.id)}
+    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 hover:bg-gray-800/50
+      transition-all duration-200 border border-gray-700/30 hover:border-gray-600/30
+      focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-left"
+  >
+    <div className="flex items-center">
+      <div className={`p-1.5 rounded-md transition-colors
+        ${isExpanded ? 'bg-blue-500/10' : ''}`}>
+        {isExpanded ? (
+          <ChevronDown className="w-4 h-4 text-sky-400" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-sky-400" />
+        )}
+      </div>
+      <div className="flex-1 flex items-center justify-between ml-2">
+        <div>
+          <span className="font-medium text-slate-200 text-sm block">
+            {module.title}
+          </span>
+          <span className="text-xs text-slate-400">
+            {module.subModules.length} lessons
+          </span>
+        </div>
+        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800/50 text-blue-400 border border-slate-700/50">
+          {module.subModules.length}
+        </span>
+      </div>
+    </div>
+  </button>
+));
 
-  const [sidebarWidth, setSidebarWidth] = useState(getInitialWidth());
+const LearnJava = () => {
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  
+  const [isMenuOpen, setIsMenuOpen] = useState(!isMobile);
+
   const [expandedModules, setExpandedModules] = useState({});
-  const [isResizing, setIsResizing] = useState(false);
   const [activeModule, setActiveModule] = useState(null);
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Open the module containing the current route
     const currentPath = location.pathname;
     modules.forEach((module) => {
       module.subModules.forEach((subModule) => {
@@ -78,7 +101,6 @@ const LearnJava = () => {
     });
   }, [location]);
 
-  // Add this to handle initial route
   useEffect(() => {
     const path = location.pathname;
     const pathParts = path.split('/');
@@ -97,87 +119,43 @@ const LearnJava = () => {
     }));
   };
 
-  // Update scroll behavior with improved scroll restoration
+  // Optimized scroll behavior
   const scrollToTop = useCallback(() => {
-    requestAnimationFrame(() => {
-      const contentArea = document.querySelector('.content-scroll-area');
-      if (contentArea) {
-        // Capture current position
-        const currentPosition = contentArea.scrollTop;
-        
-        // Force a reflow at current position
-        contentArea.style.scrollBehavior = 'instant';
-        contentArea.scrollTo(0, currentPosition);
-        
-        // Then smoothly scroll to top
-        requestAnimationFrame(() => {
-          contentArea.style.scrollBehavior = 'smooth';
-          contentArea.scrollTo(0, 0);
-          
-          // Reset scroll behavior after animation
-          setTimeout(() => {
-            contentArea.style.scrollBehavior = 'auto';
-          }, 500);
-        });
-      }
-    });
+    const contentArea = document.querySelector('.content-scroll-area');
+    if (!contentArea) return;
+
+    const scroll = () => {
+      contentArea.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    };
+
+    // Use requestAnimationFrame for smoother scrolling
+    requestAnimationFrame(scroll);
   }, []);
 
-  // Update navigation with better scroll timing
   const navigateToContent = useCallback((moduleId, subModuleId) => {
     setActiveModule(`${moduleId}.${subModuleId}`);
     setExpandedModules(prev => ({ ...prev, [moduleId]: true }));
-    // Scroll first, then navigate
     scrollToTop();
+    if (isMobile) {
+      setIsMenuOpen(false);
+    }
     setTimeout(() => {
       navigate(`/modules/java/${moduleId}/${subModuleId}`);
     }, 100);
-  }, [navigate, scrollToTop]);
+  }, [navigate, scrollToTop, isMobile]);
 
-  // Add this effect to handle scroll restoration
   useEffect(() => {
     scrollToTop();
   }, [location.pathname, scrollToTop]);
 
-  const startResizing = useCallback((mouseDownEvent) => {
-    setIsResizing(true);
-    mouseDownEvent.preventDefault();
+  // Debounced menu toggle to prevent rapid toggling
+  const toggleSidebar = useCallback(() => {
+    setIsMenuOpen(prev => !prev);
   }, []);
 
-  const stopResizing = useCallback(() => {
-    setIsResizing(false);
-  }, []);
-
-  const resize = useCallback(
-    (mouseMoveEvent) => {
-      if (isResizing) {
-        const newWidth = mouseMoveEvent.clientX;
-        if (newWidth >= 200 && newWidth <= 600) {
-          setSidebarWidth(newWidth);
-        }
-      }
-    },
-    [isResizing]
-  );
-
-  useEffect(() => {
-    window.addEventListener('mousemove', resize);
-    window.addEventListener('mouseup', stopResizing);
-    return () => {
-      window.removeEventListener('mousemove', resize);
-      window.removeEventListener('mouseup', stopResizing);
-    };
-  }, [resize, stopResizing]);
-
-  useEffect(() => {
-    setSidebarWidth(getInitialWidth());
-  }, [getInitialWidth]);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
-
-  // Update the findNextModule function
   const findNextModule = useCallback((currentModuleId, currentSubModuleId) => {
     const flatModules = modules.flatMap(module => 
       module.subModules.map(subModule => ({
@@ -193,81 +171,124 @@ const LearnJava = () => {
     return flatModules[currentIndex + 1];
   }, []);
 
-  return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-950">
-      {/* Mobile Menu - More Visible */}
-      <button
-        onClick={toggleSidebar}
-        className="md:hidden fixed top-4 right-4 z-50 p-3.5 rounded-xl bg-gray-800/30 
-        border border-gray-700/30 text-gray-300 hover:bg-gray-800/50 
-        active:scale-95 transform backdrop-blur-xl shadow-lg"
-      >
-        {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
+  // Clean up styles on unmount
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .writing-mode-vertical {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+      }
+      
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(31 41 55) transparent;
+      }
 
-      {/* Sidebar - Improved Mobile */}
+      /* Prevent CLS during transitions */
+      .sidebar-transition {
+        will-change: transform, opacity, width;
+      }
+
+      /* Optimize animations */
+      .content-scroll-area {
+        will-change: scroll-position;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Prevent layout shifts */
+      .module-container {
+        min-height: 48px;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col md:flex-row h-screen bg-gray-950 overflow-hidden">
+      {/* Mobile Menu Button */}
+      {isMobile && (
+        <button
+          onClick={toggleSidebar}
+          className="fixed top-4 left-4 z-50 p-2.5 rounded-lg bg-gray-800/90 
+            border border-gray-700/50 text-gray-400 shadow-lg backdrop-blur-sm
+            hover:text-gray-200 transition-all duration-200
+            hover:bg-gray-700/90"
+          title="Toggle Menu (Ctrl+M)"
+        >
+          <Menu size={20} />
+        </button>
+      )}
+
+      {/* Sidebar - Update visibility classes for mobile */}
       <div 
-        style={{ width: isSidebarOpen ? (isMobile ? '100%' : sidebarWidth) : 0 }} 
-        className={`fixed md:relative z-40 h-full bg-gray-900/95 backdrop-blur-xl
-          transition-all duration-300 transform border-r border-gray-800/50
-          ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}
-          md:transform-none md:transition-none overflow-hidden
-          md:min-w-[280px] lg:min-w-[320px] w-full md:w-auto`}
+        className={`fixed md:relative z-40 h-full sidebar-transition
+          ${isMenuOpen ? 'w-[280px] md:w-[320px] translate-x-0' : 'w-[60px] -translate-x-full md:translate-x-0'}
+          bg-gray-900/95 backdrop-blur-xl border-r border-gray-800/50 group flex flex-col
+          transition-all duration-300 ease-in-out`}
+        style={{ 
+          willChange: 'transform, width',
+          backfaceVisibility: 'hidden'
+        }}
       >
-        <div className="flex flex-col h-full">
-          {/* Header Area */}
-          <div className="p-6 flex-shrink-0">
-            <div className="relative pb-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl md:text-2xl font-bold tracking-tight">
-                  <span className="bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
-                    Learn Java
-                  </span>
-                  <span className="text-xs ml-2 text-slate-400 font-normal">Beta</span>
-                </h2>
+        {/* Show toggle button only on desktop */}
+        {!isMobile && (
+          <button
+            onClick={toggleSidebar}
+            className={`absolute top-1/2 -right-4 z-50 p-2 rounded-full 
+              bg-gray-800/90 border border-gray-700/50 text-gray-400 shadow-lg
+              hover:text-gray-200 transition-all duration-200 opacity-0 group-hover:opacity-100
+              transform -translate-y-1/2 hover:scale-110 focus:outline-none
+              hover:bg-gray-700/90 backdrop-blur-xl`}
+            title="Toggle Menu (Ctrl+M)"
+          >
+            <ChevronRight size={16} className={`transform transition-transform duration-200
+              ${isMenuOpen ? 'rotate-180' : 'rotate-0'}`} />
+          </button>
+        )}
+
+        <div className={`${isMenuOpen ? 'opacity-0' : 'opacity-100'} 
+          transition-opacity duration-200 h-full flex flex-col items-center py-6`}>
+          <div className="flex flex-col items-center gap-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 
+              flex items-center justify-center border border-gray-700/50">
+              <span className="text-lg font-semibold text-gray-300">J</span>
+            </div>
+            <div className="h-20 w-px bg-gradient-to-b from-blue-500/30 via-purple-500/20 to-transparent"/>
+          </div>
+          <span className="writing-mode-vertical text-xs font-medium text-gray-400
+            tracking-wider uppercase rotate-180 mt-4">Learn Java</span>
+        </div>
+
+        <div className={`${isMenuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'} 
+          transition-all duration-200 h-full overflow-hidden absolute inset-0 bg-gray-900/95 flex flex-col`}>
+          <div className="p-6 border-b border-gray-800/50 flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 
+                flex items-center justify-center border border-gray-700/50">
+                <span className="text-sm font-semibold text-gray-300">J</span>
               </div>
-              <p className="text-sm text-slate-400 mt-1">Master Java Programming</p>
-              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-blue-500/50 via-slate-700/20 to-transparent"></div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-200">Learn Java</h2>
+                <p className="text-xs text-gray-400">Master Programming</p>
+              </div>
             </div>
           </div>
 
-          {/* Module List */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700/30 hover:scrollbar-thumb-blue-500/20">
+          <div className="flex-1 overflow-y-auto">
             <div className="p-4 space-y-3">
               {modules.map((module) => (
                 <div key={module.id} className="group">
-                  <button
-                    onClick={() => toggleModule(module.id)}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 hover:bg-gray-800/50
-                      transition-all duration-200 border border-gray-700/30 hover:border-gray-600/30
-                      focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-left"
-                  >
-                    <div className="flex items-center">
-                      <div className={`p-1.5 rounded-md transition-colors
-                        ${expandedModules[module.id] ? 'bg-blue-500/10' : ''}`}>
-                        {expandedModules[module.id] ? (
-                          <ChevronDown className="w-4 h-4 text-sky-400" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-sky-400" />
-                        )}
-                      </div>
-                      <div className="flex-1 flex items-center justify-between ml-2">
-                        <div>
-                          <span className="font-medium text-slate-200 text-sm block">
-                            {module.title}
-                          </span>
-                          <span className="text-xs text-slate-400">
-                            {module.subModules.length} lessons
-                          </span>
-                        </div>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800/50 text-blue-400 border border-slate-700/50">
-                          {module.subModules.length}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
+                  <ModuleButton 
+                    module={module}
+                    isExpanded={expandedModules[module.id]}
+                    toggleModule={toggleModule}
+                  />
 
-                  {/* Submodules */}
                   {expandedModules[module.id] && (
                     <div className="relative mt-2 ml-4 pl-4 py-2 animate-slideDown">
                       <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-blue-500/30 via-slate-700/20 to-transparent"></div>
@@ -295,25 +316,24 @@ const LearnJava = () => {
             </div>
           </div>
         </div>
-
-        {/* Enhanced Resize Handle */}
-        <div
-          className="absolute top-0 right-0 w-1 h-full cursor-col-resize group hidden md:block"
-          onMouseDown={startResizing}
-        >
-          <div className="absolute inset-y-0 right-0 w-px bg-white/[0.02] group-hover:bg-sky-500/20 
-            transition-colors duration-200"></div>
-          <div className="absolute top-1/2 right-0 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Grip className="w-4 h-4 text-sky-400/40" />
-          </div>
-        </div>
       </div>
 
-      {/* Content Area - Enhanced Responsiveness */}
-      <div className="flex-1 overflow-hidden bg-gray-950">
-        <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-800 content-scroll-area">
-          {/* Responsive Breadcrumb */}
-          <div className="sticky top-0 z-10 px-4 sm:px-6 py-3 border-b border-gray-800/50 bg-gray-900/80 backdrop-blur-xl">
+      {isMobile && isMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-gray-950/60 backdrop-blur-sm z-30 transition-opacity duration-300"
+          onClick={toggleSidebar}
+          style={{ willChange: 'opacity' }}
+          aria-hidden="true"
+        />
+      )}
+
+      <div 
+        className={`flex-1 relative transition-opacity duration-200
+          ${isMobile && isMenuOpen ? 'opacity-50' : 'opacity-100'}`}
+        style={{ willChange: 'opacity' }}
+      >
+        <div className="absolute inset-0 flex flex-col">
+          <div className="sticky top-0 z-10 px-4 sm:px-6 py-3 border-b border-gray-800/50 bg-gray-900/80 backdrop-blur-xl flex-shrink-0">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <span className="text-gray-300 font-medium text-sm">Java</span>
               <svg className="w-3 h-3 text-slate-600 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -330,48 +350,71 @@ const LearnJava = () => {
             </div>
           </div>
               
-          {/* Content Area */}
-          <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
-            <div className="prose prose-invert max-w-none
-              prose-headings:text-gray-100 
-              prose-h1:text-xl sm:prose-h1:text-2xl md:prose-h1:text-3xl
-              prose-h2:text-lg sm:prose-h2:text-xl md:prose-h2:text-2xl
-              prose-p:text-gray-300 
-              prose-p:text-sm sm:prose-p:text-base
-              prose-strong:text-gray-200
-              prose-code:text-gray-300 
-              prose-code:bg-gray-800/50
-              prose-code:px-1.5 
-              prose-code:py-0.5 
-              prose-code:text-sm
-              prose-code:rounded-md
-              prose-a:text-gray-300 
-              prose-a:no-underline 
-              prose-a:hover:text-gray-100
-              prose-li:text-gray-300
-              prose-li:text-sm sm:prose-li:text-base
-              prose-pre:bg-gray-800/50
-              prose-pre:border
-              prose-pre:border-gray-700/50
-              prose-pre:p-3 sm:prose-pre:p-4
-              prose-pre:text-sm sm:prose-pre:text-base
-              prose-img:rounded-lg">
-              <Routes>
-                {modules.map((module) =>
-                  module.subModules.map((subModule) => (
-                    <Route
-                      key={subModule.id}
-                      path={`/${module.id}/${subModule.id}`}
-                      element={
-                        <subModule.component 
-                          nextModule={findNextModule(module.id, subModule.id)}
-                          onNext={navigateToContent}
-                        />
-                      }
-                    />
-                  ))
-                )}
-              </Routes>
+          <div className="flex-1 overflow-y-auto content-scroll-area">
+            <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
+              <div className="prose prose-invert max-w-none
+                prose-headings:text-gray-100 
+                prose-h1:text-xl sm:prose-h1:text-2xl md:prose-h1:text-3xl
+                prose-h2:text-lg sm:prose-h2:text-xl md:prose-h2:text-2xl
+                prose-p:text-gray-300 
+                prose-p:text-sm sm:prose-p:text-base
+                prose-strong:text-gray-200
+                prose-code:text-gray-300 
+                prose-code:bg-gray-800/50
+                prose-code:px-1.5 
+                prose-code:py-0.5 
+                prose-code:text-sm
+                prose-code:rounded-md
+                prose-a:text-gray-300 
+                prose-a:no-underline 
+                prose-a:hover:text-gray-100
+                prose-li:text-gray-300
+                prose-li:text-sm sm:prose-li:text-base
+                prose-pre:bg-gray-800/50
+                prose-pre:border
+                prose-pre:border-gray-700/50
+                prose-pre:p-3 sm:prose-pre:p-4
+                prose-pre:text-sm sm:prose-pre:text-base
+                prose-img:rounded-lg">
+                <Routes>
+                  <Route 
+                    index 
+                    element={
+                      <div className="text-center p-8">
+                        <h1>Welcome to Java Learning</h1>
+                        <p>Select a topic from the sidebar to begin</p>
+                      </div>
+                    } 
+                  />
+                  {modules.map((module) =>
+                    module.subModules.map((subModule) => (
+                      <Route
+                        key={`${module.id}-${subModule.id}`}
+                        path={`${module.id}/${subModule.id}`}
+                        element={
+                          <ErrorBoundary>
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <subModule.component 
+                                nextModule={findNextModule(module.id, subModule.id)}
+                                onNext={navigateToContent}
+                              />
+                            </Suspense>
+                          </ErrorBoundary>
+                        }
+                      />
+                    ))
+                  )}
+                  <Route 
+                    path="*" 
+                    element={
+                      <div className="text-center p-8">
+                        <h1>Topic Not Found</h1>
+                        <p>The requested topic could not be found.</p>
+                      </div>
+                    } 
+                  />
+                </Routes>
+              </div>
             </div>
           </div>
         </div>
@@ -380,4 +423,32 @@ const LearnJava = () => {
   );
 };
 
-export default LearnJava;
+// Add error boundary
+class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="text-center p-8">
+          <h1>Something went wrong</h1>
+          <p>Failed to load the module content.</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Add loading spinner
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center p-8">
+    <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+  </div>
+);
+
+export default memo(LearnJava);

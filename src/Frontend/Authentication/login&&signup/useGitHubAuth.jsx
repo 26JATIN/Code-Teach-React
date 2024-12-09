@@ -288,7 +288,7 @@ export const useGitHubAuth = () => {
         try {
           setError(null);
           const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-          const timeoutDuration = isSafari ? 20000 : 10000;
+          const timeoutDuration = isSafari ? 30000 : 10000;
 
           const response = await Promise.race([
             fetch(`${BACKEND_URL}github/oauth/callback`, {

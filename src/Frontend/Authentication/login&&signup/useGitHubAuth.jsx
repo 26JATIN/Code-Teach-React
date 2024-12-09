@@ -32,20 +32,26 @@ export const useGitHubAuth = () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         
-        const response = await fetch(url, { 
-          ...options, 
+        const finalOptions = {
+          ...options,
           credentials: 'include',
           mode: 'cors',
           signal: controller.signal,
           headers: {
             ...options.headers,
             'Accept': 'application/json',
+            'Origin': window.location.origin,
           }
-        });
+        };
+
+        console.log('Fetch attempt', i + 1, 'to', url, 'with options:', finalOptions);
+        
+        const response = await fetch(url, finalOptions);
         clearTimeout(timeoutId);
         
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Network response was not ok' }));
+          const errorData = await response.json().catch(() => ({ error: `HTTP error! status: ${response.status}` }));
+          console.error('Response error:', errorData);
           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
         return response;
@@ -154,9 +160,8 @@ export const useGitHubAuth = () => {
         return;
       }
 
-      const validationResponse = await fetch(`${BACKEND_URL}github/validate-token`, {
+      const validationResponse = await fetchWithRetry(`${BACKEND_URL}github/validate-token`, {
         method: 'POST',
-        credentials: 'include',
         headers: { 
           'Authorization': `Bearer ${storedToken}`,
           'Content-Type': 'application/json'
@@ -184,7 +189,7 @@ export const useGitHubAuth = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [manageRepository]);
+  }, [fetchWithRetry, BACKEND_URL, manageRepository]);
 
   // Modified useEffect to run checkAuth immediately and on focus
   useEffect(() => {

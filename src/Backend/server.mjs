@@ -56,43 +56,28 @@ const authLimiter = rateLimit({
   trustProxy: true
 });
 
-// Updated CORS configuration
+// Move CORS configuration before all other middleware
 const corsOptions = {
-  origin: function(origin, callback) {
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      'https://code-teach.vercel.app',
-      'http://localhost:3000'
-    ].filter(Boolean);
-    
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: process.env.FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Set-Cookie'],
-  maxAge: 600
 };
 
-// Apply CORS before other middleware
 app.use(cors(corsOptions));
-
-// Pre-flight requests
 app.options('*', cors(corsOptions));
 
-// Security headers after CORS
+// Disable helmet's default CORS handling
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginOpenerPolicy: { policy: "same-origin" },
+  crossOriginResourcePolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginEmbedderPolicy: false,
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
+      defaultSrc: ["'self'", process.env.FRONTEND_URL],
       connectSrc: ["'self'", 'https://api.github.com', process.env.FRONTEND_URL],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
     },
   }
@@ -125,11 +110,19 @@ const checkTokenBlacklist = (req, res, next) => {
 };
 
 // Add token to blacklist on logout
+const cookieOptions = {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'None',
+  domain: new URL(process.env.FRONTEND_URL).hostname,
+  path: '/',
+};
+
 app.post('/github/logout', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (token) {
     tokenBlacklist.set(token, true);
-    res.clearCookie('__vercel_live_token', { sameSite: 'None', secure: true, httpOnly: true });
+    res.clearCookie('__vercel_live_token', cookieOptions);
   }
   res.json({ success: true });
 });
@@ -174,7 +167,7 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
 
     if (tokenData.access_token) {
       cache.set(cacheKey, { access_token: tokenData.access_token });
-      res.cookie('__vercel_live_token', tokenData.access_token, { sameSite: 'None', secure: true, httpOnly: true });
+      res.cookie('__vercel_live_token', tokenData.access_token, cookieOptions);
     }
 
     return res.json(tokenData);

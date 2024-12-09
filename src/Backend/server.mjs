@@ -120,7 +120,7 @@ app.get('/health', (req, res) => {
 
 // Middleware to check token blacklist
 const checkTokenBlacklist = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
+  const token = req.headers.authorization?.split(' ')[1];S
   if (token && tokenBlacklist.get(token)) {
     return res.status(401).json({ error: 'Token is revoked' });
   }

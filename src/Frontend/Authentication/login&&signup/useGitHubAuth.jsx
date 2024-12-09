@@ -223,7 +223,7 @@ export const useGitHubAuth = () => {
     try {
       const token = localStorage.getItem(TOKEN_CACHE_KEY);
       if (token) {
-        await fetch(`${BACKEND_URL}/github/logout`, {
+        await fetch(`${BACKEND_URL}github/logout`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` }
         });

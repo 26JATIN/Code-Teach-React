@@ -406,15 +406,22 @@ export const useGitHubAuth = () => {
 
     const validateToken = async () => {
       try {
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        
-        // Always check GitHub API first for revoked tokens
-        const githubResponse = await fetch('https://api.github.com/user', {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
+        // Parallel validation requests for faster response
+        const [githubResponse, backendValidation] = await Promise.all([
+          fetch('https://api.github.com/user', {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          }),
+          fetch(`${BACKEND_URL}github/validate-token`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+            },
+            credentials: 'include'
+          })
+        ]);
 
         if (!githubResponse.ok) {
           console.log('Token invalid or revoked, logging out');
@@ -423,15 +430,6 @@ export const useGitHubAuth = () => {
           return;
         }
 
-        // Check backend for token validity
-        const backendValidation = await fetch(`${BACKEND_URL}github/validate-token`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-          credentials: 'include'
-        });
-
         const validationData = await backendValidation.json();
         if (!validationData.valid || validationData.revoked) {
           console.log('Token invalidated or revoked, logging out');
@@ -439,23 +437,37 @@ export const useGitHubAuth = () => {
           window.location.href = '/';
           return;
         }
-
       } catch (err) {
         console.error('Token validation error:', err);
-        if (!navigator.onLine) return; // Don't logout if offline
-        await signOut();
-        window.location.href = '/';
+        // Only logout on specific errors, not network issues
+        if (err.message.includes('401') || err.message.includes('403')) {
+          await signOut();
+          window.location.href = '/';
+        }
       }
     };
 
-    // Check more frequently for Safari
-    const intervalTime = 30000; // 30 seconds for all browsers
+    // More frequent checks for Safari/Mac
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isMac = /Mac/i.test(navigator.platform);
+    const intervalTime = (isSafari || isMac) ? 5000 : 30000; // 5 seconds for Safari/Mac
+
     validateToken(); // Initial validation
     const intervalId = setInterval(validateToken, intervalTime);
     
-    // Always validate on focus for Safari
-    const handleFocus = () => validateToken();
+    // Immediate validation on focus for Safari/Mac
+    const handleFocus = () => {
+      if (isSafari || isMac) {
+        validateToken();
+      }
+    };
+    
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && (isSafari || isMac)) {
+        validateToken();
+      }
+    });
 
     return () => {
       clearInterval(intervalId);

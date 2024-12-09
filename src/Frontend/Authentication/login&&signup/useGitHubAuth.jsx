@@ -134,7 +134,7 @@ export const useGitHubAuth = () => {
       }
 
       // First check with backend if token is valid
-      const validationResponse = await fetch(`${BACKEND_URL}/github/validate-token`, {
+      const validationResponse = await fetch(`${BACKEND_URL}github/validate-token`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${storedToken}` }
       });

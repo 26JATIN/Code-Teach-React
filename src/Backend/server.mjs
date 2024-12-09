@@ -5,12 +5,14 @@ import NodeCache from 'node-cache';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import helmet from 'helmet';
-
-// Load environment variables
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-// Load the backend-specific environment variables
-dotenv.config({ path: '../../.env.backend' });
+// Configure environment variables with proper path resolution
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: join(__dirname, '../../.env') });
 
 const app = express();
 

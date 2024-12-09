@@ -10,7 +10,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 
 // Load the backend-specific environment variables
-dotenv.config({ path: '../../.env.backend' });
+dotenv.config({ path: '../../.env' });
 
 const app = express();
 

@@ -82,8 +82,7 @@ export const useGitHubAuth = () => {
       const response = await fetchWithRetry(endpoints.user, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'User-Agent': 'CodeTeach-App'
+          'Content-Type': 'application/json'
         }
       });
 
@@ -109,49 +108,34 @@ export const useGitHubAuth = () => {
   // Optimized repository management
   const manageRepository = useCallback(async (token) => {
     try {
-      console.log('Starting repository management with token:', token?.substring(0, 10) + '...');
-      
       const userData = await fetchUserInfo(token);
-      if (!userData) {
-        console.error('No user data received');
-        throw new Error('Failed to fetch user data');
-      }
+      if (!userData) throw new Error('Failed to fetch user data');
+
+      // Use Promise.race for timeout
+      const repoCheck = Promise.race([
+        fetch(`https://api.github.com/repos/${userData.login}/${REPO_NAME}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Repository check timeout')), 5000)
+        )
+      ]);
+
+      const repoResponse = await repoCheck;
       
-      console.log('Checking repository existence for user:', userData.login);
-
-      const repoResponse = await fetch(`https://api.github.com/repos/${userData.login}/${REPO_NAME}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-          'User-Agent': 'CodeTeach-App'
-        }
-      });
-
-      console.log('Repository check status:', repoResponse.status);
-
       if (repoResponse.status === 404) {
-        console.log('Repository not found, creating new one');
-        const createResponse = await fetch('https://api.github.com/user/repos', {
+        await fetchWithRetry('https://api.github.com/user/repos', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'User-Agent': 'CodeTeach-App'
           },
           body: JSON.stringify({
             name: REPO_NAME,
             description: 'CodeTeach User Progress Repository',
             private: true,
-            auto_init: true
-          })
+          }),
         });
-
-        if (!createResponse.ok) {
-          const error = await createResponse.json();
-          console.error('Failed to create repository:', error);
-          throw new Error(`Failed to create repository: ${error.message}`);
-        }
       }
 
       setIsAuthenticated(true);
@@ -159,11 +143,11 @@ export const useGitHubAuth = () => {
       setError(null);
       return true;
     } catch (err) {
-      console.error('Repository management error:', err);
-      setError(`Failed to manage repository: ${err.message}`);
+      console.error('GitHub Authentication Error:', err);
+      setError('Failed to authenticate or manage repository');
       return false;
     }
-  }, [fetchUserInfo]);
+  }, [fetchUserInfo, fetchWithRetry]);
 
   // Enhanced checkAuth implementation
   const checkAuth = useCallback(async () => {

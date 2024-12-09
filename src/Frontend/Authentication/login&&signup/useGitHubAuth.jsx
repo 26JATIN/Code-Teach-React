@@ -290,54 +290,55 @@ export const useGitHubAuth = () => {
       });
 
       if (code && state) {
+        setIsLoading(true);
         try {
-          // Test backend connection first
-          const healthCheck = await fetch(`${BACKEND_URL}/health`);
-          if (!healthCheck.ok) {
-            throw new Error('Backend server is not responding');
-          }
+          // Add timeout promise
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timeout')), 10000)
+          );
 
-          const response = await fetch(`${BACKEND_URL}github/oauth/callback`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ code, state }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to exchange code for token');
-          }
+          const response = await Promise.race([
+            fetch(`${BACKEND_URL}github/oauth/callback`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify({ code, state }),
+            }),
+            timeoutPromise
+          ]);
 
           const data = await response.json();
-          console.log('Token exchange response in frontend:', data);
-
-          if (!response.ok || data.error) {
-            throw new Error(data.error || 'Failed to exchange code for token');
-          }
 
           if (data.access_token) {
             localStorage.setItem('githubAccessToken', data.access_token);
+            
+            // Add delay for Safari to handle cookies
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
             const success = await manageRepository(data.access_token);
             if (success) {
-              // Clear URL parameters and redirect
+              // Use replaceState instead of replace for better Safari compatibility
               window.history.replaceState({}, document.title, '/');
-              window.location.replace('/courses');
-            } else {
-              throw new Error('Failed to manage repository');
+              // Force a page reload for Safari
+              if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+                window.location.href = '/courses';
+              } else {
+                window.location.replace('/courses');
+              }
             }
           } else {
             throw new Error('No access token received');
           }
         } catch (err) {
-          console.error('Auth Error Details:', {
-            message: err.message,
-            stack: err.stack,
-          });
-          // setError(`Authentication failed: ${err.message}`);
-          // setTimeout(() => window.location.replace('/'), 3000);
+          console.error('Auth Error:', err);
+          setError(`Authentication failed: ${err.message}`);
+          // Add delay before redirect
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          window.location.href = '/';
+        } finally {
+          setIsLoading(false);
         }
       }
     };

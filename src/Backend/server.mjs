@@ -58,12 +58,18 @@ const authLimiter = rateLimit({
 
 // Move CORS configuration before all other middleware
 const corsOptions = {
-  origin: true, // Allow all origins and validate them in the callback
+  origin: (origin, callback) => {
+    if (!origin || origin === process.env.FRONTEND_URL) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'User-Agent', 'Accept', 'Origin'],
-  exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Origin'],
-  maxAge: 600,
+  allowedHeaders: ['Content-Type', 'Authorization', 'User-Agent', 'Accept', 'Origin', 'Cookie'],
+  exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Origin', 'Access-Control-Allow-Credentials'],
+  maxAge: 86400, // 24 hours
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
@@ -133,7 +139,8 @@ const cookieOptions = {
   secure: true,
   sameSite: 'None',
   path: '/',
-  domain: new URL(process.env.FRONTEND_URL).hostname.replace('www.', '')
+  domain: new URL(process.env.FRONTEND_URL).hostname.replace('www.', ''),
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
 // Add token to blacklist on logout
@@ -162,31 +169,32 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
   }
 
   try {
-    const tokenResponse = await Promise.race([
-      fetch('https://github.com/login/oauth/access_token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          client_id: process.env.GITHUB_CLIENT_ID,
-          client_secret: process.env.GITHUB_CLIENT_SECRET,
-          code,
-          redirect_uri: process.env.GITHUB_REDIRECT_URI,
-          state,
-        }),
+    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: process.env.GITHUB_CLIENT_ID,
+        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        code,
+        redirect_uri: process.env.GITHUB_REDIRECT_URI,
+        state,
       }),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Token request timeout')), 5000)
-      )
-    ]);
+    });
 
     const tokenData = await tokenResponse.json();
 
     if (tokenData.access_token) {
-      cache.set(cacheKey, { access_token: tokenData.access_token });
+      // Set multiple cookies for redundancy
       res.cookie('__vercel_live_token', tokenData.access_token, cookieOptions);
+      res.cookie('github_auth_token', tokenData.access_token, cookieOptions);
+      
+      // Add Cache-Control headers
+      res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
     }
 
     return res.json(tokenData);

@@ -250,7 +250,7 @@ export const useGitHubAuth = () => {
     window.location.href = githubOAuthUrl;
   }, []); // Removed CLIENT_ID and REDIRECT_URI from dependencies
 
-  // Enhanced sign out with backend notification
+  // Enhanced sign out with better cleanup
   const signOut = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -258,7 +258,8 @@ export const useGitHubAuth = () => {
       if (token) {
         await fetch(`${BACKEND_URL}github/logout`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Authorization': `Bearer ${token}` },
+          credentials: 'include'
         });
       }
     } catch (err) {
@@ -272,11 +273,10 @@ export const useGitHubAuth = () => {
       setAccessToken(null);
       setError(null);
       setIsLoading(false);
-      window.location.replace('/');
     }
   }, []);
 
-  // Ensure this useEffect is included once
+  // Modified authentication handling useEffect
   useEffect(() => {
     const handleAuthentication = async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -286,50 +286,47 @@ export const useGitHubAuth = () => {
       if (code && state) {
         setIsLoading(true);
         try {
-          // Clear any previous errors
           setError(null);
-
-          // Detect Safari
           const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-          
-          // Add longer timeout for Safari
-          const timeoutDuration = isSafari ? 15000 : 10000;
-          
-          const response = await fetch(`${BACKEND_URL}github/oauth/callback`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ code, state }),
-          });
+          const timeoutDuration = isSafari ? 20000 : 10000;
+
+          const response = await Promise.race([
+            fetch(`${BACKEND_URL}github/oauth/callback`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ code, state }),
+            }),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Request timeout')), timeoutDuration)
+            )
+          ]);
 
           const data = await response.json();
 
           if (data.access_token) {
-            localStorage.setItem('githubAccessToken', data.access_token);
+            localStorage.setItem(TOKEN_CACHE_KEY, data.access_token);
             
-            // Safari-specific: Wait longer for cookie processing
             if (isSafari) {
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-            
-            const success = await manageRepository(data.access_token);
-            
-            if (success) {
-              // Clear URL parameters first
-              window.history.replaceState({}, document.title, '/');
-              
-              // Safari-specific redirect handling
-              if (isSafari) {
-                // Use session storage to indicate pending redirect
-                sessionStorage.setItem('pendingRedirect', 'true');
-                // Force a clean reload instead of replace
+              // For Safari, do an immediate auth check
+              const authCheck = await fetch('https://api.github.com/user', {
+                headers: {
+                  'Authorization': `Bearer ${data.access_token}`,
+                  'Accept': 'application/vnd.github.v3+json'
+                }
+              });
+
+              if (authCheck.ok) {
+                await manageRepository(data.access_token);
                 window.location.href = '/courses';
-              } else {
-                window.location.replace('/courses');
+                return;
               }
-              return; // Exit early after successful redirect
+            } else {
+              const success = await manageRepository(data.access_token);
+              if (success) {
+                window.location.replace('/courses');
+                return;
+              }
             }
           }
           throw new Error('Authentication failed');
@@ -338,7 +335,7 @@ export const useGitHubAuth = () => {
           setError('Authentication error - please try again');
           
           // Recovery attempt for Safari
-          const token = localStorage.getItem('githubAccessToken');
+          const token = localStorage.getItem(TOKEN_CACHE_KEY);
           if (token) {
             try {
               const success = await manageRepository(token);
@@ -348,26 +345,15 @@ export const useGitHubAuth = () => {
               }
             } catch (recoveryErr) {
               console.error('Recovery attempt failed:', recoveryErr);
+              localStorage.removeItem(TOKEN_CACHE_KEY);
             }
           }
           
-          // Delayed redirect on failure
           setTimeout(() => {
             window.location.href = '/';
           }, 2000);
         } finally {
           setIsLoading(false);
-        }
-      } else if (sessionStorage.getItem('pendingRedirect')) {
-        // Handle pending redirect from Safari
-        sessionStorage.removeItem('pendingRedirect');
-        const token = localStorage.getItem('githubAccessToken');
-        if (token) {
-          try {
-            await manageRepository(token);
-          } catch (err) {
-            console.error('Post-redirect auth error:', err);
-          }
         }
       }
     };
@@ -375,14 +361,25 @@ export const useGitHubAuth = () => {
     handleAuthentication();
   }, [manageRepository]);
 
-  // Add Safari-specific check on component mount
+  // Add Safari-specific check with retry mechanism
   useEffect(() => {
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     if (isSafari) {
-      const token = localStorage.getItem('githubAccessToken');
-      if (token && !isAuthenticated) {
-        manageRepository(token).catch(console.error);
-      }
+      const retryAuth = async (retries = 3) => {
+        const token = localStorage.getItem(TOKEN_CACHE_KEY);
+        if (token && !isAuthenticated) {
+          for (let i = 0; i < retries; i++) {
+            try {
+              const success = await manageRepository(token);
+              if (success) break;
+            } catch (err) {
+              console.error(`Safari auth retry ${i + 1} failed:`, err);
+              await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+            }
+          }
+        }
+      };
+      retryAuth();
     }
   }, [isAuthenticated, manageRepository]);
 

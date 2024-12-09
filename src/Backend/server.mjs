@@ -133,14 +133,16 @@ const checkTokenBlacklist = (req, res, next) => {
   next();
 };
 
-// Update cookie options to work with Chrome
+// Update cookie options for better Safari support
 const cookieOptions = {
   httpOnly: true,
   secure: true,
   sameSite: 'None',
   path: '/',
-  domain: new URL(process.env.FRONTEND_URL).hostname.replace('www.', ''),
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  domain: process.env.NODE_ENV === 'production' 
+    ? new URL(process.env.FRONTEND_URL).hostname.replace('www.', '')
+    : 'localhost',
+  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
 };
 
 // Add token to blacklist on logout
@@ -153,7 +155,7 @@ app.post('/github/logout', async (req, res) => {
   res.json({ success: true });
 });
 
-// Optimized OAuth callback route
+// Optimized OAuth callback route with Safari handling
 app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
   const { code, state } = req.body;
   
@@ -180,25 +182,27 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
     const tokenData = await tokenResponse.json();
 
     if (tokenData.access_token) {
-      // Set both cookies with explicit attributes
-      const cookieString = `__vercel_live_token=${tokenData.access_token}; ${Object.entries(cookieOptions)
-        .map(([key, value]) => `${key}=${value}`)
-        .join('; ')}`;
+      // Set cookies with more reliable attributes for Safari
+      res.cookie('__vercel_live_token', tokenData.access_token, cookieOptions);
+      res.cookie('github_auth_token', tokenData.access_token, cookieOptions);
       
-      res.setHeader('Set-Cookie', [
-        cookieString,
-        `github_auth_token=${tokenData.access_token}; ${Object.entries(cookieOptions)
-          .map(([key, value]) => `${key}=${value}`)
-          .join('; ')}`
-      ]);
-      
-      // Ensure CORS headers are set
+      // Verify token immediately
+      const verifyResponse = await fetch('https://api.github.com/user', {
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!verifyResponse.ok) {
+        throw new Error('Token verification failed');
+      }
+
       res.setHeader('Access-Control-Allow-Credentials', 'true');
       if (req.headers.origin === process.env.FRONTEND_URL) {
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
       }
       
-      // Cache control
       res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
@@ -207,7 +211,7 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
     return res.json(tokenData);
   } catch (error) {
     console.error('Token exchange error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 

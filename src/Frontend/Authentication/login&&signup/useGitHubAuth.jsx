@@ -285,8 +285,9 @@ export const useGitHubAuth = () => {
 
       if (code && state) {
         setIsLoading(true);
+        setError(null); // Clear any existing errors
+        
         try {
-          setError(null);
           const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
           const timeoutDuration = isSafari ? 30000 : 10000;
 
@@ -308,7 +309,6 @@ export const useGitHubAuth = () => {
             localStorage.setItem(TOKEN_CACHE_KEY, data.access_token);
             
             if (isSafari) {
-              // For Safari, do an immediate auth check
               const authCheck = await fetch('https://api.github.com/user', {
                 headers: {
                   'Authorization': `Bearer ${data.access_token}`,
@@ -318,42 +318,59 @@ export const useGitHubAuth = () => {
 
               if (authCheck.ok) {
                 await manageRepository(data.access_token);
+                // Prevent error flash during redirect
+                setIsLoading(true);
                 window.location.href = '/courses';
                 return;
               }
             } else {
               const success = await manageRepository(data.access_token);
               if (success) {
+                // Prevent error flash during redirect
+                setIsLoading(true);
                 window.location.replace('/courses');
                 return;
               }
             }
           }
-          throw new Error('Authentication failed');
+          // Only throw error if we haven't redirected
+          if (document.location.pathname !== '/courses') {
+            throw new Error('Authentication failed');
+          }
         } catch (err) {
-          console.error('Auth Error:', err);
-          setError('Authentication error - please try again');
-          
-          // Recovery attempt for Safari
-          const token = localStorage.getItem(TOKEN_CACHE_KEY);
-          if (token) {
-            try {
-              const success = await manageRepository(token);
-              if (success) {
-                window.location.href = '/courses';
-                return;
+          // Only show error if we're not in the middle of a redirect
+          if (document.location.pathname !== '/courses') {
+            console.error('Auth Error:', err);
+            setError('Authentication error - please try again');
+            
+            // Recovery attempt for Safari
+            const token = localStorage.getItem(TOKEN_CACHE_KEY);
+            if (token) {
+              try {
+                const success = await manageRepository(token);
+                if (success) {
+                  setIsLoading(true);
+                  window.location.href = '/courses';
+                  return;
+                }
+              } catch (recoveryErr) {
+                console.error('Recovery attempt failed:', recoveryErr);
+                localStorage.removeItem(TOKEN_CACHE_KEY);
               }
-            } catch (recoveryErr) {
-              console.error('Recovery attempt failed:', recoveryErr);
-              localStorage.removeItem(TOKEN_CACHE_KEY);
+            }
+            
+            // Only redirect to home if we're not already redirecting to courses
+            if (document.location.pathname !== '/courses') {
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 2000);
             }
           }
-          
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 2000);
         } finally {
-          setIsLoading(false);
+          // Only set loading to false if we're not redirecting
+          if (document.location.pathname !== '/courses') {
+            setIsLoading(false);
+          }
         }
       }
     };

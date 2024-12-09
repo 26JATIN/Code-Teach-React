@@ -264,7 +264,7 @@ export const useGitHubAuth = () => {
             throw new Error('Backend server is not responding');
           }
 
-          const response = await fetch(`${BACKEND_URL}/github/oauth/callback`, {
+          const response = await fetch(`${BACKEND_URL}github/oauth/callback`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

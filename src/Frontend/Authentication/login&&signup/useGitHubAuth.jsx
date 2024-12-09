@@ -35,6 +35,7 @@ export const useGitHubAuth = () => {
         const response = await fetch(url, { 
           ...options, 
           credentials: 'include',
+          mode: 'cors',
           signal: controller.signal,
           headers: {
             ...options.headers,
@@ -44,7 +45,7 @@ export const useGitHubAuth = () => {
         clearTimeout(timeoutId);
         
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({ error: 'Network response was not ok' }));
           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
         return response;
@@ -153,19 +154,20 @@ export const useGitHubAuth = () => {
         return;
       }
 
-      // First check with backend if token is valid
       const validationResponse = await fetch(`${BACKEND_URL}github/validate-token`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${storedToken}` }
+        credentials: 'include',
+        headers: { 
+          'Authorization': `Bearer ${storedToken}`,
+          'Content-Type': 'application/json'
+        }
       });
 
       const { valid } = await validationResponse.json();
-
       if (!valid) {
-        throw new Error('Token is invalid or revoked');
+        throw new Error('Token is invalid');
       }
 
-      // If token is valid, proceed with repository management
       const success = await manageRepository(storedToken);
       if (!success) {
         throw new Error('Repository management failed');

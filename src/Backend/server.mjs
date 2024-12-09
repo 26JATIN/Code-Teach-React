@@ -56,31 +56,48 @@ const authLimiter = rateLimit({
   trustProxy: true
 });
 
-// Enhanced security headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      connectSrc: ["'self'", 'https://api.github.com'],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-    },
-  },
-  crossOriginEmbedderPolicy: true,
-  crossOriginOpenerPolicy: true,
-  crossOriginResourcePolicy: { policy: "same-site" }
-}));
-
-// Optimized CORS
+// Updated CORS configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'https://code-teach.vercel.app',
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      'https://code-teach.vercel.app',
+      'http://localhost:3000'
+    ].filter(Boolean);
+    
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Set-Cookie'],
   maxAge: 600
 };
+
+// Apply CORS before other middleware
 app.use(cors(corsOptions));
+
+// Pre-flight requests
+app.options('*', cors(corsOptions));
+
+// Security headers after CORS
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "same-origin" },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", 'https://api.github.com', process.env.FRONTEND_URL],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  }
+}));
+
 app.use(cookieParser());
 app.use(express.json()); 
 
@@ -169,46 +186,30 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
 
 // Optimized user info endpoint
 app.get('/github/user', checkTokenBlacklist, async (req, res) => {
-  console.log('User info request headers:', req.headers);
   const authHeader = req.headers.authorization;
   
   if (!authHeader) {
     return res.status(401).json({ error: 'No authorization token provided' });
   }
 
-  const cacheKey = `user_${authHeader.slice(-32)}`;  // Only use part of token for key
-  const cachedUser = cache.get(cacheKey);
-  
-  if (cachedUser) {
-    return res.json(cachedUser);
-  }
-
   try {
-    const userResponse = await Promise.race([
-      fetch('https://api.github.com/user', {
-        headers: { 
-          'Authorization': authHeader,
-          'Accept': 'application/json',
-          'User-Agent': 'CodeTeach-App'
-        }
-      }),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('User info request timeout')), 5000)
-      )
-    ]);
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: { 
+        'Authorization': authHeader,
+        'Accept': 'application/json',
+        'User-Agent': 'CodeTeach-App'
+      }
+    });
 
     if (!userResponse.ok) {
-      const errorData = await userResponse.json();
-      console.error('GitHub API error:', errorData);
-      throw new Error(errorData.message || 'GitHub API error');
+      throw new Error(`GitHub API error: ${userResponse.status}`);
     }
 
     const userData = await userResponse.json();
-    cache.set(cacheKey, userData);
     res.json(userData);
   } catch (error) {
     console.error('Error fetching user info:', error);
-    res.status(500).json({ error: error.message || 'Failed to fetch user information' });
+    res.status(500).json({ error: error.message });
   }
 });
 

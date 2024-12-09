@@ -283,68 +283,108 @@ export const useGitHubAuth = () => {
       const code = urlParams.get('code');
       const state = urlParams.get('state');
 
-      console.log('Checking auth params:', { 
-        code: code?.slice(0, 5), 
-        state: state?.slice(0, 5),
-        backendUrl: BACKEND_URL 
-      });
-
       if (code && state) {
         setIsLoading(true);
         try {
-          // Add timeout promise
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Request timeout')), 10000)
-          );
+          // Clear any previous errors
+          setError(null);
 
-          const response = await Promise.race([
-            fetch(`${BACKEND_URL}github/oauth/callback`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-              body: JSON.stringify({ code, state }),
-            }),
-            timeoutPromise
-          ]);
+          // Detect Safari
+          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+          
+          // Add longer timeout for Safari
+          const timeoutDuration = isSafari ? 15000 : 10000;
+          
+          const response = await fetch(`${BACKEND_URL}github/oauth/callback`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ code, state }),
+          });
 
           const data = await response.json();
 
           if (data.access_token) {
             localStorage.setItem('githubAccessToken', data.access_token);
             
-            // Add delay for Safari to handle cookies
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Safari-specific: Wait longer for cookie processing
+            if (isSafari) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
             
             const success = await manageRepository(data.access_token);
+            
             if (success) {
-              // Use replaceState instead of replace for better Safari compatibility
+              // Clear URL parameters first
               window.history.replaceState({}, document.title, '/');
-              // Force a page reload for Safari
-              if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+              
+              // Safari-specific redirect handling
+              if (isSafari) {
+                // Use session storage to indicate pending redirect
+                sessionStorage.setItem('pendingRedirect', 'true');
+                // Force a clean reload instead of replace
                 window.location.href = '/courses';
               } else {
                 window.location.replace('/courses');
               }
+              return; // Exit early after successful redirect
             }
-          } else {
-            throw new Error('No access token received');
           }
+          throw new Error('Authentication failed');
         } catch (err) {
           console.error('Auth Error:', err);
-          setError(`Authentication failed: ${err.message}`);
-          // Add delay before redirect
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          window.location.href = '/';
+          setError('Authentication error - please try again');
+          
+          // Recovery attempt for Safari
+          const token = localStorage.getItem('githubAccessToken');
+          if (token) {
+            try {
+              const success = await manageRepository(token);
+              if (success) {
+                window.location.href = '/courses';
+                return;
+              }
+            } catch (recoveryErr) {
+              console.error('Recovery attempt failed:', recoveryErr);
+            }
+          }
+          
+          // Delayed redirect on failure
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000);
         } finally {
           setIsLoading(false);
+        }
+      } else if (sessionStorage.getItem('pendingRedirect')) {
+        // Handle pending redirect from Safari
+        sessionStorage.removeItem('pendingRedirect');
+        const token = localStorage.getItem('githubAccessToken');
+        if (token) {
+          try {
+            await manageRepository(token);
+          } catch (err) {
+            console.error('Post-redirect auth error:', err);
+          }
         }
       }
     };
 
     handleAuthentication();
-  }, [manageRepository]); // Removed BACKEND_URL from dependencies
+  }, [manageRepository]);
+
+  // Add Safari-specific check on component mount
+  useEffect(() => {
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if (isSafari) {
+      const token = localStorage.getItem('githubAccessToken');
+      if (token && !isAuthenticated) {
+        manageRepository(token).catch(console.error);
+      }
+    }
+  }, [isAuthenticated, manageRepository]);
 
   return {
     isAuthenticated,

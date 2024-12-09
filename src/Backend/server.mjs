@@ -161,13 +161,6 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
     return res.status(400).json({ error: 'Missing required parameters' });
   }
 
-  const cacheKey = `oauth_${code}_${state}`;
-  const cachedResponse = cache.get(cacheKey);
-  
-  if (cachedResponse) {
-    return res.json(cachedResponse);
-  }
-
   try {
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
@@ -187,11 +180,25 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
     const tokenData = await tokenResponse.json();
 
     if (tokenData.access_token) {
-      // Set multiple cookies for redundancy
-      res.cookie('__vercel_live_token', tokenData.access_token, cookieOptions);
-      res.cookie('github_auth_token', tokenData.access_token, cookieOptions);
+      // Set both cookies with explicit attributes
+      const cookieString = `__vercel_live_token=${tokenData.access_token}; ${Object.entries(cookieOptions)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('; ')}`;
       
-      // Add Cache-Control headers
+      res.setHeader('Set-Cookie', [
+        cookieString,
+        `github_auth_token=${tokenData.access_token}; ${Object.entries(cookieOptions)
+          .map(([key, value]) => `${key}=${value}`)
+          .join('; ')}`
+      ]);
+      
+      // Ensure CORS headers are set
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      if (req.headers.origin === process.env.FRONTEND_URL) {
+        res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+      }
+      
+      // Cache control
       res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
@@ -199,7 +206,7 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
 
     return res.json(tokenData);
   } catch (error) {
-    console.error('Error during token exchange:', error);
+    console.error('Token exchange error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

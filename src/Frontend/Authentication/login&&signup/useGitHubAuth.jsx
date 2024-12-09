@@ -20,8 +20,8 @@ export const useGitHubAuth = () => {
   // Memoize API endpoints
   const endpoints = useMemo(() => ({
     user: `${BACKEND_URL}/github/user`,
-    oauth: `${BACKEND_URL}/github/oauth/callback`,
-    health: `${BACKEND_URL}/health`
+    oauth: `${BACKEND_URL}github/oauth/callback`,
+    health: `${BACKEND_URL}health`
   }), []);
 
   // Enhanced request retry mechanism

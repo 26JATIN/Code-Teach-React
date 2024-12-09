@@ -67,6 +67,11 @@ export const useGitHubAuth = () => {
 
   // Optimized user info fetching with improved caching
   const fetchUserInfo = useCallback(async (token) => {
+    if (!token) {
+      console.error('No token provided to fetchUserInfo');
+      return null;
+    }
+
     console.log('Fetching user info with token:', token?.substring(0, 10) + '...');
     const cacheKey = `user_${token}`;
     try {
@@ -79,17 +84,19 @@ export const useGitHubAuth = () => {
         }
       }
 
-      const response = await fetchWithRetry(endpoints.user, {
+      // Try GitHub API directly first
+      const response = await fetch('https://api.github.com/user', {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Accept': 'application/vnd.github.v3+json'
         }
       });
 
-      const userData = await response.json();
-      if (!userData || userData.error) {
-        throw new Error(userData.error || 'Invalid user data received');
+      if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status}`);
       }
+
+      const userData = await response.json();
       
       sessionStorage.setItem(cacheKey, JSON.stringify({
         data: userData,
@@ -103,7 +110,7 @@ export const useGitHubAuth = () => {
       setError(`Failed to retrieve user information: ${err.message}`);
       return null;
     }
-  }, [endpoints.user, fetchWithRetry]);
+  }, []);
 
   // Optimized repository management
   const manageRepository = useCallback(async (token) => {
@@ -155,41 +162,40 @@ export const useGitHubAuth = () => {
     try {
       const storedToken = localStorage.getItem(TOKEN_CACHE_KEY);
       if (!storedToken) {
-        setIsAuthenticated(false);
-        setUser(null);
-        return;
+        throw new Error('No token found');
       }
 
-      const validationResponse = await fetchWithRetry(`${BACKEND_URL}github/validate-token`, {
-        method: 'POST',
-        headers: { 
+      // Validate token directly with GitHub API
+      const userResponse = await fetch('https://api.github.com/user', {
+        headers: {
           'Authorization': `Bearer ${storedToken}`,
-          'Content-Type': 'application/json'
+          'Accept': 'application/vnd.github.v3+json'
         }
       });
 
-      const { valid } = await validationResponse.json();
-      if (!valid) {
-        throw new Error('Token is invalid');
+      if (!userResponse.ok) {
+        throw new Error('Invalid token');
       }
 
-      const success = await manageRepository(storedToken);
-      if (!success) {
-        throw new Error('Repository management failed');
-      }
+      const userData = await userResponse.json();
+      setUser(userData);
+      setAccessToken(storedToken);
+      setIsAuthenticated(true);
+
+      // Check repository after successful authentication
+      await manageRepository(storedToken);
 
     } catch (err) {
       console.error('Auth check failed:', err);
       localStorage.removeItem(TOKEN_CACHE_KEY);
-      sessionStorage.clear(); // Clear all session data
+      sessionStorage.clear();
       setIsAuthenticated(false);
       setUser(null);
       setAccessToken(null);
-      window.location.replace('/'); // Redirect to home page on auth failure
     } finally {
       setIsLoading(false);
     }
-  }, [fetchWithRetry, BACKEND_URL, manageRepository]);
+  }, [manageRepository]);
 
   // Modified useEffect to run checkAuth immediately and on focus
   useEffect(() => {

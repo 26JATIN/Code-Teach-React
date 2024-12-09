@@ -3,7 +3,7 @@ import { useTheme } from './ThemeProvider';
 import { Moon, Sun, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, Link } from 'react-router-dom';
-import GitHubAuthButton from '../../Authentication/components/GitHubAuthButton';
+import GitHubAuthButton from '../../../Authentication/components/GitHubAuthButton';
 // Memoize menu items to prevent unnecessary re-renders
 const MENU_ITEMS = [
   { name: 'Home', href: '/' },

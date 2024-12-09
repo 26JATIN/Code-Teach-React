@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useGitHubAuth } from './Frontend/pages/Authentication/login&&signup/useGitHubAuth';
+import { useGitHubAuth } from './Frontend/Authentication/login&&signup/useGitHubAuth';
 
 // Lazy load the components
 const Home = lazy(() => import('./Frontend/pages/home/homepage'));

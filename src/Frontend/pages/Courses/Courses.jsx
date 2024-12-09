@@ -4,7 +4,7 @@ import { Book, Code, Video, FileText, Eye, LogIn, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../home/components/Header';
 import { ThemeProvider } from '../home/components/ThemeProvider';
-import { useGitHubAuth } from '../Authentication/login&&signup/useGitHubAuth';
+import { useGitHubAuth } from '../../Authentication/login&&signup/useGitHubAuth';
 
 // Memoized Courses Data
 const COURSES = [

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Github, Loader } from 'lucide-react';
 import { useGitHubAuth } from '../login&&signup/useGitHubAuth';
-import { ThemeProvider } from '../../home/components/ThemeProvider';
+import { ThemeProvider } from '../../pages/home/components/ThemeProvider';
 
 const GitHubAuthButton = () => {
   const {

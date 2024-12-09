@@ -400,6 +400,44 @@ export const useGitHubAuth = () => {
     }
   }, [isAuthenticated, manageRepository]);
 
+  // Add periodic token validation
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken) return;
+
+    const validateToken = async () => {
+      try {
+        const response = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (!response.ok) {
+          console.log('Token validation failed, logging out');
+          await signOut();
+          window.location.reload();
+        }
+      } catch (err) {
+        console.error('Token validation error:', err);
+        await signOut();
+        window.location.reload();
+      }
+    };
+
+    // Check token validity every minute
+    const intervalId = setInterval(validateToken, 60000);
+    
+    // Also validate on tab focus
+    const handleFocus = () => validateToken();
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [isAuthenticated, accessToken, signOut]);
+
   return {
     isAuthenticated,
     user,

@@ -124,11 +124,12 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Middleware to check token blacklist
-const checkTokenBlacklist = (req, res, next) => {
+// Update token blacklist middleware
+const checkTokenBlacklist = async (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (token && tokenBlacklist.get(token)) {
-    return res.status(401).json({ error: 'Token is revoked' });
+    res.status(401).json({ error: 'Token is revoked', tokenRevoked: true });
+    return;
   }
   next();
 };
@@ -145,12 +146,27 @@ const cookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
 };
 
-// Add token to blacklist on logout
+// Enhanced logout endpoint
 app.post('/github/logout', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (token) {
     tokenBlacklist.set(token, true);
     res.clearCookie('__vercel_live_token', cookieOptions);
+    res.clearCookie('github_auth_token', cookieOptions);
+    
+    // Invalidate the token on GitHub
+    try {
+      await fetch('https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`${process.env.GITHUB_CLIENT_ID}:${process.env.GITHUB_CLIENT_SECRET}`).toString('base64')}`,
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({ access_token: token })
+      });
+    } catch (error) {
+      console.error('Error revoking token:', error);
+    }
   }
   res.json({ success: true });
 });

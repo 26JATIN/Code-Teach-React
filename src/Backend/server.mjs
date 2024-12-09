@@ -151,12 +151,10 @@ app.post('/github/logout', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (token) {
     tokenBlacklist.set(token, true);
-    res.clearCookie('__vercel_live_token', cookieOptions);
-    res.clearCookie('github_auth_token', cookieOptions);
     
-    // Invalidate the token on GitHub
+    // Revoke token on GitHub
     try {
-      await fetch('https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token', {
+      await fetch(`https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Basic ${Buffer.from(`${process.env.GITHUB_CLIENT_ID}:${process.env.GITHUB_CLIENT_SECRET}`).toString('base64')}`,
@@ -168,6 +166,9 @@ app.post('/github/logout', async (req, res) => {
       console.error('Error revoking token:', error);
     }
   }
+
+  res.clearCookie('__vercel_live_token', cookieOptions);
+  res.clearCookie('github_auth_token', cookieOptions);
   res.json({ success: true });
 });
 
@@ -269,7 +270,7 @@ app.get('/github/user', checkTokenBlacklist, async (req, res) => {
   }
 });
 
-// Add token validation endpoint
+// Enhance token validation endpoint
 app.post('/github/validate-token', checkTokenBlacklist, async (req, res) => {
   const authHeader = req.headers.authorization;
   
@@ -277,12 +278,32 @@ app.post('/github/validate-token', checkTokenBlacklist, async (req, res) => {
     return res.status(401).json({ valid: false });
   }
 
+  const token = authHeader.split(' ')[1];
+
   try {
-    const response = await fetch('https://api.github.com/user', {
-      headers: { 'Authorization': authHeader }
+    // Check GitHub token validity
+    const githubResponse = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': `Bearer ${token}` }
     });
 
-    if (response.status === 401) {
+    if (!githubResponse.ok) {
+      // Add token to blacklist if it's invalid
+      tokenBlacklist.set(token, true);
+      return res.json({ valid: false });
+    }
+
+    // Additional check with GitHub OAuth app
+    const appCheckResponse = await fetch(`https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${Buffer.from(`${process.env.GITHUB_CLIENT_ID}:${process.env.GITHUB_CLIENT_SECRET}`).toString('base64')}`,
+        'Accept': 'application/vnd.github.v3+json'
+      },
+      body: JSON.stringify({ access_token: token })
+    });
+
+    if (!appCheckResponse.ok) {
+      tokenBlacklist.set(token, true);
       return res.json({ valid: false });
     }
 

@@ -400,7 +400,7 @@ export const useGitHubAuth = () => {
     }
   }, [isAuthenticated, manageRepository]);
 
-  // Add periodic token validation
+  // Modify periodic token validation
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return;
 
@@ -416,19 +416,38 @@ export const useGitHubAuth = () => {
         if (!response.ok) {
           console.log('Token validation failed, logging out');
           await signOut();
-          window.location.reload();
+          window.location.href = '/';
+          return;
+        }
+
+        // Additional check with backend
+        const backendValidation = await fetch(`${BACKEND_URL}github/validate-token`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          credentials: 'include'
+        });
+
+        const validationData = await backendValidation.json();
+        if (!validationData.valid) {
+          console.log('Token invalidated by backend, logging out');
+          await signOut();
+          window.location.href = '/';
         }
       } catch (err) {
         console.error('Token validation error:', err);
         await signOut();
-        window.location.reload();
+        window.location.href = '/';
       }
     };
 
-    // Check token validity every minute
-    const intervalId = setInterval(validateToken, 60000);
+    // Check token validity every 30 seconds
+    const intervalId = setInterval(validateToken, 30000);
     
-    // Also validate on tab focus
+    // Validate on mount and tab focus
+    validateToken();
+    
     const handleFocus = () => validateToken();
     window.addEventListener('focus', handleFocus);
 

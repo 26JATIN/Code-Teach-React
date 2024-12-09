@@ -406,25 +406,29 @@ export const useGitHubAuth = () => {
 
     const validateToken = async () => {
       try {
-        // Parallel validation requests for faster response
+        // Use faster validation for all browsers
         const [githubResponse, backendValidation] = await Promise.all([
           fetch('https://api.github.com/user', {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
               'Accept': 'application/vnd.github.v3+json'
-            }
+            },
+            // Add timeout for faster error detection
+            signal: AbortSignal.timeout(3000)
           }),
           fetch(`${BACKEND_URL}github/validate-token`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${accessToken}`,
             },
-            credentials: 'include'
+            credentials: 'include',
+            // Add timeout for faster error detection
+            signal: AbortSignal.timeout(3000)
           })
         ]);
 
+        // Fast-fail if GitHub request fails
         if (!githubResponse.ok) {
-          console.log('Token invalid or revoked, logging out');
           await signOut();
           window.location.href = '/';
           return;
@@ -432,14 +436,15 @@ export const useGitHubAuth = () => {
 
         const validationData = await backendValidation.json();
         if (!validationData.valid || validationData.revoked) {
-          console.log('Token invalidated or revoked, logging out');
           await signOut();
           window.location.href = '/';
           return;
         }
       } catch (err) {
-        console.error('Token validation error:', err);
-        // Only logout on specific errors, not network issues
+        if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+          console.log('Validation timeout, will retry');
+          return;
+        }
         if (err.message.includes('401') || err.message.includes('403')) {
           await signOut();
           window.location.href = '/';
@@ -447,24 +452,16 @@ export const useGitHubAuth = () => {
       }
     };
 
-    // More frequent checks for Safari/Mac
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    const isMac = /Mac/i.test(navigator.platform);
-    const intervalTime = (isSafari || isMac) ? 5000 : 30000; // 5 seconds for Safari/Mac
-
-    validateToken(); // Initial validation
+    // Use same interval for all browsers
+    const intervalTime = 5000; // 5 seconds for all browsers
+    validateToken();
     const intervalId = setInterval(validateToken, intervalTime);
     
-    // Immediate validation on focus for Safari/Mac
-    const handleFocus = () => {
-      if (isSafari || isMac) {
-        validateToken();
-      }
-    };
-    
+    // Validate on focus for all browsers
+    const handleFocus = () => validateToken();
     window.addEventListener('focus', handleFocus);
     window.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && (isSafari || isMac)) {
+      if (document.visibilityState === 'visible') {
         validateToken();
       }
     });

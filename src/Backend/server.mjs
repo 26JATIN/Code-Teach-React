@@ -58,15 +58,33 @@ const authLimiter = rateLimit({
 
 // Move CORS configuration before all other middleware
 const corsOptions = {
-  origin: process.env.FRONTEND_URL,
+  origin: true, // Allow all origins and validate them in the callback
   credentials: true,
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Set-Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'User-Agent', 'Accept', 'Origin'],
+  exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Origin'],
+  maxAge: 600,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// Custom CORS handling
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin === process.env.FRONTEND_URL) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  next();
+}, cors(corsOptions));
+
+// Pre-flight requests
+app.options('*', (req, res) => {
+  const origin = req.headers.origin;
+  if (origin === process.env.FRONTEND_URL) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.status(204).end();
+});
 
 // Disable helmet's default CORS handling
 app.use(helmet({
@@ -109,15 +127,16 @@ const checkTokenBlacklist = (req, res, next) => {
   next();
 };
 
-// Add token to blacklist on logout
+// Update cookie options to work with Chrome
 const cookieOptions = {
   httpOnly: true,
   secure: true,
   sameSite: 'None',
-  domain: new URL(process.env.FRONTEND_URL).hostname,
   path: '/',
+  domain: new URL(process.env.FRONTEND_URL).hostname.replace('www.', '')
 };
 
+// Add token to blacklist on logout
 app.post('/github/logout', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (token) {
@@ -179,15 +198,18 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
 
 // Optimized user info endpoint
 app.get('/github/user', checkTokenBlacklist, async (req, res) => {
+  console.log('Received user info request');
   const authHeader = req.headers.authorization;
   
   if (!authHeader) {
+    console.log('No authorization header provided');
     return res.status(401).json({ error: 'No authorization token provided' });
   }
 
   try {
+    console.log('Fetching user info from GitHub');
     const userResponse = await fetch('https://api.github.com/user', {
-      headers: { 
+      headers: {
         'Authorization': authHeader,
         'Accept': 'application/json',
         'User-Agent': 'CodeTeach-App'
@@ -195,14 +217,20 @@ app.get('/github/user', checkTokenBlacklist, async (req, res) => {
     });
 
     if (!userResponse.ok) {
-      throw new Error(`GitHub API error: ${userResponse.status}`);
+      const errorData = await userResponse.json();
+      console.error('GitHub API error:', errorData);
+      throw new Error(errorData.message || `GitHub API error: ${userResponse.status}`);
     }
 
     const userData = await userResponse.json();
+    console.log('Successfully fetched user data');
     res.json(userData);
   } catch (error) {
     console.error('Error fetching user info:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

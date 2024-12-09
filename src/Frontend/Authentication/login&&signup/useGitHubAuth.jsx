@@ -41,12 +41,17 @@ export const useGitHubAuth = () => {
             ...options.headers,
             'Accept': 'application/json',
             'Origin': window.location.origin,
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
           }
         };
 
+        // Add cache-busting parameter for Chrome
+        const urlWithCache = url + (url.includes('?') ? '&' : '?') + '_=' + Date.now();
+
         console.log('Fetch attempt', i + 1, 'to', url, 'with options:', finalOptions);
         
-        const response = await fetch(url, finalOptions);
+        const response = await fetch(urlWithCache, finalOptions);
         clearTimeout(timeoutId);
         
         if (!response.ok) {
@@ -301,11 +306,15 @@ export const useGitHubAuth = () => {
 
       if (code && state) {
         try {
-          // Test backend connection first
-          const healthCheck = await fetch(`${BACKEND_URL}/health`);
-          if (!healthCheck.ok) {
-            throw new Error('Backend server is not responding');
-          }
+          // Test backend connection first with credentials
+          const healthCheck = await fetch(`${BACKEND_URL}/health`, {
+            credentials: 'include',
+            mode: 'cors',
+            headers: {
+              'Accept': 'application/json',
+              'Origin': window.location.origin
+            }
+          });
 
           const response = await fetch(`${BACKEND_URL}github/oauth/callback`, {
             method: 'POST',

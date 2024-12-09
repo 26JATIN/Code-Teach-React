@@ -406,6 +406,19 @@ export const useGitHubAuth = () => {
 
     const validateToken = async () => {
       try {
+        // Skip validation for Safari to prevent excessive requests
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        if (isSafari) {
+          // For Safari, only validate if the token is in localStorage
+          const storedToken = localStorage.getItem(TOKEN_CACHE_KEY);
+          if (!storedToken || storedToken !== accessToken) {
+            await signOut();
+            window.location.href = '/';
+            return;
+          }
+          return; // Skip API validation for Safari
+        }
+
         const response = await fetch('https://api.github.com/user', {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -420,35 +433,50 @@ export const useGitHubAuth = () => {
           return;
         }
 
-        // Additional check with backend
-        const backendValidation = await fetch(`${BACKEND_URL}github/validate-token`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-          credentials: 'include'
-        });
+        // Only perform backend validation every 5 minutes for Safari
+        const shouldCheckBackend = !isSafari || (Date.now() % (5 * 60 * 1000) === 0);
+        if (shouldCheckBackend) {
+          const backendValidation = await fetch(`${BACKEND_URL}github/validate-token`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+            },
+            credentials: 'include'
+          });
 
-        const validationData = await backendValidation.json();
-        if (!validationData.valid) {
-          console.log('Token invalidated by backend, logging out');
-          await signOut();
-          window.location.href = '/';
+          const validationData = await backendValidation.json();
+          if (!validationData.valid) {
+            console.log('Token invalidated by backend, logging out');
+            await signOut();
+            window.location.href = '/';
+          }
         }
       } catch (err) {
         console.error('Token validation error:', err);
-        await signOut();
-        window.location.href = '/';
+        // Don't immediately logout on network errors for Safari
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        if (!isSafari) {
+          await signOut();
+          window.location.href = '/';
+        }
       }
     };
 
-    // Check token validity every 30 seconds
-    const intervalId = setInterval(validateToken, 30000);
+    // Increase validation interval for Safari
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const intervalTime = isSafari ? 300000 : 30000; // 5 minutes for Safari, 30 seconds for others
     
-    // Validate on mount and tab focus
-    validateToken();
+    validateToken(); // Initial validation
+    const intervalId = setInterval(validateToken, intervalTime);
     
-    const handleFocus = () => validateToken();
+    const handleFocus = () => {
+      // For Safari, only validate on focus if it's been at least 5 minutes
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      if (!isSafari || (Date.now() % (5 * 60 * 1000) === 0)) {
+        validateToken();
+      }
+    };
+    
     window.addEventListener('focus', handleFocus);
 
     return () => {

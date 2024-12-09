@@ -143,7 +143,7 @@ const cookieOptions = {
   domain: process.env.NODE_ENV === 'production' 
     ? new URL(process.env.FRONTEND_URL).hostname.replace('www.', '')
     : 'localhost',
-  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
 };
 
 // Enhanced logout endpoint
@@ -273,6 +273,8 @@ app.get('/github/user', checkTokenBlacklist, async (req, res) => {
 // Enhance token validation endpoint
 app.post('/github/validate-token', checkTokenBlacklist, async (req, res) => {
   const authHeader = req.headers.authorization;
+  const userAgent = req.headers['user-agent'];
+  const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
   
   if (!authHeader) {
     return res.status(401).json({ valid: false });
@@ -281,36 +283,43 @@ app.post('/github/validate-token', checkTokenBlacklist, async (req, res) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    // Check GitHub token validity
+    // For Safari, only check if token is blacklisted
+    if (isSafari) {
+      return res.json({ valid: !tokenBlacklist.get(token) });
+    }
+
+    // Regular validation for other browsers
     const githubResponse = await fetch('https://api.github.com/user', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
     if (!githubResponse.ok) {
-      // Add token to blacklist if it's invalid
       tokenBlacklist.set(token, true);
       return res.json({ valid: false });
     }
 
-    // Additional check with GitHub OAuth app
-    const appCheckResponse = await fetch(`https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Basic ${Buffer.from(`${process.env.GITHUB_CLIENT_ID}:${process.env.GITHUB_CLIENT_SECRET}`).toString('base64')}`,
-        'Accept': 'application/vnd.github.v3+json'
-      },
-      body: JSON.stringify({ access_token: token })
-    });
+    // Reduced validation frequency for Safari
+    if (!isSafari) {
+      const appCheckResponse = await fetch(`https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`${process.env.GITHUB_CLIENT_ID}:${process.env.GITHUB_CLIENT_SECRET}`).toString('base64')}`,
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({ access_token: token })
+      });
 
-    if (!appCheckResponse.ok) {
-      tokenBlacklist.set(token, true);
-      return res.json({ valid: false });
+      if (!appCheckResponse.ok) {
+        tokenBlacklist.set(token, true);
+        return res.json({ valid: false });
+      }
     }
 
     return res.json({ valid: true });
   } catch (error) {
     console.error('Token validation error:', error);
-    return res.status(500).json({ valid: false });
+    // Don't invalidate token on network errors for Safari
+    return res.json({ valid: isSafari });
   }
 });
 

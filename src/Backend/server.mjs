@@ -5,6 +5,7 @@ import NodeCache from 'node-cache';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 
 // Load environment variables
 import dotenv from 'dotenv';
@@ -13,6 +14,9 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '../../.env' });
 
 const app = express();
+
+// Enable trust proxy before other middleware
+app.set('trust proxy', 1);
 
 // Enhanced cache configuration
 const cache = new NodeCache({ 
@@ -38,14 +42,18 @@ const limiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: true
+  skipSuccessfulRequests: true,
+  // Add trusted proxy configuration
+  trustProxy: true
 });
 
 // Endpoint-specific rate limiters
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30, // 30 requests per 15 minutes for auth endpoints
-  message: { error: 'Too many authentication attempts, please try again later' }
+  message: { error: 'Too many authentication attempts, please try again later' },
+  // Add trusted proxy configuration
+  trustProxy: true
 });
 
 // Enhanced security headers
@@ -65,14 +73,15 @@ app.use(helmet({
 
 // Optimized CORS
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'https://code-teach.vercel.app',
   credentials: true,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Set-Cookie'],
   maxAge: 600
 };
 app.use(cors(corsOptions));
-
+app.use(cookieParser());
 app.use(express.json()); 
 
 // Validate required environment variables
@@ -103,6 +112,7 @@ app.post('/github/logout', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (token) {
     tokenBlacklist.set(token, true);
+    res.clearCookie('__vercel_live_token', { sameSite: 'None', secure: true, httpOnly: true });
   }
   res.json({ success: true });
 });
@@ -147,6 +157,7 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
 
     if (tokenData.access_token) {
       cache.set(cacheKey, { access_token: tokenData.access_token });
+      res.cookie('__vercel_live_token', tokenData.access_token, { sameSite: 'None', secure: true, httpOnly: true });
     }
 
     return res.json(tokenData);
@@ -158,6 +169,7 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
 
 // Optimized user info endpoint
 app.get('/github/user', checkTokenBlacklist, async (req, res) => {
+  console.log('User info request headers:', req.headers);
   const authHeader = req.headers.authorization;
   
   if (!authHeader) {
@@ -174,19 +186,29 @@ app.get('/github/user', checkTokenBlacklist, async (req, res) => {
   try {
     const userResponse = await Promise.race([
       fetch('https://api.github.com/user', {
-        headers: { 'Authorization': authHeader }
+        headers: { 
+          'Authorization': authHeader,
+          'Accept': 'application/json',
+          'User-Agent': 'CodeTeach-App'
+        }
       }),
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('User info request timeout')), 5000)
       )
     ]);
 
+    if (!userResponse.ok) {
+      const errorData = await userResponse.json();
+      console.error('GitHub API error:', errorData);
+      throw new Error(errorData.message || 'GitHub API error');
+    }
+
     const userData = await userResponse.json();
     cache.set(cacheKey, userData);
     res.json(userData);
   } catch (error) {
     console.error('Error fetching user info:', error);
-    res.status(500).json({ error: 'Failed to fetch user information' });
+    res.status(500).json({ error: error.message || 'Failed to fetch user information' });
   }
 });
 
@@ -226,7 +248,7 @@ app.use((err, req, res, next) => {
 // Start the server
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on https://localhost:${PORT}`);
   console.log(`Connected to frontend: ${process.env.FRONTEND_URL}`);
 });
 

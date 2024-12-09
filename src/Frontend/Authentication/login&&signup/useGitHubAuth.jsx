@@ -32,12 +32,24 @@ export const useGitHubAuth = () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         
-        const response = await fetch(url, { ...options, signal: controller.signal });
+        const response = await fetch(url, { 
+          ...options, 
+          credentials: 'include',
+          signal: controller.signal,
+          headers: {
+            ...options.headers,
+            'Accept': 'application/json',
+          }
+        });
         clearTimeout(timeoutId);
         
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
         return response;
       } catch (error) {
+        console.error(`Attempt ${i + 1} failed:`, error);
         lastError = error;
         if (i === maxRetries - 1) break;
         await new Promise(resolve => setTimeout(resolve, delayMs * Math.pow(2, i)));
@@ -48,6 +60,7 @@ export const useGitHubAuth = () => {
 
   // Optimized user info fetching with improved caching
   const fetchUserInfo = useCallback(async (token) => {
+    console.log('Fetching user info with token:', token?.substring(0, 10) + '...');
     const cacheKey = `user_${token}`;
     try {
       const cachedData = sessionStorage.getItem(cacheKey);
@@ -60,10 +73,16 @@ export const useGitHubAuth = () => {
       }
 
       const response = await fetchWithRetry(endpoints.user, {
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
 
       const userData = await response.json();
+      if (!userData || userData.error) {
+        throw new Error(userData.error || 'Invalid user data received');
+      }
       
       sessionStorage.setItem(cacheKey, JSON.stringify({
         data: userData,
@@ -73,7 +92,8 @@ export const useGitHubAuth = () => {
       setUser(userData);
       return userData;
     } catch (err) {
-      setError('Failed to retrieve user information');
+      console.error('User info fetch error:', err);
+      setError(`Failed to retrieve user information: ${err.message}`);
       return null;
     }
   }, [endpoints.user, fetchWithRetry]);

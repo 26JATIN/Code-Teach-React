@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';  // Remove useMemo since we won't need it
 
 // Environment variables
 const CLIENT_ID = process.env.REACT_APP_GITHUB_CLIENT_ID;
@@ -9,7 +9,6 @@ const REPO_NAME = 'codeteach';
 // Cache constants
 const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes (shortened from 30 minutes for better performance)
 const TOKEN_CACHE_KEY = 'githubAccessToken';
-const REPO_CACHE_KEY = 'repo_status';
 const PROGRESS_CACHE_KEY = 'course_progress';
 
 export const useGitHubAuth = () => {
@@ -21,101 +20,6 @@ export const useGitHubAuth = () => {
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [isRepoOperationInProgress, setIsRepoOperationInProgress] = useState(false);
   const operationQueue = useRef([]);
-
-  // Memoize API endpoints
-  const endpoints = useMemo(() => ({
-    user: `${BACKEND_URL}github/user`,
-    oauth: `${BACKEND_URL}github/oauth/callback`,
-    health: `${BACKEND_URL}health`
-  }), []);
-
-  // Enhanced request retry mechanism
-  const fetchWithRetry = useCallback(async (url, options, maxRetries = 3, delayMs = 1000) => {
-    let lastError;
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const finalOptions = {
-          ...options,
-          credentials: 'include',
-          mode: 'cors',
-          signal: controller.signal,
-          headers: {
-            ...options.headers,
-            'Accept': 'application/json',
-            'Origin': window.location.origin,
-          }
-        };
-
-        console.log('Fetch attempt', i + 1, 'to', url, 'with options:', finalOptions);
-        
-        const response = await fetch(url, finalOptions);
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: `HTTP error! status: ${response.status}` }));
-          console.error('Response error:', errorData);
-          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-        }
-        return response;
-      } catch (error) {
-        console.error(`Attempt ${i + 1} failed:`, error);
-        lastError = error;
-        if (i === maxRetries - 1) break;
-        await new Promise(resolve => setTimeout(resolve, delayMs * Math.pow(2, i)));
-      }
-    }
-    throw lastError;
-  }, []);
-
-  // Optimized user info fetching with improved caching
-  const fetchUserInfo = useCallback(async (token) => {
-    if (!token) {
-      console.error('No token provided to fetchUserInfo');
-      return null;
-    }
-
-    console.log('Fetching user info with token:', token?.substring(0, 10) + '...');
-    const cacheKey = `user_${token}`;
-    try {
-      const cachedData = sessionStorage.getItem(cacheKey);
-      if (cachedData) {
-        const { data, timestamp } = JSON.parse(cachedData);
-        if (Date.now() - timestamp < CACHE_DURATION) {
-          setUser(data);
-          return data;
-        }
-      }
-
-      // Try GitHub API directly first
-      const response = await fetch('https://api.github.com/user', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.status}`);
-      }
-
-      const userData = await response.json();
-      
-      sessionStorage.setItem(cacheKey, JSON.stringify({
-        data: userData,
-        timestamp: Date.now()
-      }));
-
-      setUser(userData);
-      return userData;
-    } catch (err) {
-      console.error('User info fetch error:', err);
-      setError(`Failed to retrieve user information: ${err.message}`);
-      return null;
-    }
-  }, []);
 
   // Optimized repository management
   const manageRepository = useCallback(async (token) => {
@@ -383,7 +287,7 @@ export const useGitHubAuth = () => {
     };
 
     handleAuthentication();
-  }, [BACKEND_URL, manageRepository]);
+  }, [manageRepository]); // Remove BACKEND_URL from dependencies
 
   // Add Safari-specific check with retry mechanism
   useEffect(() => {

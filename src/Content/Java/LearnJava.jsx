@@ -208,6 +208,83 @@ const LearnJava = () => {
     };
   }, []);
 
+  // Add smooth scroll function
+  const smoothScroll = useCallback((direction) => {
+    const contentArea = document.querySelector('.content-scroll-area');
+    if (!contentArea) return;
+
+    const scrollAmount = window.innerHeight * 0.75; // 75% of viewport height
+    const currentScroll = contentArea.scrollTop;
+    const targetScroll = direction === 'up' ? 
+      currentScroll - scrollAmount : 
+      currentScroll + scrollAmount;
+
+    contentArea.scrollTo({
+      top: targetScroll,
+      behavior: 'smooth'
+    });
+  }, []);
+
+  // Add navigation between modules
+  const navigateModules = useCallback((direction) => {
+    const currentPath = location.pathname;
+    const pathParts = currentPath.split('/');
+    const currentModuleId = pathParts[pathParts.length - 2];
+    const currentSubModuleId = pathParts[pathParts.length - 1];
+
+    const flatModules = modules.flatMap(module => 
+      module.subModules.map(subModule => ({
+        ...subModule,
+        moduleId: module.id
+      }))
+    );
+    
+    const currentIndex = flatModules.findIndex(
+      m => m.moduleId === currentModuleId && m.id === currentSubModuleId
+    );
+
+    const targetIndex = direction === 'next' ? 
+      currentIndex + 1 : 
+      currentIndex - 1;
+
+    if (targetIndex >= 0 && targetIndex < flatModules.length) {
+      const targetModule = flatModules[targetIndex];
+      navigateToContent(targetModule.moduleId, targetModule.id);
+    }
+  }, [location.pathname, navigateToContent]);
+
+  // Add keyboard event listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Only handle if not typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          smoothScroll('down');
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          smoothScroll('up');
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          navigateModules('next');
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          navigateModules('prev');
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [smoothScroll, navigateModules]);
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-950 overflow-hidden">
       {/* Mobile Menu Button */}

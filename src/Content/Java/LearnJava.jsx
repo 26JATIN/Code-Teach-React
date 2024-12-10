@@ -15,6 +15,7 @@ import WhatIsCompiler from './1.HowaprogramWorks/3.whatisacompiler';
 import WhatIsInterpreter from './1.HowaprogramWorks/4.whatisainterpreter';
 import WhatIsCodeEditor from './1.HowaprogramWorks/5.whatisacodeeditor';
 import WhatTypeOfLanguageIsJava from './1.HowaprogramWorks/6.whattypeoflanguageisjava';
+import Set1Datatypes from './2.Syntex And Variables/4.Set-1,datatypes';
 
 const modules = [
   {
@@ -45,7 +46,8 @@ const modules = [
     subModules: [
       { id: '2.1', title: 'Java Syntax', component: Syntexofjava },
       { id: '2.2', title: 'Variables in Java', component: VariablesinJava },
-      { id: '2.3', title: 'Data Types in Java', component: DatatypesinJava }
+      { id: '2.3', title: 'Data Types in Java', component: DatatypesinJava },
+      { id: '2.4', title: 'Practice Set 1', component: Set1Datatypes }  // Add this line
     ]
   }
 ];

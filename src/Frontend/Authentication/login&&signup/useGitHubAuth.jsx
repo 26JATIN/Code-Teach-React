@@ -138,8 +138,40 @@ export const useGitHubAuth = () => {
       }
 
       setUser(userData);
-      // Rest of repository management code
-      // ...existing code...
+
+      // Check if repository exists
+      console.log('Checking if repository exists...');
+      const repoResponse = await fetch(`https://api.github.com/repos/${userData.login}/${REPO_NAME}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      // If repo doesn't exist, create it
+      if (repoResponse.status === 404) {
+        console.log('Repository not found, creating new one...');
+        const createResponse = await fetch('https://api.github.com/user/repos', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: REPO_NAME,
+            description: 'CodeTeach User Progress Repository',
+            private: true,
+            auto_init: true  // Initialize with README
+          })
+        });
+
+        if (!createResponse.ok) {
+          const error = await createResponse.json();
+          console.error('Repository creation failed:', error);
+          throw new Error(`Failed to create repository: ${error.message}`);
+        }
+      }
 
       setIsAuthenticated(true);
       setAccessToken(token);
@@ -147,7 +179,7 @@ export const useGitHubAuth = () => {
       return true;
     } catch (err) {
       console.error('Repository management error:', err);
-      setError('Failed to setup repository');
+      setError(`Failed to setup repository: ${err.message}`);
       return false;
     }
   }, []);

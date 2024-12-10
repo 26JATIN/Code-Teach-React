@@ -171,6 +171,8 @@ export const useGitHubAuth = () => {
           console.error('Repository creation failed:', error);
           throw new Error(`Failed to create repository: ${error.message}`);
         }
+      } else {
+        console.log('Repository found:', `${userData.login}/${REPO_NAME}`);
       }
 
       setIsAuthenticated(true);

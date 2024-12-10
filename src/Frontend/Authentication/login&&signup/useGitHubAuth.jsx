@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 // Environment variables
 const CLIENT_ID = process.env.REACT_APP_GITHUB_CLIENT_ID;
@@ -7,8 +7,10 @@ const REDIRECT_URI = encodeURIComponent(process.env.REACT_APP_GITHUB_REDIRECT_UR
 const REPO_NAME = 'codeteach';
 
 // Cache constants
-const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes
+const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes (shortened from 30 minutes for better performance)
 const TOKEN_CACHE_KEY = 'githubAccessToken';
+const REPO_CACHE_KEY = 'repo_status';
+const PROGRESS_CACHE_KEY = 'course_progress';
 
 export const useGitHubAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -17,6 +19,8 @@ export const useGitHubAuth = () => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [isRepoOperationInProgress, setIsRepoOperationInProgress] = useState(false);
+  const operationQueue = useRef([]);
 
   // Memoize API endpoints
   const endpoints = useMemo(() => ({
@@ -479,74 +483,138 @@ export const useGitHubAuth = () => {
   const fetchEnrolledCourses = useCallback(async () => {
     if (!accessToken || !user) return;
 
+    // Check cache first
+    const cachedProgress = sessionStorage.getItem(PROGRESS_CACHE_KEY);
+    if (cachedProgress) {
+      const { data, timestamp } = JSON.parse(cachedProgress);
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        setEnrolledCourses(data);
+        return;
+      }
+    }
+
     try {
       const response = await fetch(`https://api.github.com/repos/${user.login}/${REPO_NAME}/contents/courses`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/vnd.github.v3+json'
+          'Accept': 'application/vnd.github.v3+json',
+          'If-None-Match': sessionStorage.getItem('progress_etag') || ''
         }
       });
 
+      if (response.status === 304) {
+        // Content hasn't changed, use cached version
+        return;
+      }
+
       if (response.ok) {
+        const etag = response.headers.get('ETag');
+        if (etag) sessionStorage.setItem('progress_etag', etag);
+
         const files = await response.json();
-        const courses = [];
-        
-        for (const file of files) {
-          if (file.name.endsWith('.json')) {
-            const content = await fetch(file.download_url);
-            const courseData = await content.json();
-            courses.push(courseData);
-          }
-        }
+        const progressPromises = files
+          .filter(file => file.name.endsWith('.json'))
+          .map(file => fetch(file.download_url)
+            .then(res => res.json())
+            .catch(err => {
+              console.error(`Failed to fetch ${file.name}:`, err);
+              return null;
+            }));
+
+        const courses = (await Promise.all(progressPromises))
+          .filter(Boolean)
+          .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+
+        // Update cache
+        sessionStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify({
+          data: courses,
+          timestamp: Date.now()
+        }));
 
         setEnrolledCourses(courses);
       }
     } catch (error) {
       console.error('Failed to fetch enrolled courses:', error);
+      // Use cached data if available
+      if (cachedProgress) {
+        setEnrolledCourses(JSON.parse(cachedProgress).data);
+      }
     }
   }, [accessToken, user]);
 
   // Add this function to manage course enrollment
   const enrollCourse = useCallback(async (courseId, courseData) => {
-    if (!accessToken || !user) return false;
+    if (!accessToken || !user || isRepoOperationInProgress) return false;
+
+    // Add to operation queue if another operation is in progress
+    if (isRepoOperationInProgress) {
+      return new Promise((resolve) => {
+        operationQueue.current.push({
+          operation: () => enrollCourse(courseId, courseData),
+          resolve
+        });
+      });
+    }
+
+    setIsRepoOperationInProgress(true);
     
     try {
-      const content = btoa(JSON.stringify({
-        enrolledAt: new Date().toISOString(),
-        courseId,
-        progress: 0,
-        ...courseData
-      }));
-
       const path = `courses/${courseId}.json`;
-      const url = `https://api.github.com/repos/${user.login}/${REPO_NAME}/contents/${path}`;
+      const content = {
+        courseId,
+        enrolledAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        progress: 0,
+        ...courseData,
+        version: Date.now() // Add version for conflict resolution
+      };
 
-      // Check if file exists
+      // Check existing enrollment with conditional request
+      const url = `https://api.github.com/repos/${user.login}/${REPO_NAME}/contents/${path}`;
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/vnd.github.v3+json'
+          'Accept': 'application/vnd.github.v3+json',
+          'If-None-Match': '"' + sessionStorage.getItem(`etag_${courseId}`) + '"'
         }
       });
-      
+
+      if (response.status === 304) {
+        // Content hasn't changed, use cached version
+        return true;
+      }
+
+      const contentEncoded = btoa(JSON.stringify(content));
+
       if (response.ok) {
-        const fileData = await response.json();
-        // Update existing file
+        const existingFile = await response.json();
+        // Store ETag for future requests
+        const etag = response.headers.get('ETag');
+        if (etag) sessionStorage.setItem(`etag_${courseId}`, etag.replace(/"/g, ''));
+
+        // Compare versions to resolve conflicts
+        const existingContent = JSON.parse(atob(existingFile.content));
+        if (existingContent.version > content.version) {
+          // Remote version is newer, merge changes
+          content.progress = Math.max(existingContent.progress, content.progress);
+          content.version = existingContent.version + 1;
+        }
+
         await fetch(url, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Accept': 'application/vnd.github.v3+json',
             'Content-Type': 'application/json',
+            'If-Match': existingFile.sha // Prevent race conditions
           },
           body: JSON.stringify({
             message: `Update course enrollment: ${courseId}`,
-            content,
-            sha: fileData.sha
+            content: btoa(JSON.stringify(content)),
+            sha: existingFile.sha
           })
         });
-      } else {
-        // Create new file
+      } else if (response.status === 404) {
         await fetch(url, {
           method: 'PUT',
           headers: {
@@ -556,18 +624,35 @@ export const useGitHubAuth = () => {
           },
           body: JSON.stringify({
             message: `Add course enrollment: ${courseId}`,
-            content
+            content: contentEncoded
           })
         });
       }
 
-      await fetchEnrolledCourses();
+      // Update local cache
+      const updatedCourses = [...enrolledCourses];
+      const existingIndex = updatedCourses.findIndex(c => c.courseId === courseId);
+      if (existingIndex >= 0) {
+        updatedCourses[existingIndex] = content;
+      } else {
+        updatedCourses.push(content);
+      }
+      setEnrolledCourses(updatedCourses);
+
       return true;
     } catch (error) {
-      console.error('Failed to enroll in course:', error);
+      console.error('Enrollment failed:', error);
       return false;
+    } finally {
+      setIsRepoOperationInProgress(false);
+      
+      // Process next operation in queue
+      if (operationQueue.current.length > 0) {
+        const nextOperation = operationQueue.current.shift();
+        nextOperation.operation().then(nextOperation.resolve);
+      }
     }
-  }, [accessToken, user, fetchEnrolledCourses]);
+  }, [accessToken, user, enrolledCourses, isRepoOperationInProgress]);
 
   // Add to useEffect that runs on authentication
   useEffect(() => {
@@ -587,5 +672,6 @@ export const useGitHubAuth = () => {
     enrolledCourses,
     enrollCourse,
     fetchEnrolledCourses,
+    isRepoOperationInProgress
   };
 };

@@ -8,16 +8,11 @@ import { useGitHubAuth } from '../../Authentication/login&&signup/useGitHubAuth'
 
 function EnrolledCoursesPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, enrolledCourses, fetchEnrolledCourses } = useGitHubAuth();
+  const { enrolledCourses, fetchEnrolledCourses } = useGitHubAuth();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadCourses = async () => {
-      if (!isAuthenticated) {
-        navigate('/login');
-        return;
-      }
-      
       try {
         await fetchEnrolledCourses();
       } finally {
@@ -26,7 +21,7 @@ function EnrolledCoursesPage() {
     };
 
     loadCourses();
-  }, [isAuthenticated, fetchEnrolledCourses, navigate]);
+  }, [fetchEnrolledCourses]);
 
   const handleContinueCourse = (path) => {
     navigate(path);

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Book, Code, Video, FileText, Eye, LogIn, X } from 'lucide-react';
+import { Book, Code, Video, FileText, Eye, LogIn, X, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../home/components/Header';
 import { ThemeProvider } from '../home/components/ThemeProvider';
@@ -117,7 +117,7 @@ const Dialog = React.memo(({ isOpen, onClose, title, description, children }) =>
 // Page component with Performance Optimizations
 function CoursesPage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useGitHubAuth(); // Remove initiateLogin since it's no longer used
+  const { isAuthenticated, enrollCourse, enrolledCourses } = useGitHubAuth();
   const [isSignInDialogOpen, setIsSignInDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
@@ -126,20 +126,31 @@ function CoursesPage() {
     navigate(course.path);
   }, [navigate]);
 
-  const handleEnrollCourse = useCallback((course) => {
+  const handleEnrollCourse = useCallback(async (course) => {
     if (isAuthenticated) {
-      // If authenticated, navigate to the course
-      navigate(`${course.path}/enroll`);
+      const success = await enrollCourse(course.id, {
+        title: course.title,
+        level: course.level,
+        duration: course.duration
+      });
+      if (success) {
+        // Show success message or update UI
+        console.log('Successfully enrolled in course');
+      }
     } else {
-      // If not authenticated, show sign in dialog
       setSelectedCourse(course);
       setIsSignInDialogOpen(true);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, enrollCourse]);
 
   const handleCloseDialog = useCallback(() => {
     setIsSignInDialogOpen(false);
   }, []);
+
+  // Check if course is enrolled
+  const isEnrolled = useCallback((courseId) => {
+    return enrolledCourses.some(course => course.courseId === courseId);
+  }, [enrolledCourses]);
 
   // Memoized course rendering
   const courseCards = useMemo(() => 
@@ -175,15 +186,26 @@ function CoursesPage() {
             <Eye className="mr-2" size={16} />
             View Course
           </Button>
-          <Button 
-            onClick={() => handleEnrollCourse(course)}
-          >
-            <LogIn className="mr-2" size={16} />
-            Enroll
-          </Button>
+          {isEnrolled(course.id) ? (
+            <Button 
+              variant="outline"
+              className="bg-green-50 text-green-600 border-green-600 hover:bg-green-100"
+              disabled
+            >
+              <Check className="mr-2" size={16} />
+              Enrolled
+            </Button>
+          ) : (
+            <Button 
+              onClick={() => handleEnrollCourse(course)}
+            >
+              <LogIn className="mr-2" size={16} />
+              Enroll
+            </Button>
+          )}
         </div>
       </motion.div>
-    )), [handleViewCourse, handleEnrollCourse]
+    )), [handleViewCourse, handleEnrollCourse, isEnrolled]
   );
 
   return (

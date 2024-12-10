@@ -16,6 +16,7 @@ export const useGitHubAuth = () => {
   const [accessToken, setAccessToken] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
 
   // Memoize API endpoints
   const endpoints = useMemo(() => ({
@@ -474,6 +475,107 @@ export const useGitHubAuth = () => {
     };
   }, [isAuthenticated, accessToken, signOut]);
 
+  // Add this function to fetch enrolled courses
+  const fetchEnrolledCourses = useCallback(async () => {
+    if (!accessToken || !user) return;
+
+    try {
+      const response = await fetch(`https://api.github.com/repos/${user.login}/${REPO_NAME}/contents/courses`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (response.ok) {
+        const files = await response.json();
+        const courses = [];
+        
+        for (const file of files) {
+          if (file.name.endsWith('.json')) {
+            const content = await fetch(file.download_url);
+            const courseData = await content.json();
+            courses.push(courseData);
+          }
+        }
+
+        setEnrolledCourses(courses);
+      }
+    } catch (error) {
+      console.error('Failed to fetch enrolled courses:', error);
+    }
+  }, [accessToken, user]);
+
+  // Add this function to manage course enrollment
+  const enrollCourse = useCallback(async (courseId, courseData) => {
+    if (!accessToken || !user) return false;
+    
+    try {
+      const content = btoa(JSON.stringify({
+        enrolledAt: new Date().toISOString(),
+        courseId,
+        progress: 0,
+        ...courseData
+      }));
+
+      const path = `courses/${courseId}.json`;
+      const url = `https://api.github.com/repos/${user.login}/${REPO_NAME}/contents/${path}`;
+
+      // Check if file exists
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+      
+      if (response.ok) {
+        const fileData = await response.json();
+        // Update existing file
+        await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: `Update course enrollment: ${courseId}`,
+            content,
+            sha: fileData.sha
+          })
+        });
+      } else {
+        // Create new file
+        await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: `Add course enrollment: ${courseId}`,
+            content
+          })
+        });
+      }
+
+      await fetchEnrolledCourses();
+      return true;
+    } catch (error) {
+      console.error('Failed to enroll in course:', error);
+      return false;
+    }
+  }, [accessToken, user, fetchEnrolledCourses]);
+
+  // Add to useEffect that runs on authentication
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchEnrolledCourses();
+    }
+  }, [isAuthenticated, fetchEnrolledCourses]);
+
   return {
     isAuthenticated,
     user,
@@ -482,5 +584,8 @@ export const useGitHubAuth = () => {
     isLoading,
     initiateLogin,
     signOut,
+    enrolledCourses,
+    enrollCourse,
+    fetchEnrolledCourses,
   };
 };

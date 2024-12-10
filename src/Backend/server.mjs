@@ -140,6 +140,7 @@ const cookieOptions = {
   secure: true,
   sameSite: 'None',
   path: '/',
+  
   domain: process.env.NODE_ENV === 'production' 
     ? new URL(process.env.FRONTEND_URL).hostname.replace('www.', '')
     : 'localhost',

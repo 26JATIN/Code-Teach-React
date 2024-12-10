@@ -47,16 +47,18 @@ const COURSES = [
 ];
 
 // Optimized Button Component with Memoization
-const Button = React.memo(({ children, onClick, variant = 'default', className = '' }) => {
+const Button = React.memo(({ children, onClick, variant = 'default', className = '', disabled }) => {
   const baseStyles = "px-4 py-2 rounded-md flex items-center justify-center transition-all duration-300 w-full";
   const variantStyles = {
     default: "bg-blue-500 text-white hover:bg-blue-600 active:scale-95",
-    outline: "border border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 active:scale-95"
+    outline: "border border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 active:scale-95",
+    success: "bg-green-500 text-white border-green-500 hover:bg-green-600 cursor-default"
   };
 
   return (
     <button 
-      onClick={onClick} 
+      onClick={onClick}
+      disabled={disabled}
       className={`${baseStyles} ${variantStyles[variant]} ${className}`}
       aria-label={typeof children === 'string' ? children : 'Button'}
     >
@@ -186,23 +188,28 @@ function CoursesPage() {
             <Eye className="mr-2" size={16} />
             View Course
           </Button>
-          {isEnrolled(course.id) ? (
-            <Button 
-              variant="outline"
-              className="bg-green-50 text-green-600 border-green-600 hover:bg-green-100"
-              disabled
-            >
-              <Check className="mr-2" size={16} />
-              Enrolled
-            </Button>
-          ) : (
-            <Button 
-              onClick={() => handleEnrollCourse(course)}
-            >
-              <LogIn className="mr-2" size={16} />
-              Enroll
-            </Button>
-          )}
+          <motion.div
+            initial={false}
+            animate={{ scale: [0.95, 1] }}
+            transition={{ duration: 0.2 }}
+          >
+            {isEnrolled(course.id) ? (
+              <Button 
+                variant="success"
+                disabled
+              >
+                <Check className="mr-2" size={16} />
+                Enrolled
+              </Button>
+            ) : (
+              <Button 
+                onClick={() => handleEnrollCourse(course)}
+              >
+                <LogIn className="mr-2" size={16} />
+                Enroll
+              </Button>
+            )}
+          </motion.div>
         </div>
       </motion.div>
     )), [handleViewCourse, handleEnrollCourse, isEnrolled]

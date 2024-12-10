@@ -363,7 +363,7 @@ export const useGitHubAuth = () => {
             if (document.location.pathname !== '/courses') {
               setTimeout(() => {
                 window.location.href = '/';
-              }, 2000);
+              }, 10000);
             }
           }
         } finally {

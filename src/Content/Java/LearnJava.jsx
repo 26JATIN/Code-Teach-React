@@ -7,6 +7,8 @@ import WhyJava from './0.Intoduction To Java/2.WhyJava';
 import TopicsCovered from './0.Intoduction To Java/3.TopicsCovered';
 import InstallationOfJavaOnWindows from './0.Intoduction To Java/4.InstallationOfJavaOnWindows';
 import Syntexofjava from './2.Syntex And Variables/1.Syntexofjava';
+import VariablesinJava from './2.Syntex And Variables/2.VariablesinJava';
+import DatatypesinJava from './2.Syntex And Variables/3.DatatypesinJava';
 import WhatIsAProgram from './1.HowaprogramWorks/1.whatisaprogram';
 import HowDoesAProgramWork from './1.HowaprogramWorks/2.howdoesprogramworks';
 import WhatIsCompiler from './1.HowaprogramWorks/3.whatisacompiler';
@@ -41,7 +43,9 @@ const modules = [
     id: '2',
     title: 'Syntax And Variables',
     subModules: [
-      { id: '2.1', title: 'Java Syntax', component: Syntexofjava }
+      { id: '2.1', title: 'Java Syntax', component: Syntexofjava },
+      { id: '2.2', title: 'Variables in Java', component: VariablesinJava },
+      { id: '2.3', title: 'Data Types in Java', component: DatatypesinJava }
     ]
   }
 ];

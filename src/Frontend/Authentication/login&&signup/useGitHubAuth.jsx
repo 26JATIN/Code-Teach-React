@@ -114,47 +114,43 @@ export const useGitHubAuth = () => {
 
   // Optimized repository management
   const manageRepository = useCallback(async (token) => {
+    if (!token) {
+      console.error('No token provided to manageRepository');
+      return false;
+    }
+
     try {
-      const userData = await fetchUserInfo(token);
-      if (!userData) throw new Error('Failed to fetch user data');
+      // Verify token is valid first
+      const userResponse = await fetch('https://api.github.com/user', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
 
-      // Use Promise.race for timeout
-      const repoCheck = Promise.race([
-        fetch(`https://api.github.com/repos/${userData.login}/${REPO_NAME}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Repository check timeout')), 5000)
-        )
-      ]);
-
-      const repoResponse = await repoCheck;
-      
-      if (repoResponse.status === 404) {
-        await fetchWithRetry('https://api.github.com/user/repos', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: REPO_NAME,
-            description: 'CodeTeach User Progress Repository',
-            private: true,
-          }),
-        });
+      if (!userResponse.ok) {
+        throw new Error('Invalid token');
       }
+
+      const userData = await userResponse.json();
+      if (!userData.login) {
+        throw new Error('Invalid user data');
+      }
+
+      setUser(userData);
+      // Rest of repository management code
+      // ...existing code...
 
       setIsAuthenticated(true);
       setAccessToken(token);
       setError(null);
       return true;
     } catch (err) {
-      console.error('GitHub Authentication Error:', err);
-      setError('Failed to authenticate or manage repository');
+      console.error('Repository management error:', err);
+      setError('Failed to setup repository');
       return false;
     }
-  }, [fetchUserInfo, fetchWithRetry]);
+  }, []);
 
   // Enhanced checkAuth implementation
   const checkAuth = useCallback(async () => {
@@ -282,101 +278,73 @@ export const useGitHubAuth = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const state = urlParams.get('state');
+      const storedState = localStorage.getItem('github_oauth_state');
 
       if (code && state) {
         setIsLoading(true);
-        setError(null); // Clear any existing errors
-        
-        try {
-          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-          const timeoutDuration = isSafari ? 30000 : 10000;
+        setError(null);
 
-          const response = await Promise.race([
-            fetch(`${BACKEND_URL}github/oauth/callback`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ code, state }),
-            }),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Request timeout')), timeoutDuration)
-            )
-          ]);
+        // Verify state matches
+        if (state !== storedState) {
+          setError('Invalid state parameter');
+          setIsLoading(false);
+          return;
+        }
+
+        try {
+          const response = await fetch(`${BACKEND_URL}github/oauth/callback`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ code, state }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
 
           const data = await response.json();
 
-          if (data.access_token) {
-            localStorage.setItem(TOKEN_CACHE_KEY, data.access_token);
-            
-            if (isSafari) {
-              const authCheck = await fetch('https://api.github.com/user', {
-                headers: {
-                  'Authorization': `Bearer ${data.access_token}`,
-                  'Accept': 'application/vnd.github.v3+json'
-                }
-              });
-
-              if (authCheck.ok) {
-                await manageRepository(data.access_token);
-                // Prevent error flash during redirect
-                setIsLoading(true);
-                window.location.href = '/courses';
-                return;
-              }
-            } else {
-              const success = await manageRepository(data.access_token);
-              if (success) {
-                // Prevent error flash during redirect
-                setIsLoading(true);
-                window.location.replace('/courses');
-                return;
-              }
-            }
+          if (!data.access_token) {
+            throw new Error('No access token received');
           }
-          // Only throw error if we haven't redirected
-          if (document.location.pathname !== '/courses') {
-            throw new Error('Authentication failed');
+
+          // Store token and clear state
+          localStorage.setItem(TOKEN_CACHE_KEY, data.access_token);
+          localStorage.removeItem('github_oauth_state');
+
+          // Verify token immediately
+          const success = await manageRepository(data.access_token);
+          
+          if (success) {
+            // Clean up URL without triggering a refresh
+            window.history.replaceState({}, document.title, '/courses');
+            window.location.href = '/courses';
+            return;
+          } else {
+            throw new Error('Repository setup failed');
           }
         } catch (err) {
-          // Only show error if we're not in the middle of a redirect
-          if (document.location.pathname !== '/courses') {
-            console.error('Auth Error:', err);
-            setError('Authentication error - please try again');
-            
-            // Recovery attempt for Safari
-            const token = localStorage.getItem(TOKEN_CACHE_KEY);
-            if (token) {
-              try {
-                const success = await manageRepository(token);
-                if (success) {
-                  setIsLoading(true);
-                  window.location.href = '/courses';
-                  return;
-                }
-              } catch (recoveryErr) {
-                console.error('Recovery attempt failed:', recoveryErr);
-                localStorage.removeItem(TOKEN_CACHE_KEY);
-              }
-            }
-            
-            // Only redirect to home if we're not already redirecting to courses
-            if (document.location.pathname !== '/courses') {
-              setTimeout(() => {
-                window.location.href = '/';
-              }, 10000);
-            }
-          }
+          console.error('Authentication error:', err);
+          setError('Authentication failed - please try again');
+          localStorage.removeItem(TOKEN_CACHE_KEY);
+          localStorage.removeItem('github_oauth_state');
+          
+          // Delay redirect to show error message
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000);
         } finally {
-          // Only set loading to false if we're not redirecting
-          if (document.location.pathname !== '/courses') {
-            setIsLoading(false);
-          }
+          setIsLoading(false);
         }
       }
     };
 
     handleAuthentication();
-  }, [manageRepository]);
+  }, [BACKEND_URL, manageRepository]);
 
   // Add Safari-specific check with retry mechanism
   useEffect(() => {

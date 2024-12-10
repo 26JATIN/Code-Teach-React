@@ -172,7 +172,7 @@ app.post('/github/logout', async (req, res) => {
   res.json({ success: true });
 });
 
-// Optimized OAuth callback route with Safari handling
+// Enhanced OAuth callback route
 app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
   const { code, state } = req.body;
   
@@ -181,6 +181,7 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
   }
 
   try {
+    // Exchange code for token
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
       headers: {
@@ -198,37 +199,47 @@ app.post('/github/oauth/callback', authLimiter, limiter, async (req, res) => {
 
     const tokenData = await tokenResponse.json();
 
-    if (tokenData.access_token) {
-      // Set cookies with more reliable attributes for Safari
-      res.cookie('__vercel_live_token', tokenData.access_token, cookieOptions);
-      res.cookie('github_auth_token', tokenData.access_token, cookieOptions);
-      
-      // Verify token immediately
-      const verifyResponse = await fetch('https://api.github.com/user', {
-        headers: {
-          'Authorization': `Bearer ${tokenData.access_token}`,
-          'Accept': 'application/json'
-        }
-      });
-
-      if (!verifyResponse.ok) {
-        throw new Error('Token verification failed');
-      }
-
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      if (req.headers.origin === process.env.FRONTEND_URL) {
-        res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
-      }
-      
-      res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
+    if (tokenData.error) {
+      console.error('GitHub OAuth error:', tokenData.error);
+      return res.status(400).json({ error: tokenData.error_description || 'OAuth error' });
     }
 
-    return res.json(tokenData);
+    if (!tokenData.access_token) {
+      return res.status(400).json({ error: 'No access token received' });
+    }
+
+    // Verify token immediately
+    const verifyResponse = await fetch('https://api.github.com/user', {
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!verifyResponse.ok) {
+      throw new Error('Token verification failed');
+    }
+
+    const userData = await verifyResponse.json();
+    if (!userData.login) {
+      throw new Error('Invalid user data');
+    }
+
+    // Set secure cookies
+    res.cookie('github_auth_token', tokenData.access_token, cookieOptions);
+    
+    // Return success response
+    return res.json({
+      access_token: tokenData.access_token,
+      token_type: tokenData.token_type,
+      scope: tokenData.scope
+    });
   } catch (error) {
     console.error('Token exchange error:', error);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+    return res.status(500).json({ 
+      error: 'Authentication failed',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

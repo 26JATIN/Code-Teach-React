@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Github, Loader } from 'lucide-react';
+import { Github, Loader, Book } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useGitHubAuth } from '../login&&signup/useGitHubAuth';
 import { ThemeProvider } from '../../pages/home/components/ThemeProvider';
 
 const GitHubAuthButton = () => {
+  const navigate = useNavigate();
   const {
     isAuthenticated,
     user,
@@ -31,6 +33,11 @@ const GitHubAuthButton = () => {
     timeoutRef.current = setTimeout(() => {
       setMenuOpen(false);
     }, 100);
+  };
+
+  const handleMyCourses = () => {
+    setMenuOpen(false);
+    navigate('/enrolled-courses');
   };
 
   return (
@@ -104,6 +111,18 @@ const GitHubAuthButton = () => {
               <div className="px-2.5 py-1.5 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 truncate">
                 {user?.login}
               </div>
+              <button
+                onClick={handleMyCourses}
+                className="block w-full text-left px-2.5 py-1.5 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 
+                hover:bg-gradient-to-r hover:from-purple-600/10 hover:to-purple-500/10 
+                dark:hover:from-purple-900/20 dark:hover:to-purple-800/20 
+                transition-all duration-200"
+              >
+                <div className="flex items-center">
+                  <Book className="w-3.5 h-3.5 mr-1.5" />
+                  My Courses
+                </div>
+              </button>
               <button
                 onClick={signOut}
                 className="block w-full text-left px-2.5 py-1.5 text-[11px] sm:text-xs text-gray-700 dark:text-gray-200 

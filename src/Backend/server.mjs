@@ -32,6 +32,9 @@ const tokenBlacklist = new NodeCache({
   checkperiod: 600 // Clean up every 10 minutes
 });
 
+// Add REPO_NAME constant
+const REPO_NAME = 'codeteach-progress';
+
 // Security and optimization middleware
 app.use(helmet());
 app.use(compression());
@@ -143,8 +146,8 @@ const cookieOptions = {
   
   domain: process.env.NODE_ENV === 'production' 
     ? new URL(process.env.FRONTEND_URL).hostname.replace('www.', '')
-    : 'localhost',
-  maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    : 'localhost'
+  // removed maxAge as it's deprecated for clearCookie
 };
 
 // Enhanced logout endpoint
@@ -168,8 +171,9 @@ app.post('/github/logout', async (req, res) => {
     }
   }
 
-  res.clearCookie('__vercel_live_token', cookieOptions);
-  res.clearCookie('github_auth_token', cookieOptions);
+  // Update clearCookie calls to not include maxAge
+  res.clearCookie('__vercel_live_token', { ...cookieOptions });
+  res.clearCookie('github_auth_token', { ...cookieOptions });
   res.json({ success: true });
 });
 

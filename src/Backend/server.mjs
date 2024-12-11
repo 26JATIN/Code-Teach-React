@@ -1,6 +1,5 @@
 import express from 'express';
 import fetch from 'node-fetch';
-import cors from 'cors';
 import NodeCache from 'node-cache';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
@@ -59,26 +58,17 @@ const authLimiter = rateLimit({
   trustProxy: true
 });
 
-// Remove all existing CORS middleware and replace with this configuration
-const corsOptions = {
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [process.env.FRONTEND_URL];
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-};
-
-// Single CORS middleware
-app.use(cors(corsOptions));
+// Remove all existing CORS configuration and middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://code-teach.vercel.app');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
 
 app.use(cookieParser());
 app.use(express.json()); 
@@ -531,12 +521,8 @@ const courseManagementService = {
 // Add new endpoints
 app.get('/api/courses/enrolled', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
-  
-  if (!token) {
-    return res.status(401).json([]);
-  }
+  if (!token) return res.status(401).json([]);
 
-  // Remove manual CORS headers as they're handled by cors middleware
   try {
     const userResponse = await fetch('https://api.github.com/user', {
       headers: { 

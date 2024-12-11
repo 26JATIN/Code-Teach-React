@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, LogIn, X, Check, FileText } from 'lucide-react';
+import { Eye, LogIn, X, Check, FileText, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../home/components/Header';
 import { ThemeProvider } from '../home/components/ThemeProvider';

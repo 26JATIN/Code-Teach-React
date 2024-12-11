@@ -395,17 +395,39 @@ const courseManagementService = {
 
         // Wait for repository creation to complete
         await new Promise(resolve => setTimeout(resolve, 2000));
+      }
 
-        // Create initial structure with courses directory
-        const initialContent = Buffer.from(`
-# CodeTeach Progress
-This repository tracks your progress in CodeTeach courses.
+      // Try to create courses directory by creating a placeholder file
+      try {
+        const placeholderResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses/.gitkeep`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'Initialize courses directory',
+            content: Buffer.from('').toString('base64')
+          })
+        });
 
-## Directory Structure
-- /courses - Contains your course progress files
-        `).toString('base64');
+        if (!placeholderResponse.ok) {
+          const courseDirCheck = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          });
+          
+          // If directory already exists, that's fine
+          if (!courseDirCheck.ok) {
+            throw new Error('Failed to initialize courses directory');
+          }
+        }
 
-        // Create README with directory structure in root
+        // Create README in root if it doesn't exist
+        const readmeContent = Buffer.from(`# CodeTeach Progress\nThis repository tracks your progress in CodeTeach courses.\n\n## Directory Structure\n- /courses - Contains your course progress files`).toString('base64');
         await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/README.md`, {
           method: 'PUT',
           headers: {
@@ -414,47 +436,14 @@ This repository tracks your progress in CodeTeach courses.
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            message: 'Initialize repository structure',
-            content: initialContent
+            message: 'Add README',
+            content: readmeContent
           })
-        });
+        }).catch(() => {}); // Ignore if README already exists
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
-      // Check if courses directory exists
-      const coursesResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      });
-
-      // If courses directory doesn't exist or is a file
-      if (!coursesResponse.ok || (coursesResponse.ok && !Array.isArray(await coursesResponse.json()))) {
-        // Create an empty commit to initialize the courses directory
-        const createTreeResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/git/trees`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            tree: [{
-              path: 'courses',
-              mode: '040000',
-              type: 'tree',
-              content: ''
-            }]
-          })
-        });
-
-        if (!createTreeResponse.ok) {
-          throw new Error('Failed to create courses directory structure');
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (dirError) {
+        console.error('Directory creation error:', dirError);
+        throw new Error('Failed to create courses directory');
       }
 
       return true;

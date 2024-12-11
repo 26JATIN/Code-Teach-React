@@ -372,20 +372,6 @@ const courseManagementService = {
         }
       });
 
-      if (checkRepoResponse.ok) {
-        // Check if courses directory exists
-        const coursesResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        
-        if (coursesResponse.ok) {
-          return true; // Both repo and courses directory exist
-        }
-      }
-
       if (!checkRepoResponse.ok) {
         // Create repository if it doesn't exist
         const createRepoResponse = await fetch('https://api.github.com/user/repos', {
@@ -411,24 +397,46 @@ const courseManagementService = {
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
-      // Create courses directory with a README.md file
-      const readmeContent = Buffer.from('# Course Progress\nThis directory contains your course progress.').toString('base64');
-      const createDirResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses/README.md`, {
-        method: 'PUT',
+      // Try to get the courses directory
+      const coursesResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses`, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: 'Initialize courses directory',
-          content: readmeContent,
-          branch: 'main'
-        })
+          'Accept': 'application/vnd.github.v3+json'
+        }
       });
 
-      if (!createDirResponse.ok) {
-        throw new Error('Failed to create courses directory');
+      // If courses directory doesn't exist, create it with a README
+      if (!coursesResponse.ok) {
+        // Create README.md in the root first
+        await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/README.md`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'Initialize repository',
+            content: Buffer.from('# CodeTeach Progress\nThis repository tracks your progress in CodeTeach courses.').toString('base64')
+          })
+        });
+
+        // Then create the courses directory with its README
+        await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses/README.md`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'Initialize courses directory',
+            content: Buffer.from('# Courses\nThis directory contains your course progress files.').toString('base64')
+          })
+        });
+
+        // Wait for directory creation to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
       return true;

@@ -10,21 +10,50 @@ function EnrolledCoursesPage() {
   const navigate = useNavigate();
   const { enrolledCourses, fetchEnrolledCourses } = useGitHubAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+    let retryCount = 0;
+    const maxRetries = 3;
+
     const loadCourses = async () => {
       try {
-        await fetchEnrolledCourses();
+        setError(null);
+        setIsLoading(true);
+        const courses = await fetchEnrolledCourses();
+        
+        if (!Array.isArray(courses)) {
+          throw new Error('Invalid response format');
+        }
+
+      } catch (err) {
+        if (isMounted) {
+          console.error('Load courses error:', err);
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`Retrying... (${retryCount}/${maxRetries})`);
+            setTimeout(loadCourses, 1000 * retryCount);
+            return;
+          }
+          setError(err.message);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     loadCourses();
-    // Add periodic refresh every 30 seconds
-    const intervalId = setInterval(loadCourses, 30000);
+    
+    // Use longer interval for background refresh
+    const intervalId = setInterval(loadCourses, 60000);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, [fetchEnrolledCourses]);
 
   const handleContinueCourse = (path) => {
@@ -56,6 +85,14 @@ function EnrolledCoursesPage() {
           transition={{ duration: 0.5 }}
           className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8"
         >
+          {error && (
+            <div className="max-w-7xl mx-auto mb-8">
+              <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg">
+                Error loading courses: {error}
+              </div>
+            </div>
+          )}
+          
           <div className="max-w-7xl mx-auto">
             <motion.div
               initial={{ y: -50, opacity: 0 }}

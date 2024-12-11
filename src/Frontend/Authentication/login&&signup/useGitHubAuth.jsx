@@ -326,6 +326,12 @@ export const useGitHubAuth = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      // Add response type validation
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response type');
+      }
+
       // Log raw response for debugging
       const text = await response.text();
       console.log('Raw response:', text);
@@ -333,8 +339,12 @@ export const useGitHubAuth = () => {
       let courses;
       try {
         courses = JSON.parse(text);
+        if (!Array.isArray(courses)) {
+          console.warn('Received non-array response:', courses);
+          courses = [];
+        }
       } catch (parseError) {
-        console.error('JSON Parse error:', parseError);
+        console.error('JSON Parse error:', parseError, 'Raw text:', text);
         courses = [];
       }
 
@@ -357,7 +367,7 @@ export const useGitHubAuth = () => {
       const cachedCourses = sessionStorage.getItem(PROGRESS_CACHE_KEY);
       const parsedCachedCourses = cachedCourses ? JSON.parse(cachedCourses) : [];
       setEnrolledCourses(parsedCachedCourses);
-      return [];
+      return parsedCachedCourses;
     }
   }, [accessToken]);
 

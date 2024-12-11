@@ -208,24 +208,36 @@ export const useGitHubAuth = () => {
   // Add Safari-specific check with retry mechanism
   useEffect(() => {
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    if (isSafari) {
+    if (isSafari && isAuthenticated && accessToken) {
+      const validateAuth = async () => {
+        try {
+          const response = await fetch(`${BACKEND_URL}github/validate-token`, {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+            },
+            credentials: 'include'
+          });
+          return response.ok;
+        } catch (err) {
+          console.error('Safari auth validation failed:', err);
+          return false;
+        }
+      };
+
       const retryAuth = async (retries = 3) => {
-        const token = localStorage.getItem(TOKEN_CACHE_KEY);
-        if (token && !isAuthenticated) {
-          for (let i = 0; i < retries; i++) {
-            try {
-              const success = await manageRepository(token);
-              if (success) break;
-            } catch (err) {
-              console.error(`Safari auth retry ${i + 1} failed:`, err);
-              await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-            }
+        for (let i = 0; i < retries; i++) {
+          try {
+            const success = await validateAuth();
+            if (success) break;
+          } catch (err) {
+            console.error(`Safari auth retry ${i + 1} failed:`, err);
+            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
           }
         }
       };
       retryAuth();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, accessToken]);
 
   // Modify periodic token validation
   useEffect(() => {

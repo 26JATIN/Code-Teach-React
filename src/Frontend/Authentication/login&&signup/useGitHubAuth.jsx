@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';  // Remove use
 const CLIENT_ID = process.env.REACT_APP_GITHUB_CLIENT_ID;
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const REDIRECT_URI = encodeURIComponent(process.env.REACT_APP_GITHUB_REDIRECT_URI);
-const REPO_NAME = 'codeteach';
+const REPO_NAME = 'codeteach-progress';
 
 // Cache constants
 const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes (shortened from 30 minutes for better performance)
@@ -316,6 +316,7 @@ export const useGitHubAuth = () => {
     if (!accessToken) return;
 
     try {
+      console.log('Fetching enrolled courses...'); // Add debug log
       const response = await fetch(`${BACKEND_URL}api/courses/enrolled`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -328,26 +329,27 @@ export const useGitHubAuth = () => {
       }
 
       const courses = await response.json();
+      console.log('Received courses:', courses); // Add debug log
+      
       if (Array.isArray(courses)) {
         setEnrolledCourses(courses);
-        // Cache the enrolled courses
         sessionStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify(courses));
       }
     } catch (error) {
       console.error('Failed to fetch enrolled courses:', error);
-      // Try to get cached courses if fetch fails
       const cachedCourses = sessionStorage.getItem(PROGRESS_CACHE_KEY);
       if (cachedCourses) {
         setEnrolledCourses(JSON.parse(cachedCourses));
       }
     }
-  }, [accessToken]);
+  }, [accessToken, BACKEND_URL]);
 
   // Add this function to manage course enrollment
   const enrollCourse = useCallback(async (courseId, courseData) => {
     if (!accessToken || isRepoOperationInProgress) return false;
 
     setIsRepoOperationInProgress(true);
+    console.log('Enrolling with data:', { courseId, courseData }); // Add debug log
     
     try {
       const response = await fetch(`${BACKEND_URL}api/courses/enroll`, {
@@ -356,13 +358,23 @@ export const useGitHubAuth = () => {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ courseId, courseData })
+        body: JSON.stringify({ 
+          courseId: Number(courseId), 
+          courseData: {
+            ...courseData,
+            progress: 0 // Initialize progress
+          }
+        })
       });
 
       if (response.ok) {
-        await fetchEnrolledCourses();
+        console.log('Enrollment API call successful'); // Add debug log
+        await fetchEnrolledCourses(); // Refresh courses immediately
         return true;
       }
+      
+      const errorData = await response.json();
+      console.error('Enrollment API error:', errorData); // Add debug log
       return false;
     } catch (error) {
       console.error('Enrollment failed:', error);
@@ -370,7 +382,7 @@ export const useGitHubAuth = () => {
     } finally {
       setIsRepoOperationInProgress(false);
     }
-  }, [accessToken, isRepoOperationInProgress, fetchEnrolledCourses]);
+  }, [accessToken, isRepoOperationInProgress, fetchEnrolledCourses, BACKEND_URL]);
 
   // Add initialization of enrolled courses from cache
   useEffect(() => {
@@ -382,6 +394,13 @@ export const useGitHubAuth = () => {
       fetchEnrolledCourses();
     }
   }, [isAuthenticated, fetchEnrolledCourses]);
+
+  // Add effect to load courses on auth change
+  useEffect(() => {
+    if (isAuthenticated && accessToken) {
+      fetchEnrolledCourses();
+    }
+  }, [isAuthenticated, accessToken, fetchEnrolledCourses]);
 
   return {
     isAuthenticated,

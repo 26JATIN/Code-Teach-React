@@ -91,14 +91,19 @@ function CoursesPage() {
 
   const handleEnrollCourse = useCallback(async (course) => {
     if (isAuthenticated) {
-      const success = await enrollCourse(course.id, {
+      console.log('Enrolling in course:', course); // Add debug log
+      const success = await enrollCourse(Number(course.id), {
         title: course.title,
         level: course.level,
         duration: course.duration,
-        path: course.path  // Add path for navigation
+        path: course.path,
+        description: course.description // Add description
       });
       if (success) {
-        await fetchEnrolledCourses();  // Refresh the enrolled courses list
+        console.log('Enrollment successful'); // Add debug log
+        await fetchEnrolledCourses();
+      } else {
+        console.error('Enrollment failed'); // Add debug log
       }
     } else {
       setSelectedCourse(course);
@@ -112,6 +117,7 @@ function CoursesPage() {
 
   // Check if course is enrolled
   const isEnrolled = useCallback((courseId) => {
+    console.log('Checking enrollment:', courseId, enrolledCourses); // Add debug log
     return enrolledCourses.some(course => Number(course.courseId) === Number(courseId));
   }, [enrolledCourses]);
 

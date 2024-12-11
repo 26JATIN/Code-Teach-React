@@ -1,13 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';  // Remove useMemo since we won't need it
+import { useState, useEffect, useCallback } from 'react';
 
 // Environment variables
 const CLIENT_ID = process.env.REACT_APP_GITHUB_CLIENT_ID;
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const REDIRECT_URI = encodeURIComponent(process.env.REACT_APP_GITHUB_REDIRECT_URI);
-const REPO_NAME = 'codeteach-progress';
 
 // Cache constants
-const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes (shortened from 30 minutes for better performance)
 const TOKEN_CACHE_KEY = 'githubAccessToken';
 const PROGRESS_CACHE_KEY = 'course_progress';
 
@@ -19,7 +17,6 @@ export const useGitHubAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [isRepoOperationInProgress, setIsRepoOperationInProgress] = useState(false);
-  const operationQueue = useRef([]);
 
   // Enhanced checkAuth implementation
   const checkAuth = useCallback(async () => {
@@ -342,7 +339,7 @@ export const useGitHubAuth = () => {
         setEnrolledCourses(JSON.parse(cachedCourses));
       }
     }
-  }, [accessToken, BACKEND_URL]);
+  }, [accessToken]); // Removed BACKEND_URL
 
   // Add this function to manage course enrollment
   const enrollCourse = useCallback(async (courseId, courseData) => {
@@ -382,7 +379,7 @@ export const useGitHubAuth = () => {
     } finally {
       setIsRepoOperationInProgress(false);
     }
-  }, [accessToken, isRepoOperationInProgress, fetchEnrolledCourses, BACKEND_URL]);
+  }, [accessToken, isRepoOperationInProgress, fetchEnrolledCourses]); // Removed BACKEND_URL
 
   // Add initialization of enrolled courses from cache
   useEffect(() => {

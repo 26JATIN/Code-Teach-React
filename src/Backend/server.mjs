@@ -663,5 +663,6 @@ process.on('SIGTERM', () => {
   server.close(() => {
     console.log('Server closed');
     process.exit(0);
+    
   });
 });

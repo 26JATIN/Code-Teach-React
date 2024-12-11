@@ -1,50 +1,11 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Book, Code, Video, FileText, Eye, LogIn, X, Check } from 'lucide-react';
+import { Eye, LogIn, X, Check, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../home/components/Header';
 import { ThemeProvider } from '../home/components/ThemeProvider';
 import { useGitHubAuth } from '../../Authentication/login&&signup/useGitHubAuth';
-
-// Memoized Courses Data
-const COURSES = [
-  {
-    id: 1,
-    title: 'Java Programming',
-    description: 'Comprehensive course covering Java fundamentals, object-oriented programming, and advanced concepts.',
-    level: 'Beginner to Advanced',
-    icon: <Code size={32} className="text-purple-600 dark:text-purple-400" />,
-    duration: '8 weeks',
-    path: '/modules/java'
-  },
-  {
-    id: 2,
-    title: 'C++ Mastery',
-    description: 'Deep dive into C++ programming, covering language intricacies, system-level programming, and best practices.',
-    level: 'Intermediate to Advanced',
-    icon: <Book size={32} className="text-blue-600 dark:text-blue-400" />,
-    duration: '10 weeks',
-    path: '/modules/cpp'
-  },
-  {
-    id: 3,
-    title: 'Data Structures & Algorithms',
-    description: 'Comprehensive course on data structures, algorithm design, analysis, and problem-solving techniques.',
-    level: 'Advanced',
-    icon: <Video size={32} className="text-green-600 dark:text-green-400" />,
-    duration: '12 weeks',
-    path: '/modules/dsa'
-  },
-  {
-    id: 4,
-    title: 'Web Development Bootcamp',
-    description: 'Full-stack web development course covering frontend, backend, and modern web technologies.',
-    level: 'Comprehensive',
-    icon: <FileText size={32} className="text-red-600 dark:text-red-400" />,
-    duration: '16 weeks',
-    path: '/modules/web-development'
-  }
-];
+import { COURSES } from './Components/AvailableCourses';
 
 // Optimized Button Component with Memoization
 const Button = React.memo(({ children, onClick, variant = 'default', className = '', disabled }) => {

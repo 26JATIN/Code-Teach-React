@@ -1,5 +1,5 @@
 import React from 'react';
-import NextButton from '../../Components/NextButton';
+import NextButton from '../../Components/Interface Components/NextButton';
 
 // Helper component for installation steps
 const InstallStep = ({ number, title, children }) => (

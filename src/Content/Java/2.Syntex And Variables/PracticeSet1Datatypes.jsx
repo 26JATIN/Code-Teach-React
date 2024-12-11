@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import CodeEditor from '../../Components/CodeEditor';
-import NextButton from '../../Components/NextButton';
-import CodeSnippet from '../../Components/CodeSnippet';
+import CodeEditor from '../../Components/Code Components/CodeEditor';
+import NextButton from '../../Components/Interface Components/NextButton';
+import CodeSnippet from '../../Components/Code Components/CodeSnippet';
 
 const Set1Datatypes = ({ nextModule, onNext }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});

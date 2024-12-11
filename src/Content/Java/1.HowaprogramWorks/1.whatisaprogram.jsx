@@ -1,5 +1,5 @@
 import React from 'react';
-import NextButton from '../../Components/NextButton';
+import NextButton from '../../Components/Interface Components/NextButton';
 
 const ProgramFlowchart = () => (
   <svg className="w-full max-w-2xl mx-auto" viewBox="0 0 600 300">

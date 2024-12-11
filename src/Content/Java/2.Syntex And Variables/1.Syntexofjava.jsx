@@ -1,7 +1,7 @@
 import React from 'react';
-import CodeSnippet from '../../Components/CodeSnippet';
-import CodeEditor from '../../Components/CodeEditor';
-import NextButton from '../../Components/NextButton';
+import CodeSnippet from '../../Components/Code Components/CodeSnippet';
+import CodeEditor from '../../Components/Code Components/CodeEditor';
+import NextButton from '../../Components/Interface Components/NextButton';
 
 const Syntexofjava = ({ nextModule, onNext }) => {
   const examples = {

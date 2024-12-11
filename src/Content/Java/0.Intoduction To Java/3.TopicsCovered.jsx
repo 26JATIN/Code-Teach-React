@@ -1,5 +1,5 @@
 import React from 'react';
-import NextButton from '../../Components/NextButton';
+import NextButton from '../../Components/Interface Components/NextButton';
 
 // Topic card component for consistent styling
 const TopicCard = ({ title, emoji, description, subtopics }) => (

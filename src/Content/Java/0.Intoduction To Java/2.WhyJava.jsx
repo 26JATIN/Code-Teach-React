@@ -1,5 +1,5 @@
 import React from 'react';
-import NextButton from '../../Components/NextButton';
+import NextButton from '../../Components/Interface Components/NextButton';
 
 // Feature card component for better organization
 const FeatureCard = ({ emoji, title, description }) => (

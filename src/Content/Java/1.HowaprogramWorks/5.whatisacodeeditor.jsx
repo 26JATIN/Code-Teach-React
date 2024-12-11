@@ -1,6 +1,6 @@
 import React from 'react';
-import NextButton from '../../Components/NextButton';
-import CodeEditor from '../../Components/CodeEditor';
+import NextButton from '../../Components/Interface Components/NextButton';
+import CodeEditor from '../../Components/Code Components/CodeEditor';
 
 const WhatIsCodeEditor = ({ nextModule, onNext }) => {
   const simpleExample = `public class HelloWorld {

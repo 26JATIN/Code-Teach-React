@@ -1,7 +1,7 @@
 import React from 'react';
-import CodeSnippet from '../../Components/CodeSnippet';
+import CodeSnippet from '../../Components/Code Components/CodeSnippet';
 // Remove CodeEditor import
-import NextButton from '../../Components/NextButton';
+import NextButton from '../../Components/Interface Components/NextButton';
 
 const VariablesinJava = ({ nextModule, onNext }) => {
   const examples = {

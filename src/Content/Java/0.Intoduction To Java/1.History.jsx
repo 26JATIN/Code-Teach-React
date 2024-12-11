@@ -1,5 +1,5 @@
 import React from 'react';
-import NextButton from '../../Components/NextButton';
+import NextButton from '../../Components/Interface Components/NextButton';
 
 // Timeline component for better visualization
 const TimelineEvent = ({ year, title, description }) => (

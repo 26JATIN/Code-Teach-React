@@ -1,6 +1,6 @@
 import React from 'react';
-import NextButton from '../../Components/NextButton';
-import CodeSnippet from '../../Components/CodeSnippet';
+import NextButton from '../../Components/Interface Components/NextButton';
+import CodeSnippet from '../../Components/Code Components/CodeSnippet';
 
 const WhatIsCompiler = ({ nextModule, onNext }) => {
   const examples = {

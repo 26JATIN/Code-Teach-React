@@ -574,6 +574,9 @@ app.get('/api/courses/enrolled', checkTokenBlacklist, async (req, res) => {
   }
 
   try {
+    // Set proper content type header
+    res.setHeader('Content-Type', 'application/json');
+
     const userResponse = await fetch('https://api.github.com/user', {
       headers: { 
         'Authorization': `Bearer ${token}`,
@@ -592,19 +595,17 @@ app.get('/api/courses/enrolled', checkTokenBlacklist, async (req, res) => {
     
     const courses = await courseManagementService.getEnrolledCourses(token, userData.login);
     
-    // Log the response for debugging
-    console.log('Courses response:', courses);
-    
-    // Set explicit CORS headers for this endpoint
-    res.header('Access-Control-Allow-Origin', req.headers.origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    
     // Ensure we're sending a valid JSON array
-    res.json(Array.isArray(courses) ? courses : []);
+    if (!Array.isArray(courses)) {
+      console.warn('Invalid courses data, sending empty array');
+      return res.json([]);
+    }
+    
+    return res.json(courses);
   } catch (error) {
     console.error('Error fetching enrolled courses:', error);
-    // Always return an array, even on error
-    res.status(500).json([]);
+    // Always return a valid JSON array
+    return res.status(500).json([]);
   }
 });
 

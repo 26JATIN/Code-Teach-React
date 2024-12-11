@@ -310,65 +310,67 @@ export const useGitHubAuth = () => {
 
   // Update fetchEnrolledCourses to better handle errors and caching
   const fetchEnrolledCourses = useCallback(async () => {
-    if (!accessToken) return;
+    if (!accessToken) return [];
 
-    try {
-      console.log('Fetching enrolled courses...');
-      const response = await fetch(`${BACKEND_URL}api/courses/enrolled`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache'  // Prevent caching
-        }
-      });
+    let retryCount = 0;
+    const maxRetries = 3;
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Add response type validation
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Invalid response type');
-      }
-
-      // Log raw response for debugging
-      const text = await response.text();
-      console.log('Raw response:', text);
-
-      let courses;
+    const tryFetch = async () => {
       try {
-        courses = JSON.parse(text);
+        console.log('Fetching enrolled courses...');
+        const response = await fetch(`${BACKEND_URL}api/courses/enrolled`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Validate content type
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Invalid content type received:', contentType);
+          console.error('Response body:', text);
+          throw new Error('Invalid response type - expected JSON');
+        }
+
+        const courses = await response.json();
+        
+        // Validate response structure
         if (!Array.isArray(courses)) {
           console.warn('Received non-array response:', courses);
-          courses = [];
+          return [];
         }
-      } catch (parseError) {
-        console.error('JSON Parse error:', parseError, 'Raw text:', text);
-        courses = [];
-      }
 
-      // Ensure courses is an array
-      if (!Array.isArray(courses)) {
-        console.warn('Courses is not an array, defaulting to empty array');
-        courses = [];
-      }
+        // Update state and cache
+        setEnrolledCourses(courses);
+        sessionStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify(courses));
+        return courses;
 
-      // Update state with fresh data
-      setEnrolledCourses(courses);
-      
-      // Update session storage
-      sessionStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify(courses));
-      
-      return courses;
-    } catch (error) {
-      console.error('Failed to fetch enrolled courses:', error);
-      // On error, return empty array
-      const cachedCourses = sessionStorage.getItem(PROGRESS_CACHE_KEY);
-      const parsedCachedCourses = cachedCourses ? JSON.parse(cachedCourses) : [];
-      setEnrolledCourses(parsedCachedCourses);
-      return parsedCachedCourses;
-    }
+      } catch (error) {
+        console.error(`Fetch attempt ${retryCount + 1} failed:`, error);
+        
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Retrying... (${retryCount}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          return tryFetch();
+        }
+
+        // Use cached data on final failure
+        const cachedData = sessionStorage.getItem(PROGRESS_CACHE_KEY);
+        const cachedCourses = cachedData ? JSON.parse(cachedData) : [];
+        setEnrolledCourses(cachedCourses);
+        return cachedCourses;
+      }
+    };
+
+    return tryFetch();
   }, [accessToken]);
 
   // Add this function to manage course enrollment

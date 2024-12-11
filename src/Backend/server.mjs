@@ -69,10 +69,27 @@ const corsOptions = {
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'User-Agent', 'Accept', 'Origin', 'Cookie'],
-  exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Origin', 'Access-Control-Allow-Credentials'],
-  maxAge: 86400, // 24 hours
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'User-Agent',
+    'Accept',
+    'Origin',
+    'Cache-Control',
+    'X-Requested-With',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Methods',
+    'Access-Control-Allow-Credentials'
+  ],
+  exposedHeaders: [
+    'Set-Cookie',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Credentials',
+    'Access-Control-Allow-Headers'
+  ],
+  maxAge: 86400,
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
@@ -81,7 +98,12 @@ const corsOptions = {
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin === process.env.FRONTEND_URL) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
+    res.header('Access-Control-Expose-Headers', corsOptions.exposedHeaders.join(', '));
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Max-Age', '86400');
   }
   next();
 }, cors(corsOptions));
@@ -90,15 +112,19 @@ app.use((req, res, next) => {
 app.options('*', (req, res) => {
   const origin = req.headers.origin;
   if (origin === process.env.FRONTEND_URL) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Max-Age', '86400');
   }
   res.status(204).end();
 });
 
 // Disable helmet's default CORS handling
 app.use(helmet({
-  crossOriginResourcePolicy: false,
-  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   crossOriginEmbedderPolicy: false,
   contentSecurityPolicy: {
     directives: {
@@ -106,6 +132,8 @@ app.use(helmet({
       connectSrc: ["'self'", 'https://api.github.com', process.env.FRONTEND_URL],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      fontSrc: ["'self'", 'data:', 'https:'],
     },
   }
 }));
@@ -566,6 +594,10 @@ app.get('/api/courses/enrolled', checkTokenBlacklist, async (req, res) => {
     
     // Log the response for debugging
     console.log('Courses response:', courses);
+    
+    // Set explicit CORS headers for this endpoint
+    res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
     
     // Ensure we're sending a valid JSON array
     res.json(Array.isArray(courses) ? courses : []);

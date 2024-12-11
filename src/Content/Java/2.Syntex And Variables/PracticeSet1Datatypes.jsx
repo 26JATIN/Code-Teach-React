@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import CodeEditor from '../../Components/Code Components/CodeEditor';
-import NextButton from '../../Components/Interface Components/NextButton';
 import CodeSnippet from '../../Components/Code Components/CodeSnippet';
 
-const Set1Datatypes = ({ nextModule, onNext }) => {
+const Set1Datatypes = () => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [currentExample, setCurrentExample] = useState(null);
@@ -432,11 +431,6 @@ System.out.println("Age: " + age);`,
           <li>• Try running the example code in your IDE to see it in action</li>
           <li>• Practice combining different print statements to understand their behavior</li>
         </ul>
-      </div>
-
-      {/* Navigation */}
-      <div className="flex justify-end pt-4">
-        <NextButton nextModule={nextModule} onNext={onNext} />
       </div>
 
       {showCodeModal && (

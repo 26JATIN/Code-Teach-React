@@ -1,5 +1,4 @@
 import React from 'react';
-import NextButton from '../../Components/Interface Components/NextButton';
 import CodeSnippet from '../../Components/Code Components/CodeSnippet';
 
 const WhatIsInterpreter = ({ nextModule, onNext }) => {
@@ -119,14 +118,9 @@ if age > 18:
           </p>
           <p>
             <span className="text-green-400 font-medium">Cool fact:</span> Some languages use both 
-            compilation and interpretation! Java compiles to bytecode first, then interprets it. 🤯
+            compilation and interpretation! Java compiles to bytecode first, then interprets it. ����
           </p>
         </div>
-      </div>
-
-      <div className="mt-8 flex justify-between">
-        <div></div>
-        <NextButton nextModule={nextModule} onNext={onNext} />
       </div>
     </div>
   );

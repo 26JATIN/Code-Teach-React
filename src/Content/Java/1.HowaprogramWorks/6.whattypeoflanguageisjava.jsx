@@ -1,8 +1,7 @@
 import React from 'react';
-import NextButton from '../../Components/Interface Components/NextButton';
 import CodeExample from '../../Components/Code Components/CodeEditor';
 
-const WhatTypeOfLanguageIsJava = ({ nextModule, onNext }) => {
+const WhatTypeOfLanguageIsJava = () => {
   const simpleExample = `public class Main {
     public static void main(String[] args) {
         // This is a simple Java program
@@ -157,11 +156,6 @@ const WhatTypeOfLanguageIsJava = ({ nextModule, onNext }) => {
             </li>
           </ul>
         </div>
-      </div>
-
-      <div className="mt-8 flex justify-between">
-        <div></div>
-        <NextButton nextModule={nextModule} onNext={onNext} />
       </div>
     </div>
   );

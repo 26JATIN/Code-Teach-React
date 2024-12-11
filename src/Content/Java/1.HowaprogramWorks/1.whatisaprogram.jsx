@@ -1,5 +1,4 @@
 import React from 'react';
-import NextButton from '../../Components/Interface Components/NextButton';
 
 const ProgramFlowchart = () => (
   <svg className="w-full max-w-2xl mx-auto" viewBox="0 0 600 300">
@@ -135,11 +134,6 @@ const WhatIsAProgram = ({ nextModule, onNext }) => {
             <li>Games (responding to your controls)</li>
           </ul>
         </div>
-      </div>
-
-      <div className="mt-8 flex justify-between">
-        <div></div>
-        <NextButton nextModule={nextModule} onNext={onNext} />
       </div>
     </div>
   );

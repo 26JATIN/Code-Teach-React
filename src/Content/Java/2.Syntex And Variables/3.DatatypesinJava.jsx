@@ -1,9 +1,8 @@
 import React from 'react';
 import CodeSnippet from '../../Components/Code Components/CodeSnippet';
 import CodeEditor from '../../Components/Code Components/CodeEditor';
-import NextButton from '../../Components/Interface Components/NextButton';
 
-const DatatypesinJava = ({ nextModule, onNext }) => {
+const DatatypesinJava = () => {
   const examples = {
     basicTypes: {
       title: '🔢 Basic Data Types',
@@ -335,11 +334,6 @@ String name = "John";  // Uses more boxes for longer names`,
           <li>Use <code className="text-blue-400">char</code> for single characters</li>
           <li>Use <code className="text-blue-400">boolean</code> for yes/no decisions</li>
         </ul>
-      </div>
-
-      {/* Navigation */}
-      <div className="flex justify-end pt-4">
-        <NextButton nextModule={nextModule} onNext={onNext} />
       </div>
     </div>
   );

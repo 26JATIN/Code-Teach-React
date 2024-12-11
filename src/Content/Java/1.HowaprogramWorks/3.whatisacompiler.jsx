@@ -1,5 +1,4 @@
 import React from 'react';
-import NextButton from '../../Components/Interface Components/NextButton';
 import CodeSnippet from '../../Components/Code Components/CodeSnippet';
 
 const WhatIsCompiler = ({ nextModule, onNext }) => {
@@ -135,11 +134,6 @@ const WhatIsCompiler = ({ nextModule, onNext }) => {
             perform over 200 different types of optimizations on your code! 🤯
           </p>
         </div>
-      </div>
-
-      <div className="mt-8 flex justify-between">
-        <div></div>
-        <NextButton nextModule={nextModule} onNext={onNext} />
       </div>
     </div>
   );

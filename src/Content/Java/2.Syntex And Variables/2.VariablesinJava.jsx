@@ -1,9 +1,8 @@
 import React from 'react';
 import CodeSnippet from '../../Components/Code Components/CodeSnippet';
-// Remove CodeEditor import
-import NextButton from '../../Components/Interface Components/NextButton';
+// Remove NextButton import
 
-const VariablesinJava = ({ nextModule, onNext }) => {
+const VariablesinJava = () => {  // Remove props
   const examples = {
     variableDeclaration: {
       title: '📝 Variable Declaration',
@@ -238,11 +237,6 @@ int newNumber = 42;`,
           </ul>
         </div>
       </section>
-
-      {/* Navigation */}
-      <div className="flex justify-end pt-4">
-        <NextButton nextModule={nextModule} onNext={onNext} />
-      </div>
     </div>
   );
 };

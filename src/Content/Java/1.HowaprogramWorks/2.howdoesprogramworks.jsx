@@ -1,7 +1,7 @@
 import React from 'react';
-import NextButton from '../../Components/Interface Components/NextButton';
 import CodeSnippet from '../../Components/Code Components/CodeSnippet';
-const HowDoesAProgramWork = ({ nextModule, onNext }) => {
+
+const HowDoesAProgramWork = () => {
   // Code examples with proper titles
   const examples = {
     helloWorld: {
@@ -178,11 +178,6 @@ const HowDoesAProgramWork = ({ nextModule, onNext }) => {
           <div className="space-y-4">
             <CodeSnippet {...examples.calculator} language="java" />
           </div>
-        </div>
-
-        <div className="mt-8 flex justify-between">
-          <div></div>
-          <NextButton nextModule={nextModule} onNext={onNext} />
         </div>
       </div>
     </div>

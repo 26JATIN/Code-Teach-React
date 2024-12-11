@@ -1,9 +1,8 @@
 import React from 'react';
 import CodeSnippet from '../../Components/Code Components/CodeSnippet';
 import CodeEditor from '../../Components/Code Components/CodeEditor';
-import NextButton from '../../Components/Interface Components/NextButton';
 
-const Syntexofjava = ({ nextModule, onNext }) => {
+const Syntexofjava = () => {
   const examples = {
     basicStructure: {
       title: '🏗️ Java Program Structure',
@@ -177,11 +176,6 @@ public class MyProgram {
         </div>
         <CodeEditor defaultCode=" " />
       </section>
-
-      {/* Navigation */}
-      <div className="flex justify-end pt-4">
-        <NextButton nextModule={nextModule} onNext={onNext} />
-      </div>
     </div>
   );
 };

@@ -59,43 +59,18 @@ const authLimiter = rateLimit({
   trustProxy: true
 });
 
-// Update CORS configuration
+// Update CORS configuration to be more permissive during development
 const corsOptions = {
-  origin: process.env.FRONTEND_URL,
+  origin: true, // Allow all origins in development
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: 'Content-Type,Authorization,Accept,Origin',
-  exposedHeaders: ['Content-Type'],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
-// Simplify CORS handling
+// Remove all other CORS-related middleware and just use a single cors handler
 app.use(cors(corsOptions));
-
-// Remove custom CORS middleware and replace with a simpler version
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Credentials', 'true');
-  next();
-});
-
-// Simplify OPTIONS handling
-app.options('*', cors(corsOptions));
-
-// Disable helmet's default CORS handling
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
-  crossOriginEmbedderPolicy: false,
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'", process.env.FRONTEND_URL],
-      connectSrc: ["'self'", 'https://api.github.com', process.env.FRONTEND_URL],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:', 'https:'],
-      fontSrc: ["'self'", 'data:', 'https:'],
-    },
-  }
-}));
 
 app.use(cookieParser());
 app.use(express.json()); 
@@ -546,7 +521,7 @@ const courseManagementService = {
 };
 
 // Add new endpoints
-app.get('/api/courses/enrolled', checkTokenBlacklist, cors(corsOptions), async (req, res) => {
+app.get('/api/courses/enrolled', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   
   if (!token) {
@@ -554,6 +529,11 @@ app.get('/api/courses/enrolled', checkTokenBlacklist, cors(corsOptions), async (
   }
 
   try {
+    // Set explicit CORS headers for this route
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Content-Type', 'application/json');
+
     const userResponse = await fetch('https://api.github.com/user', {
       headers: { 
         'Authorization': `Bearer ${token}`,

@@ -373,31 +373,47 @@ const courseManagementService = {
       });
 
       if (checkRepoResponse.ok) {
-        return true; // Repo exists
+        // Check if courses directory exists
+        const coursesResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        
+        if (coursesResponse.ok) {
+          return true; // Both repo and courses directory exist
+        }
       }
 
-      // Create repository if it doesn't exist
-      const createRepoResponse = await fetch('https://api.github.com/user/repos', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: REPO_NAME,
-          private: true,
-          auto_init: true,
-          description: 'CodeTeach course progress tracking repository'
-        })
-      });
+      if (!checkRepoResponse.ok) {
+        // Create repository if it doesn't exist
+        const createRepoResponse = await fetch('https://api.github.com/user/repos', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: REPO_NAME,
+            private: true,
+            auto_init: true,
+            description: 'CodeTeach course progress tracking repository'
+          })
+        });
 
-      if (!createRepoResponse.ok) {
-        throw new Error('Failed to create repository');
+        if (!createRepoResponse.ok) {
+          throw new Error('Failed to create repository');
+        }
+
+        // Wait for repository creation to complete
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
-      // Create courses directory
-      const createDirResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses`, {
+      // Create courses directory with a README.md file
+      const readmeContent = Buffer.from('# Course Progress\nThis directory contains your course progress.').toString('base64');
+      const createDirResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses/README.md`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -406,12 +422,16 @@ const courseManagementService = {
         },
         body: JSON.stringify({
           message: 'Initialize courses directory',
-          content: Buffer.from('').toString('base64'),
+          content: readmeContent,
           branch: 'main'
         })
       });
 
-      return createDirResponse.ok;
+      if (!createDirResponse.ok) {
+        throw new Error('Failed to create courses directory');
+      }
+
+      return true;
     } catch (error) {
       console.error('Error ensuring repository exists:', error);
       return false;

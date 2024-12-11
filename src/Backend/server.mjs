@@ -431,18 +431,38 @@ const courseManagementService = {
 // Add new endpoints
 app.get('/api/courses/enrolled', checkTokenBlacklist, async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'No token provided' });
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
 
   try {
     const userResponse = await fetch('https://api.github.com/user', {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
     });
+
+    if (!userResponse.ok) {
+      throw new Error(`GitHub API error: ${userResponse.status}`);
+    }
+
     const userData = await userResponse.json();
+    if (!userData.login) {
+      throw new Error('Invalid user data received');
+    }
     
     const courses = await courseManagementService.getEnrolledCourses(token, userData.login);
-    res.json(courses);
+    
+    // Ensure we're sending a valid JSON array
+    if (!Array.isArray(courses)) {
+      res.json([]);
+    } else {
+      res.json(courses);
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch enrolled courses' });
+    console.error('Error fetching enrolled courses:', error);
+    res.status(500).json({ error: 'Failed to fetch enrolled courses', details: error.message });
   }
 });
 

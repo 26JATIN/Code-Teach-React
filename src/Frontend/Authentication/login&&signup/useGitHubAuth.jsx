@@ -323,12 +323,21 @@ export const useGitHubAuth = () => {
         }
       });
 
-      if (response.ok) {
-        const courses = await response.json();
-        setEnrolledCourses(courses);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const text = await response.text();
+      try {
+        const courses = JSON.parse(text);
+        setEnrolledCourses(Array.isArray(courses) ? courses : []);
+      } catch (parseError) {
+        console.error('Failed to parse courses response:', text);
+        setEnrolledCourses([]);
       }
     } catch (error) {
       console.error('Failed to fetch enrolled courses:', error);
+      setEnrolledCourses([]);
     }
   }, [accessToken]);
 

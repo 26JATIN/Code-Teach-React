@@ -2,20 +2,26 @@ import React, { useState, useEffect, useCallback, memo, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Menu } from 'lucide-react';
 import { useMediaQuery } from 'react-responsive';
+
+// Module 0: Introduction To Java
 import History from './0.Intoduction To Java/1.History';
 import WhyJava from './0.Intoduction To Java/2.WhyJava';
 import TopicsCovered from './0.Intoduction To Java/3.TopicsCovered';
 import InstallationOfJavaOnWindows from './0.Intoduction To Java/4.InstallationOfJavaOnWindows';
-import Syntexofjava from './2.Syntex And Variables/1.Syntexofjava';
-import VariablesinJava from './2.Syntex And Variables/2.VariablesinJava';
-import DatatypesinJava from './2.Syntex And Variables/3.DatatypesinJava';
+
+// Module 1: How Programs Work
 import WhatIsAProgram from './1.HowaprogramWorks/1.whatisaprogram';
 import HowDoesAProgramWork from './1.HowaprogramWorks/2.howdoesprogramworks';
 import WhatIsCompiler from './1.HowaprogramWorks/3.whatisacompiler';
 import WhatIsInterpreter from './1.HowaprogramWorks/4.whatisainterpreter';
 import WhatIsCodeEditor from './1.HowaprogramWorks/5.whatisacodeeditor';
 import WhatTypeOfLanguageIsJava from './1.HowaprogramWorks/6.whattypeoflanguageisjava';
-import Set1Datatypes from './2.Syntex And Variables/4.Set-1,datatypes';
+
+// Module 2: Syntax And Variables
+import Syntexofjava from './2.Syntex And Variables/1.Syntexofjava';
+import VariablesinJava from './2.Syntex And Variables/2.VariablesinJava';
+import DatatypesinJava from './2.Syntex And Variables/3.DatatypesinJava';
+import Set1Datatypes from './2.Syntex And Variables/PracticeSet1Datatypes';
 
 const modules = [
   {
@@ -53,38 +59,44 @@ const modules = [
 ];
 
 // Memoize the module and submodule buttons for better performance
-const ModuleButton = memo(({ module, isExpanded, toggleModule }) => (
-  <button
-    onClick={() => toggleModule(module.id)}
-    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 hover:bg-gray-800/50
-      transition-all duration-200 border border-gray-700/30 hover:border-gray-600/30
-      focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-left"
-  >
-    <div className="flex items-center">
-      <div className={`p-1.5 rounded-md transition-colors
-        ${isExpanded ? 'bg-blue-500/10' : ''}`}>
-        {isExpanded ? (
-          <ChevronDown className="w-4 h-4 text-sky-400" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-sky-400" />
-        )}
-      </div>
-      <div className="flex-1 flex items-center justify-between ml-2">
-        <div>
-          <span className="font-medium text-slate-200 text-sm block">
-            {module.title}
-          </span>
-          <span className="text-xs text-slate-400">
-            {module.subModules.length} lessons
+const ModuleButton = memo(({ module, isExpanded, toggleModule }) => {
+  // Calculate regular lessons and practice sets
+  const lessonCount = module.subModules.filter(sm => !sm.title.toLowerCase().includes('practice')).length;
+  const practiceCount = module.subModules.filter(sm => sm.title.toLowerCase().includes('practice')).length;
+
+  return (
+    <button
+      onClick={() => toggleModule(module.id)}
+      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 hover:bg-gray-800/50
+        transition-all duration-200 border border-gray-700/30 hover:border-gray-600/30
+        focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-left"
+    >
+      <div className="flex items-center">
+        <div className={`p-1.5 rounded-md transition-colors
+          ${isExpanded ? 'bg-blue-500/10' : ''}`}>
+          {isExpanded ? (
+            <ChevronDown className="w-4 h-4 text-sky-400" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-sky-400" />
+          )}
+        </div>
+        <div className="flex-1 flex items-center justify-between ml-2">
+          <div>
+            <span className="font-medium text-slate-200 text-sm block">
+              {module.title}
+            </span>
+            <span className="text-xs text-slate-400">
+              {lessonCount} lessons {practiceCount > 0 ? `• ${practiceCount} practice ${practiceCount === 1 ? 'set' : 'sets'}` : ''}
+            </span>
+          </div>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800/50 text-blue-400 border border-slate-700/50">
+            {module.subModules.length}
           </span>
         </div>
-        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800/50 text-blue-400 border border-slate-700/50">
-          {module.subModules.length}
-        </span>
       </div>
-    </div>
-  </button>
-));
+    </button>
+  );
+});
 
 const LearnJava = () => {
   const isMobile = useMediaQuery({ maxWidth: 768 });

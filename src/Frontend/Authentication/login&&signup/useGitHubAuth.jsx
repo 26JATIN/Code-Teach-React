@@ -313,11 +313,12 @@ export const useGitHubAuth = () => {
     if (!accessToken) return;
 
     try {
-      console.log('Fetching enrolled courses...'); // Add debug log
+      console.log('Fetching enrolled courses...');
       const response = await fetch(`${BACKEND_URL}api/courses/enrolled`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'  // Prevent caching
         }
       });
 
@@ -325,61 +326,79 @@ export const useGitHubAuth = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const courses = await response.json();
-      console.log('Received courses:', courses); // Add debug log
-      
-      if (Array.isArray(courses)) {
-        setEnrolledCourses(courses);
-        sessionStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify(courses));
+      // Log raw response for debugging
+      const text = await response.text();
+      console.log('Raw response:', text);
+
+      let courses;
+      try {
+        courses = JSON.parse(text);
+      } catch (parseError) {
+        console.error('JSON Parse error:', parseError);
+        courses = [];
       }
+
+      // Ensure courses is an array
+      if (!Array.isArray(courses)) {
+        console.warn('Courses is not an array, defaulting to empty array');
+        courses = [];
+      }
+
+      // Update state with fresh data
+      setEnrolledCourses(courses);
+      
+      // Update session storage
+      sessionStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify(courses));
+      
+      return courses;
     } catch (error) {
       console.error('Failed to fetch enrolled courses:', error);
+      // On error, return empty array
       const cachedCourses = sessionStorage.getItem(PROGRESS_CACHE_KEY);
-      if (cachedCourses) {
-        setEnrolledCourses(JSON.parse(cachedCourses));
-      }
+      const parsedCachedCourses = cachedCourses ? JSON.parse(cachedCourses) : [];
+      setEnrolledCourses(parsedCachedCourses);
+      return [];
     }
-  }, [accessToken]); // Removed BACKEND_URL
+  }, [accessToken]);
 
   // Add this function to manage course enrollment
   const enrollCourse = useCallback(async (courseId, courseData) => {
     if (!accessToken || isRepoOperationInProgress) return false;
 
     setIsRepoOperationInProgress(true);
-    console.log('Enrolling with data:', { courseId, courseData }); // Add debug log
-    
     try {
+      console.log('Enrolling course:', { courseId, courseData });
       const response = await fetch(`${BACKEND_URL}api/courses/enroll`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
-          courseId: Number(courseId), 
-          courseData: {
-            ...courseData,
-            progress: 0 // Initialize progress
-          }
-        })
+        body: JSON.stringify({ courseId, courseData })
       });
 
-      if (response.ok) {
-        console.log('Enrollment API call successful'); // Add debug log
-        await fetchEnrolledCourses(); // Refresh courses immediately
-        return true;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Enrollment error response:', errorText);
+        throw new Error('Enrollment failed');
       }
+
+      // Clear any cached data
+      sessionStorage.removeItem(PROGRESS_CACHE_KEY);
       
-      const errorData = await response.json();
-      console.error('Enrollment API error:', errorData); // Add debug log
-      return false;
+      // Add delay before fetching updated courses
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Immediately fetch updated courses
+      await fetchEnrolledCourses();
+      return true;
     } catch (error) {
       console.error('Enrollment failed:', error);
       return false;
     } finally {
       setIsRepoOperationInProgress(false);
     }
-  }, [accessToken, isRepoOperationInProgress, fetchEnrolledCourses]); // Removed BACKEND_URL
+  }, [accessToken, isRepoOperationInProgress, fetchEnrolledCourses]);
 
   // Add initialization of enrolled courses from cache
   useEffect(() => {

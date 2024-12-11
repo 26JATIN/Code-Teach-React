@@ -564,15 +564,15 @@ app.get('/api/courses/enrolled', checkTokenBlacklist, async (req, res) => {
     
     const courses = await courseManagementService.getEnrolledCourses(token, userData.login);
     
+    // Log the response for debugging
+    console.log('Courses response:', courses);
+    
     // Ensure we're sending a valid JSON array
-    if (!Array.isArray(courses)) {
-      res.json([]);
-    } else {
-      res.json(courses);
-    }
+    res.json(Array.isArray(courses) ? courses : []);
   } catch (error) {
     console.error('Error fetching enrolled courses:', error);
-    res.status(500).json({ error: 'Failed to fetch enrolled courses', details: error.message });
+    // Always return an array, even on error
+    res.status(500).json([]);
   }
 });
 

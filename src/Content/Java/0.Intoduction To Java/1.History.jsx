@@ -1,5 +1,5 @@
 import React from 'react';
-import NextButton from '../../Components/Interface Components/NextButton';
+// Remove NextButton import
 
 // Timeline component for better visualization
 const TimelineEvent = ({ year, title, description }) => (
@@ -12,7 +12,7 @@ const TimelineEvent = ({ year, title, description }) => (
   </div>
 );
 
-const History = ({ nextModule, onNext }) => {
+const History = () => {  // Remove props
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
@@ -129,10 +129,6 @@ const History = ({ nextModule, onNext }) => {
             <span>Object-Oriented</span>
           </div>
         </div>
-      </div>
-
-      <div className="mt-8 flex justify-end">
-        <NextButton nextModule={nextModule} onNext={onNext} />
       </div>
     </div>
   );

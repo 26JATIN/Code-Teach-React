@@ -1,8 +1,7 @@
 import React from 'react';
-import NextButton from '../../Components/Interface Components/NextButton';
 import CodeEditor from '../../Components/Code Components/CodeEditor';
 
-const WhatIsCodeEditor = ({ nextModule, onNext }) => {
+const WhatIsCodeEditor = () => {
   const simpleExample = `public class HelloWorld {
     public static void main(String[] args) {
         // Try changing this message!
@@ -144,11 +143,6 @@ const WhatIsCodeEditor = ({ nextModule, onNext }) => {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="mt-8 flex justify-between">
-        <div></div>
-        <NextButton nextModule={nextModule} onNext={onNext} />
       </div>
     </div>
   );

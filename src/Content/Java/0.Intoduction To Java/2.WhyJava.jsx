@@ -1,5 +1,4 @@
 import React from 'react';
-import NextButton from '../../Components/Interface Components/NextButton';
 
 // Feature card component for better organization
 const FeatureCard = ({ emoji, title, description }) => (
@@ -14,7 +13,7 @@ const FeatureCard = ({ emoji, title, description }) => (
   </div>
 );
 
-const WhyJava = ({ nextModule, onNext }) => {
+const WhyJava = () => {
   return (
     <div className="space-y-8">
       {/* Friendly Introduction */}
@@ -162,11 +161,6 @@ const WhyJava = ({ nextModule, onNext }) => {
           </div>
         </div>
       </section>
-
-      {/* Navigation Button */}
-      <div className="flex justify-end">
-        <NextButton nextModule={nextModule} onNext={onNext} />
-      </div>
     </div>
   );
 };

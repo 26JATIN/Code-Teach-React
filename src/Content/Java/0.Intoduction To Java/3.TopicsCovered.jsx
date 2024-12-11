@@ -1,5 +1,4 @@
 import React from 'react';
-import NextButton from '../../Components/Interface Components/NextButton';
 
 // Topic card component for consistent styling
 const TopicCard = ({ title, emoji, description, subtopics }) => (
@@ -22,7 +21,7 @@ const TopicCard = ({ title, emoji, description, subtopics }) => (
   </div>
 );
 
-const TopicsCovered = ({ nextModule, onNext }) => {
+const TopicsCovered = () => {
   const courseContent = [
     {
       title: "Getting Started with Java",
@@ -137,9 +136,6 @@ const TopicsCovered = ({ nextModule, onNext }) => {
             <span>Knowledge checks</span>
           </div>
         </div>
-      </div>
-      <div className="flex justify-end">
-      <NextButton nextModule={nextModule} onNext={onNext} />
       </div>
     </div>
   );

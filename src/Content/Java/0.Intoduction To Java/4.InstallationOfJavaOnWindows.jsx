@@ -1,5 +1,4 @@
 import React from 'react';
-import NextButton from '../../Components/Interface Components/NextButton';
 
 // Helper component for installation steps
 const InstallStep = ({ number, title, children }) => (
@@ -28,7 +27,7 @@ const Screenshot = ({ alt, caption }) => (
   </div>
 );
 
-const InstallationOfJavaOnWindows = ({ nextModule, onNext }) => {
+const InstallationOfJavaOnWindows = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-6">
@@ -254,10 +253,6 @@ const InstallationOfJavaOnWindows = ({ nextModule, onNext }) => {
           </div>
         </div>
       </section>
-
-      <div className="flex justify-end">
-        <NextButton nextModule={nextModule} onNext={onNext} />
-      </div>
     </div>
   );
 };

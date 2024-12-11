@@ -358,7 +358,69 @@ const courseManagementService = {
     return courses;
   },
 
+  async ensureRepositoryExists(token, username) {
+    try {
+      // First check if repo exists
+      const checkRepoResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (checkRepoResponse.ok) {
+        return true; // Repo exists
+      }
+
+      // Create repository if it doesn't exist
+      const createRepoResponse = await fetch('https://api.github.com/user/repos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: REPO_NAME,
+          private: true,
+          auto_init: true,
+          description: 'CodeTeach course progress tracking repository'
+        })
+      });
+
+      if (!createRepoResponse.ok) {
+        throw new Error('Failed to create repository');
+      }
+
+      // Create courses directory
+      const createDirResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: 'Initialize courses directory',
+          content: Buffer.from('').toString('base64'),
+          branch: 'main'
+        })
+      });
+
+      return createDirResponse.ok;
+    } catch (error) {
+      console.error('Error ensuring repository exists:', error);
+      return false;
+    }
+  },
+
   async enrollInCourse(token, username, courseId, courseData) {
+    // Ensure repository exists before proceeding
+    const repoExists = await this.ensureRepositoryExists(token, username);
+    if (!repoExists) {
+      throw new Error('Failed to ensure repository exists');
+    }
+
     const path = `courses/${courseId}.json`;
     const url = `https://api.github.com/repos/${username}/${REPO_NAME}/contents/${path}`;
     

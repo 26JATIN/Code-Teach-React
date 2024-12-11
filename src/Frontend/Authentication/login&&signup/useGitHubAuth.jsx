@@ -308,69 +308,41 @@ export const useGitHubAuth = () => {
     };
   }, [isAuthenticated, accessToken, signOut]);
 
-  // Update fetchEnrolledCourses to better handle errors and caching
+  // Update fetchEnrolledCourses
   const fetchEnrolledCourses = useCallback(async () => {
     if (!accessToken) return [];
 
-    let retryCount = 0;
-    const maxRetries = 3;
+    try {
+      console.log('Fetching enrolled courses...');
+      const response = await fetch(`${BACKEND_URL}api/courses/enrolled`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+        credentials: 'include'
+      });
 
-    const tryFetch = async () => {
+      let courses = [];
+      
       try {
-        console.log('Fetching enrolled courses...');
-        const response = await fetch(`${BACKEND_URL}api/courses/enrolled`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        // Validate content type
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text();
-          console.error('Invalid content type received:', contentType);
-          console.error('Response body:', text);
-          throw new Error('Invalid response type - expected JSON');
-        }
-
-        const courses = await response.json();
-        
-        // Validate response structure
-        if (!Array.isArray(courses)) {
-          console.warn('Received non-array response:', courses);
-          return [];
-        }
-
-        // Update state and cache
-        setEnrolledCourses(courses);
-        sessionStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify(courses));
-        return courses;
-
-      } catch (error) {
-        console.error(`Fetch attempt ${retryCount + 1} failed:`, error);
-        
-        if (retryCount < maxRetries) {
-          retryCount++;
-          console.log(`Retrying... (${retryCount}/${maxRetries})`);
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-          return tryFetch();
-        }
-
-        // Use cached data on final failure
-        const cachedData = sessionStorage.getItem(PROGRESS_CACHE_KEY);
-        const cachedCourses = cachedData ? JSON.parse(cachedData) : [];
-        setEnrolledCourses(cachedCourses);
-        return cachedCourses;
+        courses = await response.json();
+      } catch (e) {
+        console.error('JSON parse error:', e);
       }
-    };
 
-    return tryFetch();
+      if (!Array.isArray(courses)) {
+        console.warn('Non-array response:', courses);
+        courses = [];
+      }
+
+      console.log('Received courses:', courses);
+      setEnrolledCourses(courses);
+      return courses;
+
+    } catch (error) {
+      console.error('Fetch failed:', error);
+      return [];
+    }
   }, [accessToken]);
 
   // Add this function to manage course enrollment
@@ -423,7 +395,7 @@ export const useGitHubAuth = () => {
     }
   }, [isAuthenticated, fetchEnrolledCourses]);
 
-  // Add effect to load courses on auth change
+  // Add immediate course fetch on auth
   useEffect(() => {
     if (isAuthenticated && accessToken) {
       fetchEnrolledCourses();

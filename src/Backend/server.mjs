@@ -61,37 +61,10 @@ const authLimiter = rateLimit({
 
 // Move CORS configuration before all other middleware
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin || origin === process.env.FRONTEND_URL) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Allow all origins temporarily for debugging
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'User-Agent',
-    'Accept',
-    'Origin',
-    'Cache-Control',
-    'X-Requested-With',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Headers',
-    'Access-Control-Allow-Methods',
-    'Access-Control-Allow-Credentials'
-  ],
-  exposedHeaders: [
-    'Set-Cookie',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Credentials',
-    'Access-Control-Allow-Headers'
-  ],
-  maxAge: 86400,
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
 };
 
 // Custom CORS handling
@@ -363,31 +336,51 @@ app.post('/github/validate-token', checkTokenBlacklist, async (req, res) => {
 // Add new course management service
 const courseManagementService = {
   async getEnrolledCourses(token, username) {
-    const cacheKey = `courses_${username}`;
-    const cachedData = cache.get(cacheKey);
-    if (cachedData) return cachedData;
+    try {
+      // First ensure repository exists
+      await this.ensureRepositoryExists(token, username);
 
-    const repoResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github.v3+json'
+      const response = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'CodeTeach-App'
+        }
+      });
+
+      if (!response.ok) {
+        console.log('Repository not found or empty, returning empty array');
+        return [];
       }
-    });
 
-    if (!repoResponse.ok) return [];
+      const files = await response.json();
+      
+      if (!Array.isArray(files)) {
+        console.log('No files found, returning empty array');
+        return [];
+      }
 
-    const files = await repoResponse.json();
-    const courses = await Promise.all(
-      files
-        .filter(file => file.name.endsWith('.json'))
-        .map(async file => {
-          const response = await fetch(file.download_url);
-          return response.json();
+      const courseFiles = files.filter(file => file.name.endsWith('.json'));
+      console.log('Found course files:', courseFiles.length);
+
+      const courses = await Promise.all(
+        courseFiles.map(async file => {
+          try {
+            const fileResponse = await fetch(file.download_url);
+            if (!fileResponse.ok) return null;
+            return await fileResponse.json();
+          } catch (err) {
+            console.error(`Error reading ${file.name}:`, err);
+            return null;
+          }
         })
-    );
+      );
 
-    cache.set(cacheKey, courses, 300); // Cache for 5 minutes
-    return courses;
+      return courses.filter(Boolean);
+    } catch (error) {
+      console.error('getEnrolledCourses error:', error);
+      return [];
+    }
   },
 
   async ensureRepositoryExists(token, username) {
@@ -569,43 +562,37 @@ const courseManagementService = {
 // Add new endpoints
 app.get('/api/courses/enrolled', checkTokenBlacklist, async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
+  
   if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
+    return res.status(401).json([]);
   }
 
-  try {
-    // Set proper content type header
-    res.setHeader('Content-Type', 'application/json');
+  // Set CORS headers manually for this endpoint
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Content-Type', 'application/json');
 
+  try {
     const userResponse = await fetch('https://api.github.com/user', {
       headers: { 
         'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'User-Agent': 'CodeTeach-App'
       }
     });
 
-    if (!userResponse.ok) {
-      throw new Error(`GitHub API error: ${userResponse.status}`);
-    }
-
     const userData = await userResponse.json();
-    if (!userData.login) {
-      throw new Error('Invalid user data received');
-    }
-    
+    console.log('User data:', userData); // Debug log
+
     const courses = await courseManagementService.getEnrolledCourses(token, userData.login);
-    
-    // Ensure we're sending a valid JSON array
-    if (!Array.isArray(courses)) {
-      console.warn('Invalid courses data, sending empty array');
-      return res.json([]);
-    }
-    
-    return res.json(courses);
+    console.log('Fetched courses:', courses); // Debug log
+
+    // Send response immediately
+    return res.json(courses || []);
+
   } catch (error) {
-    console.error('Error fetching enrolled courses:', error);
-    // Always return a valid JSON array
-    return res.status(500).json([]);
+    console.error('Error:', error);
+    return res.json([]); // Return empty array instead of error status
   }
 });
 

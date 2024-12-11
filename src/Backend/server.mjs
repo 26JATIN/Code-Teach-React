@@ -59,17 +59,25 @@ const authLimiter = rateLimit({
   trustProxy: true
 });
 
-// Update CORS configuration
+// Remove all existing CORS middleware and replace with this configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL, // Set specific origin instead of allowing all
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [process.env.FRONTEND_URL];
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Type'],
-  maxAge: 86400,
-  optionsSuccessStatus: 204
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
 };
 
+// Single CORS middleware
 app.use(cors(corsOptions));
 
 app.use(cookieParser());
@@ -528,12 +536,8 @@ app.get('/api/courses/enrolled', async (req, res) => {
     return res.status(401).json([]);
   }
 
+  // Remove manual CORS headers as they're handled by cors middleware
   try {
-    // Set specific origin instead of wildcard
-    res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Content-Type', 'application/json');
-
     const userResponse = await fetch('https://api.github.com/user', {
       headers: { 
         'Authorization': `Bearer ${token}`,

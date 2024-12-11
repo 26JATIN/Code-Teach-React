@@ -318,40 +318,37 @@ export const useGitHubAuth = () => {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Accept': 'application/json'
         },
-        credentials: 'include',
-        mode: 'cors'
+        credentials: 'include'
       });
 
+      // Add verbose logging
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
       console.log('Response status:', response.status);
-      const contentType = response.headers.get('content-type');
-      console.log('Content-Type:', contentType);
 
       if (!response.ok) {
-        console.error('Response not OK:', response.status);
-        return [];
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const text = await response.text();
       console.log('Raw response:', text);
 
+      let courses = [];
       try {
-        const courses = JSON.parse(text);
-        if (!Array.isArray(courses)) {
-          console.warn('Non-array response:', courses);
-          return [];
-        }
-        setEnrolledCourses(courses);
-        return courses;
+        courses = JSON.parse(text);
       } catch (e) {
-        console.error('JSON parse error:', e);
-        return [];
+        console.error('Parse error:', e);
       }
 
+      if (Array.isArray(courses)) {
+        setEnrolledCourses(courses);
+        return courses;
+      }
+
+      return [];
     } catch (error) {
-      console.error('Fetch failed:', error);
+      console.error('Fetch error:', error);
       return [];
     }
   }, [accessToken]);

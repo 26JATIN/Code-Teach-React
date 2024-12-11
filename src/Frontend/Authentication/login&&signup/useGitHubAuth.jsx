@@ -319,9 +319,10 @@ export const useGitHubAuth = () => {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Accept': 'application/json',
-          'Origin': window.location.origin
+          'Content-Type': 'application/json'
         },
-        credentials: 'include'
+        credentials: 'include',
+        mode: 'cors'
       });
 
       console.log('Response status:', response.status);

@@ -83,6 +83,7 @@ function CoursesPage() {
   const { isAuthenticated, enrollCourse, enrolledCourses, fetchEnrolledCourses } = useGitHubAuth();
   const [isSignInDialogOpen, setIsSignInDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [enrollmentStatus, setEnrollmentStatus] = useState({});
 
   // Memoized event handlers
   const handleViewCourse = useCallback((course) => {
@@ -91,19 +92,25 @@ function CoursesPage() {
 
   const handleEnrollCourse = useCallback(async (course) => {
     if (isAuthenticated) {
-      console.log('Enrolling in course:', course); // Add debug log
-      const success = await enrollCourse(Number(course.id), {
-        title: course.title,
-        level: course.level,
-        duration: course.duration,
-        path: course.path,
-        description: course.description // Add description
-      });
-      if (success) {
-        console.log('Enrollment successful'); // Add debug log
-        await fetchEnrolledCourses();
-      } else {
-        console.error('Enrollment failed'); // Add debug log
+      setEnrollmentStatus(prev => ({ ...prev, [course.id]: 'pending' }));
+      try {
+        const success = await enrollCourse(Number(course.id), {
+          title: course.title,
+          level: course.level,
+          duration: course.duration,
+          path: course.path,
+          description: course.description
+        });
+        
+        if (success) {
+          await fetchEnrolledCourses(); // Refresh courses immediately
+          setEnrollmentStatus(prev => ({ ...prev, [course.id]: 'success' }));
+        } else {
+          setEnrollmentStatus(prev => ({ ...prev, [course.id]: 'error' }));
+        }
+      } catch (error) {
+        console.error('Enrollment error:', error);
+        setEnrollmentStatus(prev => ({ ...prev, [course.id]: 'error' }));
       }
     } else {
       setSelectedCourse(course);
@@ -129,6 +136,15 @@ function CoursesPage() {
       }
     };
     refreshCourses();
+  }, [isAuthenticated, fetchEnrolledCourses]);
+
+  // Add effect to refresh courses periodically
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchEnrolledCourses();
+      const intervalId = setInterval(fetchEnrolledCourses, 10000); // Refresh every 10 seconds
+      return () => clearInterval(intervalId);
+    }
   }, [isAuthenticated, fetchEnrolledCourses]);
 
   // Memoized course rendering
@@ -181,15 +197,25 @@ function CoursesPage() {
             ) : (
               <Button 
                 onClick={() => handleEnrollCourse(course)}
+                disabled={enrollmentStatus[course.id] === 'pending'}
               >
-                <LogIn className="mr-2" size={16} />
-                Enroll
+                {enrollmentStatus[course.id] === 'pending' ? (
+                  <>
+                    <Loader2 className="mr-2 animate-spin" size={16} />
+                    Enrolling...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="mr-2" size={16} />
+                    Enroll
+                  </>
+                )}
               </Button>
             )}
           </motion.div>
         </div>
       </motion.div>
-    )), [handleViewCourse, handleEnrollCourse, isEnrolled]
+    )), [handleViewCourse, handleEnrollCourse, isEnrolled, enrollmentStatus]
   );
 
   return (

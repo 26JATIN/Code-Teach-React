@@ -21,80 +21,6 @@ export const useGitHubAuth = () => {
   const [isRepoOperationInProgress, setIsRepoOperationInProgress] = useState(false);
   const operationQueue = useRef([]);
 
-  // Optimized repository management
-  const manageRepository = useCallback(async (token) => {
-    if (!token) {
-      console.error('No token provided to manageRepository');
-      return false;
-    }
-
-    try {
-      // Verify token is valid first
-      const userResponse = await fetch('https://api.github.com/user', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      });
-
-      if (!userResponse.ok) {
-        throw new Error('Invalid token');
-      }
-
-      const userData = await userResponse.json();
-      if (!userData.login) {
-        throw new Error('Invalid user data');
-      }
-
-      setUser(userData);
-
-      // Check if repository exists
-      console.log('Checking if repository exists...');
-      const repoResponse = await fetch(`https://api.github.com/repos/${userData.login}/${REPO_NAME}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      });
-
-      // If repo doesn't exist, create it
-      if (repoResponse.status === 404) {
-        console.log('Repository not found, creating new one...');
-        const createResponse = await fetch('https://api.github.com/user/repos', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            name: REPO_NAME,
-            description: 'CodeTeach User Progress Repository',
-            private: true,
-            auto_init: true  // Initialize with README
-          })
-        });
-
-        if (!createResponse.ok) {
-          const error = await createResponse.json();
-          console.error('Repository creation failed:', error);
-          throw new Error(`Failed to create repository: ${error.message}`);
-        }
-      } else {
-        console.log('Repository found:', `${userData.login}/${REPO_NAME}`);
-      }
-
-      setIsAuthenticated(true);
-      setAccessToken(token);
-      setError(null);
-      return true;
-    } catch (err) {
-      console.error('Repository management error:', err);
-      setError(`Failed to setup repository: ${err.message}`);
-      return false;
-    }
-  }, []);
-
   // Enhanced checkAuth implementation
   const checkAuth = useCallback(async () => {
     setIsLoading(true);
@@ -121,9 +47,6 @@ export const useGitHubAuth = () => {
       setAccessToken(storedToken);
       setIsAuthenticated(true);
 
-      // Check repository after successful authentication
-      await manageRepository(storedToken);
-
     } catch (err) {
       console.error('Auth check failed:', err);
       localStorage.removeItem(TOKEN_CACHE_KEY);
@@ -134,7 +57,7 @@ export const useGitHubAuth = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [manageRepository]);
+  }, []);
 
   // Modified useEffect to run checkAuth immediately and on focus
   useEffect(() => {
@@ -259,17 +182,10 @@ export const useGitHubAuth = () => {
           localStorage.setItem(TOKEN_CACHE_KEY, data.access_token);
           localStorage.removeItem('github_oauth_state');
 
-          // Verify token immediately
-          const success = await manageRepository(data.access_token);
-          
-          if (success) {
-            // Clean up URL without triggering a refresh
-            window.history.replaceState({}, document.title, '/courses');
-            window.location.href = '/courses';
-            return;
-          } else {
-            throw new Error('Repository setup failed');
-          }
+          // Clean up URL without triggering a refresh
+          window.history.replaceState({}, document.title, '/courses');
+          window.location.href = '/courses';
+          return;
         } catch (err) {
           console.error('Authentication error:', err);
           setError('Authentication failed - please try again');
@@ -287,7 +203,7 @@ export const useGitHubAuth = () => {
     };
 
     handleAuthentication();
-  }, [manageRepository]); // Remove BACKEND_URL from dependencies
+  }, []); // Remove BACKEND_URL from dependencies
 
   // Add Safari-specific check with retry mechanism
   useEffect(() => {
@@ -309,7 +225,7 @@ export const useGitHubAuth = () => {
       };
       retryAuth();
     }
-  }, [isAuthenticated, manageRepository]);
+  }, [isAuthenticated]);
 
   // Modify periodic token validation
   useEffect(() => {
@@ -385,178 +301,53 @@ export const useGitHubAuth = () => {
 
   // Add this function to fetch enrolled courses
   const fetchEnrolledCourses = useCallback(async () => {
-    if (!accessToken || !user) return;
-
-    // Check cache first
-    const cachedProgress = sessionStorage.getItem(PROGRESS_CACHE_KEY);
-    if (cachedProgress) {
-      const { data, timestamp } = JSON.parse(cachedProgress);
-      if (Date.now() - timestamp < CACHE_DURATION) {
-        setEnrolledCourses(data);
-        return;
-      }
-    }
+    if (!accessToken) return;
 
     try {
-      const response = await fetch(`https://api.github.com/repos/${user.login}/${REPO_NAME}/contents/courses`, {
+      const response = await fetch(`${BACKEND_URL}api/courses/enrolled`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'If-None-Match': sessionStorage.getItem('progress_etag') || ''
+          'Accept': 'application/json'
         }
       });
 
-      if (response.status === 304) {
-        // Content hasn't changed, use cached version
-        return;
-      }
-
       if (response.ok) {
-        const etag = response.headers.get('ETag');
-        if (etag) sessionStorage.setItem('progress_etag', etag);
-
-        const files = await response.json();
-        const progressPromises = files
-          .filter(file => file.name.endsWith('.json'))
-          .map(file => fetch(file.download_url)
-            .then(res => res.json())
-            .catch(err => {
-              console.error(`Failed to fetch ${file.name}:`, err);
-              return null;
-            }));
-
-        const courses = (await Promise.all(progressPromises))
-          .filter(Boolean)
-          .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
-
-        // Update cache
-        sessionStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify({
-          data: courses,
-          timestamp: Date.now()
-        }));
-
+        const courses = await response.json();
         setEnrolledCourses(courses);
       }
     } catch (error) {
       console.error('Failed to fetch enrolled courses:', error);
-      // Use cached data if available
-      if (cachedProgress) {
-        setEnrolledCourses(JSON.parse(cachedProgress).data);
-      }
     }
-  }, [accessToken, user]);
+  }, [accessToken]);
 
   // Add this function to manage course enrollment
   const enrollCourse = useCallback(async (courseId, courseData) => {
-    if (!accessToken || !user || isRepoOperationInProgress) return false;
-
-    // Add to operation queue if another operation is in progress
-    if (isRepoOperationInProgress) {
-      return new Promise((resolve) => {
-        operationQueue.current.push({
-          operation: () => enrollCourse(courseId, courseData),
-          resolve
-        });
-      });
-    }
+    if (!accessToken || isRepoOperationInProgress) return false;
 
     setIsRepoOperationInProgress(true);
     
     try {
-      const path = `courses/${courseId}.json`;
-      const content = {
-        courseId,
-        enrolledAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
-        progress: 0,
-        ...courseData,
-        version: Date.now() // Add version for conflict resolution
-      };
-
-      // Check existing enrollment with conditional request
-      const url = `https://api.github.com/repos/${user.login}/${REPO_NAME}/contents/${path}`;
-      const response = await fetch(url, {
+      const response = await fetch(`${BACKEND_URL}api/courses/enroll`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'If-None-Match': '"' + sessionStorage.getItem(`etag_${courseId}`) + '"'
-        }
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ courseId, courseData })
       });
 
-      if (response.status === 304) {
-        // Content hasn't changed, use cached version
+      if (response.ok) {
+        await fetchEnrolledCourses();
         return true;
       }
-
-      const contentEncoded = btoa(JSON.stringify(content));
-
-      if (response.ok) {
-        const existingFile = await response.json();
-        // Store ETag for future requests
-        const etag = response.headers.get('ETag');
-        if (etag) sessionStorage.setItem(`etag_${courseId}`, etag.replace(/"/g, ''));
-
-        // Compare versions to resolve conflicts
-        const existingContent = JSON.parse(atob(existingFile.content));
-        if (existingContent.version > content.version) {
-          // Remote version is newer, merge changes
-          content.progress = Math.max(existingContent.progress, content.progress);
-          content.version = existingContent.version + 1;
-        }
-
-        await fetch(url, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json',
-            'If-Match': existingFile.sha // Prevent race conditions
-          },
-          body: JSON.stringify({
-            message: `Update course enrollment: ${courseId}`,
-            content: btoa(JSON.stringify(content)),
-            sha: existingFile.sha
-          })
-        });
-      } else if (response.status === 404) {
-        await fetch(url, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: `Add course enrollment: ${courseId}`,
-            content: contentEncoded
-          })
-        });
-      }
-
-      // Update local cache
-      const updatedCourses = [...enrolledCourses];
-      const existingIndex = updatedCourses.findIndex(c => c.courseId === courseId);
-      if (existingIndex >= 0) {
-        updatedCourses[existingIndex] = content;
-      } else {
-        updatedCourses.push(content);
-      }
-      setEnrolledCourses(updatedCourses);
-
-      return true;
+      return false;
     } catch (error) {
       console.error('Enrollment failed:', error);
       return false;
     } finally {
       setIsRepoOperationInProgress(false);
-      
-      // Process next operation in queue
-      if (operationQueue.current.length > 0) {
-        const nextOperation = operationQueue.current.shift();
-        nextOperation.operation().then(nextOperation.resolve);
-      }
     }
-  }, [accessToken, user, enrolledCourses, isRepoOperationInProgress]);
+  }, [accessToken, isRepoOperationInProgress, fetchEnrolledCourses]);
 
   // Add to useEffect that runs on authentication
   useEffect(() => {

@@ -328,6 +328,155 @@ app.post('/github/validate-token', checkTokenBlacklist, async (req, res) => {
   }
 });
 
+// Add new course management service
+const courseManagementService = {
+  async getEnrolledCourses(token, username) {
+    const cacheKey = `courses_${username}`;
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) return cachedData;
+
+    const repoResponse = await fetch(`https://api.github.com/repos/${username}/${REPO_NAME}/contents/courses`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (!repoResponse.ok) return [];
+
+    const files = await repoResponse.json();
+    const courses = await Promise.all(
+      files
+        .filter(file => file.name.endsWith('.json'))
+        .map(async file => {
+          const response = await fetch(file.download_url);
+          return response.json();
+        })
+    );
+
+    cache.set(cacheKey, courses, 300); // Cache for 5 minutes
+    return courses;
+  },
+
+  async enrollInCourse(token, username, courseId, courseData) {
+    const path = `courses/${courseId}.json`;
+    const url = `https://api.github.com/repos/${username}/${REPO_NAME}/contents/${path}`;
+    
+    const content = {
+      courseId,
+      enrolledAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
+      progress: 0,
+      ...courseData,
+      version: Date.now()
+    };
+
+    try {
+      const existingResponse = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      const contentEncoded = Buffer.from(JSON.stringify(content)).toString('base64');
+
+      if (existingResponse.ok) {
+        const existingFile = await existingResponse.json();
+        const existingContent = JSON.parse(Buffer.from(existingFile.content, 'base64').toString());
+        
+        if (existingContent.version > content.version) {
+          content.progress = Math.max(existingContent.progress, content.progress);
+          content.version = existingContent.version + 1;
+        }
+
+        await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Update course enrollment: ${courseId}`,
+            content: contentEncoded,
+            sha: existingFile.sha
+          })
+        });
+      } else if (existingResponse.status === 404) {
+        await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Add course enrollment: ${courseId}`,
+            content: contentEncoded
+          })
+        });
+      }
+
+      // Invalidate cache
+      cache.del(`courses_${username}`);
+      return true;
+    } catch (error) {
+      console.error('Enrollment error:', error);
+      return false;
+    }
+  }
+};
+
+// Add new endpoints
+app.get('/api/courses/enrolled', checkTokenBlacklist, async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided' });
+
+  try {
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const userData = await userResponse.json();
+    
+    const courses = await courseManagementService.getEnrolledCourses(token, userData.login);
+    res.json(courses);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch enrolled courses' });
+  }
+});
+
+app.post('/api/courses/enroll', checkTokenBlacklist, async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  const { courseId, courseData } = req.body;
+
+  if (!token || !courseId) {
+    return res.status(400).json({ error: 'Missing required parameters' });
+  }
+
+  try {
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const userData = await userResponse.json();
+
+    const success = await courseManagementService.enrollInCourse(
+      token,
+      userData.login,
+      courseId,
+      courseData
+    );
+
+    if (success) {
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: 'Enrollment failed' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Enrollment failed' });
+  }
+});
+
 // Enhanced error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);

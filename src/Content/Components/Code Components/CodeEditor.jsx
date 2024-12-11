@@ -57,6 +57,9 @@ const CodeEditor = ({ defaultCode }) => {
     renderLineHighlight: 'all',
     lineHeight: Math.round(fontSize * LINE_HEIGHT_FACTOR),
     padding: { top: 8, bottom: 8 },
+    lineNumbersMinChars: 3,     // Add this line
+    glyphMargin: false,         // Add this line
+    folding: false,             // Add this line
     scrollbar: {
       vertical: 'auto',
       horizontal: 'visible',

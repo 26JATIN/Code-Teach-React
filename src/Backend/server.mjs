@@ -419,25 +419,29 @@ const courseManagementService = {
   },
 
   async enrollInCourse(token, username, courseId, courseData) {
-    // Ensure repository exists before proceeding
-    const repoExists = await this.ensureRepositoryExists(token, username);
-    if (!repoExists) {
-      throw new Error('Failed to ensure repository exists');
-    }
-
-    const path = `courses/${courseId}.json`;
-    const url = `https://api.github.com/repos/${username}/${REPO_NAME}/contents/${path}`;
-    
-    const content = {
-      courseId,
-      enrolledAt: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
-      progress: 0,
-      ...courseData,
-      version: Date.now()
-    };
-
     try {
+      // Ensure repository exists before proceeding
+      const repoExists = await this.ensureRepositoryExists(token, username);
+      if (!repoExists) {
+        throw new Error('Failed to ensure repository exists');
+      }
+
+      // Wait a bit after repo creation to avoid GitHub API race conditions
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const path = `courses/${courseId}.json`;
+      const url = `https://api.github.com/repos/${username}/${REPO_NAME}/contents/${path}`;
+      
+      const content = {
+        courseId,
+        enrolledAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        progress: 0,
+        ...courseData,
+        version: Date.now()
+      };
+
+      // First try to get existing file
       const existingResponse = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -445,18 +449,12 @@ const courseManagementService = {
         }
       });
 
-      const contentEncoded = Buffer.from(JSON.stringify(content)).toString('base64');
+      const contentEncoded = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
 
       if (existingResponse.ok) {
+        // Update existing file
         const existingFile = await existingResponse.json();
-        const existingContent = JSON.parse(Buffer.from(existingFile.content, 'base64').toString());
-        
-        if (existingContent.version > content.version) {
-          content.progress = Math.max(existingContent.progress, content.progress);
-          content.version = existingContent.version + 1;
-        }
-
-        await fetch(url, {
+        const updateResponse = await fetch(url, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -469,8 +467,13 @@ const courseManagementService = {
             sha: existingFile.sha
           })
         });
-      } else if (existingResponse.status === 404) {
-        await fetch(url, {
+
+        if (!updateResponse.ok) {
+          throw new Error('Failed to update course file');
+        }
+      } else {
+        // Create new file
+        const createResponse = await fetch(url, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -482,6 +485,12 @@ const courseManagementService = {
             content: contentEncoded
           })
         });
+
+        if (!createResponse.ok) {
+          const errorData = await createResponse.json();
+          console.error('GitHub API Error:', errorData);
+          throw new Error('Failed to create course file');
+        }
       }
 
       // Invalidate cache
@@ -489,7 +498,7 @@ const courseManagementService = {
       return true;
     } catch (error) {
       console.error('Enrollment error:', error);
-      return false;
+      throw error; // Propagate error to caller
     }
   }
 };

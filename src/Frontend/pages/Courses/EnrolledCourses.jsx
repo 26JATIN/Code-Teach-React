@@ -21,10 +21,18 @@ function EnrolledCoursesPage() {
     };
 
     loadCourses();
+    // Add periodic refresh every 30 seconds
+    const intervalId = setInterval(loadCourses, 30000);
+
+    return () => clearInterval(intervalId);
   }, [fetchEnrolledCourses]);
 
   const handleContinueCourse = (path) => {
-    navigate(path);
+    if (path) {
+      navigate(path);
+    } else {
+      console.warn('No path available for this course');
+    }
   };
 
   const getIcon = (courseId) => {

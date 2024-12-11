@@ -311,7 +311,7 @@ export const useGitHubAuth = () => {
     };
   }, [isAuthenticated, accessToken, signOut]);
 
-  // Add this function to fetch enrolled courses
+  // Update fetchEnrolledCourses to better handle errors and caching
   const fetchEnrolledCourses = useCallback(async () => {
     if (!accessToken) return;
 
@@ -327,17 +327,19 @@ export const useGitHubAuth = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const text = await response.text();
-      try {
-        const courses = JSON.parse(text);
-        setEnrolledCourses(Array.isArray(courses) ? courses : []);
-      } catch (parseError) {
-        console.error('Failed to parse courses response:', text);
-        setEnrolledCourses([]);
+      const courses = await response.json();
+      if (Array.isArray(courses)) {
+        setEnrolledCourses(courses);
+        // Cache the enrolled courses
+        sessionStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify(courses));
       }
     } catch (error) {
       console.error('Failed to fetch enrolled courses:', error);
-      setEnrolledCourses([]);
+      // Try to get cached courses if fetch fails
+      const cachedCourses = sessionStorage.getItem(PROGRESS_CACHE_KEY);
+      if (cachedCourses) {
+        setEnrolledCourses(JSON.parse(cachedCourses));
+      }
     }
   }, [accessToken]);
 
@@ -370,9 +372,13 @@ export const useGitHubAuth = () => {
     }
   }, [accessToken, isRepoOperationInProgress, fetchEnrolledCourses]);
 
-  // Add to useEffect that runs on authentication
+  // Add initialization of enrolled courses from cache
   useEffect(() => {
     if (isAuthenticated) {
+      const cachedCourses = sessionStorage.getItem(PROGRESS_CACHE_KEY);
+      if (cachedCourses) {
+        setEnrolledCourses(JSON.parse(cachedCourses));
+      }
       fetchEnrolledCourses();
     }
   }, [isAuthenticated, fetchEnrolledCourses]);

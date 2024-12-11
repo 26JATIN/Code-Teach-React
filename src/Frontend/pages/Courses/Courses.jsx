@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, LogIn, X, Check, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -80,7 +80,7 @@ const Dialog = React.memo(({ isOpen, onClose, title, description, children }) =>
 // Page component with Performance Optimizations
 function CoursesPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, enrollCourse, enrolledCourses } = useGitHubAuth();
+  const { isAuthenticated, enrollCourse, enrolledCourses, fetchEnrolledCourses } = useGitHubAuth();
   const [isSignInDialogOpen, setIsSignInDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
@@ -94,17 +94,17 @@ function CoursesPage() {
       const success = await enrollCourse(course.id, {
         title: course.title,
         level: course.level,
-        duration: course.duration
+        duration: course.duration,
+        path: course.path  // Add path for navigation
       });
       if (success) {
-        // Show success message or update UI
-        console.log('Successfully enrolled in course');
+        await fetchEnrolledCourses();  // Refresh the enrolled courses list
       }
     } else {
       setSelectedCourse(course);
       setIsSignInDialogOpen(true);
     }
-  }, [isAuthenticated, enrollCourse]);
+  }, [isAuthenticated, enrollCourse, fetchEnrolledCourses]);
 
   const handleCloseDialog = useCallback(() => {
     setIsSignInDialogOpen(false);
@@ -112,8 +112,18 @@ function CoursesPage() {
 
   // Check if course is enrolled
   const isEnrolled = useCallback((courseId) => {
-    return enrolledCourses.some(course => course.courseId === courseId);
+    return enrolledCourses.some(course => Number(course.courseId) === Number(courseId));
   }, [enrolledCourses]);
+
+  // Add useEffect to refresh enrolled courses after enrollment
+  useEffect(() => {
+    const refreshCourses = async () => {
+      if (isAuthenticated) {
+        await fetchEnrolledCourses();
+      }
+    };
+    refreshCourses();
+  }, [isAuthenticated, fetchEnrolledCourses]);
 
   // Memoized course rendering
   const courseCards = useMemo(() => 

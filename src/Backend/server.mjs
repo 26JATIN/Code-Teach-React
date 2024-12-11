@@ -59,40 +59,26 @@ const authLimiter = rateLimit({
   trustProxy: true
 });
 
-// Move CORS configuration before all other middleware
+// Update CORS configuration
 const corsOptions = {
-  origin: true, // Allow all origins temporarily for debugging
+  origin: process.env.FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  allowedHeaders: 'Content-Type,Authorization,Accept,Origin',
+  exposedHeaders: ['Content-Type'],
 };
 
-// Custom CORS handling
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin === process.env.FRONTEND_URL) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
-    res.header('Access-Control-Expose-Headers', corsOptions.exposedHeaders.join(', '));
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Max-Age', '86400');
-  }
-  next();
-}, cors(corsOptions));
+// Simplify CORS handling
+app.use(cors(corsOptions));
 
-// Pre-flight requests
-app.options('*', (req, res) => {
-  const origin = req.headers.origin;
-  if (origin === process.env.FRONTEND_URL) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Max-Age', '86400');
-  }
-  res.status(204).end();
+// Remove custom CORS middleware and replace with a simpler version
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
 });
+
+// Simplify OPTIONS handling
+app.options('*', cors(corsOptions));
 
 // Disable helmet's default CORS handling
 app.use(helmet({
@@ -560,17 +546,12 @@ const courseManagementService = {
 };
 
 // Add new endpoints
-app.get('/api/courses/enrolled', checkTokenBlacklist, async (req, res) => {
+app.get('/api/courses/enrolled', checkTokenBlacklist, cors(corsOptions), async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   
   if (!token) {
     return res.status(401).json([]);
   }
-
-  // Set CORS headers manually for this endpoint
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Content-Type', 'application/json');
 
   try {
     const userResponse = await fetch('https://api.github.com/user', {

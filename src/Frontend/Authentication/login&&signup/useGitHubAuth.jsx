@@ -239,7 +239,6 @@ export const useGitHubAuth = () => {
   // Modify periodic token validation
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return;
-
     const validateToken = async () => {
       try {
         // Use faster validation for all browsers

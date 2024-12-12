@@ -491,6 +491,7 @@ const courseManagementService = {
         const createResponse = await fetch(url, {
           method: 'PUT',
           headers: {
+            
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/vnd.github.v3+json',
             'Content-Type': 'application/json'

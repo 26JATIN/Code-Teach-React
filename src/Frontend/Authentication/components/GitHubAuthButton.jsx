@@ -34,7 +34,6 @@ const GitHubAuthButton = () => {
       setMenuOpen(false);
     }, 100);
   };
-
   const handleMyCourses = () => {
     setMenuOpen(false);
     navigate('/enrolled-courses');

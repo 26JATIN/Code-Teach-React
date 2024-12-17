@@ -1,25 +1,22 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, LogIn, X, Check, FileText, Loader2 } from 'lucide-react';
+import React, { useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { Eye, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../home/components/Header';
-import { ThemeProvider } from '../home/components/ThemeProvider';
-import { useGitHubAuth } from '../../Authentication/login&&signup/useGitHubAuth';
+import Header from '../../Components/Header';
+import { ThemeProvider } from '../../Components/ThemeProvider';
 import { COURSES } from './Components/AvailableCourses';
 
 // Optimized Button Component with Memoization
-const Button = React.memo(({ children, onClick, variant = 'default', className = '', disabled }) => {
+const Button = React.memo(({ children, onClick, variant = 'default', className = '' }) => {
   const baseStyles = "px-4 py-2 rounded-md flex items-center justify-center transition-all duration-300 w-full";
   const variantStyles = {
     default: "bg-blue-500 text-white hover:bg-blue-600 active:scale-95",
     outline: "border border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 active:scale-95",
-    success: "bg-green-500 text-white border-green-500 hover:bg-green-600 cursor-default"
   };
 
   return (
     <button 
       onClick={onClick}
-      disabled={disabled}
       className={`${baseStyles} ${variantStyles[variant]} ${className}`}
       aria-label={typeof children === 'string' ? children : 'Button'}
     >
@@ -28,131 +25,20 @@ const Button = React.memo(({ children, onClick, variant = 'default', className =
   );
 });
 
-// Optimized Dialog Component with Accessibility
-const Dialog = React.memo(({ isOpen, onClose, title, description, children }) => {
-  if (!isOpen) return null;
-
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  return (
-    <AnimatePresence>
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-        onClick={handleOverlayClick}  // Add click handler here
-      >
-        <motion.div 
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          exit={{ scale: 0.9 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-[95%] p-6 relative"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dialog-title"
-          aria-describedby="dialog-description"
-        >
-          <button 
-            onClick={onClose} 
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            aria-label="Close dialog"
-          >
-            <X size={24} />
-          </button>
-          <h2 id="dialog-title" className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
-            {title}
-          </h2>
-          <p id="dialog-description" className="text-gray-600 dark:text-gray-400 mb-6">
-            {description}
-          </p>
-          {children}
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-});
-
 // Page component with Performance Optimizations
 function CoursesPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, enrollCourse, enrolledCourses, fetchEnrolledCourses } = useGitHubAuth();
-  const [isSignInDialogOpen, setIsSignInDialogOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [enrollmentStatus, setEnrollmentStatus] = useState({});
 
   // Memoized event handlers
   const handleViewCourse = useCallback((course) => {
     navigate(course.path);
   }, [navigate]);
 
-  const handleEnrollCourse = useCallback(async (course) => {
-    if (isAuthenticated) {
-      setEnrollmentStatus(prev => ({ ...prev, [course.id]: 'pending' }));
-      try {
-        const success = await enrollCourse(Number(course.id), {
-          title: course.title,
-          level: course.level,
-          duration: course.duration,
-          path: course.path,
-          description: course.description
-        });
-        
-        if (success) {
-          await fetchEnrolledCourses(); // Refresh courses immediately
-          setEnrollmentStatus(prev => ({ ...prev, [course.id]: 'success' }));
-        } else {
-          setEnrollmentStatus(prev => ({ ...prev, [course.id]: 'error' }));
-        }
-      } catch (error) {
-        console.error('Enrollment error:', error);
-        setEnrollmentStatus(prev => ({ ...prev, [course.id]: 'error' }));
-      }
-    } else {
-      setSelectedCourse(course);
-      setIsSignInDialogOpen(true);
-    }
-  }, [isAuthenticated, enrollCourse, fetchEnrolledCourses]);
-
-  const handleCloseDialog = useCallback(() => {
-    setIsSignInDialogOpen(false);
-  }, []);
-
-  // Check if course is enrolled
-  const isEnrolled = useCallback((courseId) => {
-    console.log('Checking enrollment:', courseId, enrolledCourses); // Add debug log
-    return enrolledCourses.some(course => Number(course.courseId) === Number(courseId));
-  }, [enrolledCourses]);
-
-  // Add useEffect to refresh enrolled courses after enrollment
-  useEffect(() => {
-    const refreshCourses = async () => {
-      if (isAuthenticated) {
-        await fetchEnrolledCourses();
-      }
-    };
-    refreshCourses();
-  }, [isAuthenticated, fetchEnrolledCourses]);
-
-  // Add effect to refresh courses periodically
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchEnrolledCourses();
-      const intervalId = setInterval(fetchEnrolledCourses, 10000); // Refresh every 10 seconds
-      return () => clearInterval(intervalId);
-    }
-  }, [isAuthenticated, fetchEnrolledCourses]);
-
   // Memoized course rendering
   const courseCards = useMemo(() => 
     COURSES.map((course) => (
       <motion.div
         key={course.id}
-
         className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 dark:border-gray-700 flex flex-col"
       >
         <div className="flex items-center mb-4">
@@ -173,49 +59,15 @@ function CoursesPage() {
             {course.duration}
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => handleViewCourse(course)}
-          >
-            <Eye className="mr-2" size={16} />
-            View Course
-          </Button>
-          <motion.div
-            initial={false}
-            animate={{ scale: [0.95, 1] }}
-            transition={{ duration: 0.2 }}
-          >
-            {isEnrolled(course.id) ? (
-              <Button 
-                variant="success"
-                disabled
-              >
-                <Check className="mr-2" size={16} />
-                Enrolled
-              </Button>
-            ) : (
-              <Button 
-                onClick={() => handleEnrollCourse(course)}
-                disabled={enrollmentStatus[course.id] === 'pending'}
-              >
-                {enrollmentStatus[course.id] === 'pending' ? (
-                  <>
-                    <Loader2 className="mr-2 animate-spin" size={16} />
-                    Enrolling...
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="mr-2" size={16} />
-                    Enroll
-                  </>
-                )}
-              </Button>
-            )}
-          </motion.div>
-        </div>
+        <Button 
+          variant="outline" 
+          onClick={() => handleViewCourse(course)}
+        >
+          <Eye className="mr-2" size={16} />
+          View Course
+        </Button>
       </motion.div>
-    )), [handleViewCourse, handleEnrollCourse, isEnrolled, enrollmentStatus]
+    )), [handleViewCourse]
   );
 
   return (
@@ -230,7 +82,6 @@ function CoursesPage() {
           className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8"
         >
           <div className="max-w-7xl mx-auto">
-            {/* Page Header */}
             <motion.div
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -245,26 +96,14 @@ function CoursesPage() {
               </p>
             </motion.div>
 
-            {/* Courses Grid - Responsive Layout */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {courseCards}
             </div>
-
-            {/* Sign In Required Dialog */}
-            <Dialog 
-              isOpen={isSignInDialogOpen}
-              onClose={handleCloseDialog}
-              title="Sign In Required"
-              description={`To enroll in the course "${selectedCourse?.title}", please sign in or create an account first.`}
-            >
-              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
-                Click anywhere outside to close
-              </div>
-            </Dialog>
           </div>
         </motion.div>
       </div>
     </ThemeProvider>
   );
 }
+
 export default React.memo(CoursesPage);

@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from './ui/button';
 import { Code, Users, Zap } from 'lucide-react';
 
-const CodeBlock = () => (
+const fadeInVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const slideInVariants = {
+  hidden: (direction) => ({ opacity: 0, x: direction === 'left' ? -20 : 20 }),
+  visible: { opacity: 1, x: 0 }
+};
+
+const CodeBlock = memo(() => (
   <pre className="text-white white:text-white overflow-x-auto">
     <code>
       <span className="text-blue-400">function</span>{' '}
@@ -35,16 +45,35 @@ const CodeBlock = () => (
       <span className="text-green-400">learnToCode</span>();
     </code>
   </pre>
-);
+));
 
-export default function Hero() {
+const FeatureCard = memo(({ icon: Icon, title, description }) => (
+  <motion.div
+    variants={fadeInVariants}
+    className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-200 dark:border-gray-700"
+  >
+    <Icon className="h-12 w-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{title}</h3>
+    <p className="text-gray-700 dark:text-gray-300">{description}</p>
+  </motion.div>
+));
+
+const FEATURES = [
+  { icon: Code, title: "Interactive Coding", description: "Learn by doing with our hands-on coding exercises" },
+  { icon: Users, title: "Expert Mentorship", description: "Get guidance from industry professionals" },
+  { icon: Zap, title: "Fast-Track Learning", description: "Accelerate your career with our focused curriculum" }
+];
+
+const Hero = () => {
   return (
     <section className="py-12 md:py-20 lg:py-32 overflow-hidden bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            variants={slideInVariants}
+            initial="hidden"
+            animate="visible"
+            custom="left"
             transition={{ duration: 0.5 }}
             className="text-center lg:text-left lg:w-1/2"
           >
@@ -63,9 +92,12 @@ export default function Hero() {
               </Button>
             </div>
           </motion.div>
+
           <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            variants={slideInVariants}
+            initial="hidden"
+            animate="visible"
+            custom="right"
             transition={{ duration: 0.5, delay: 0.2 }}
             className="lg:w-1/2 w-full max-w-lg mx-auto"
           >
@@ -103,35 +135,28 @@ export default function Hero() {
             </div>
           </motion.div>
         </div>
+
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial="hidden"
+          animate="visible"
+          variants={fadeInVariants}
           transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-20 text-center"
         >
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Why Choose Us?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { icon: Code, title: "Interactive Coding", description: "Learn by doing with our hands-on coding exercises" },
-              { icon: Users, title: "Expert Mentorship", description: "Get guidance from industry professionals" },
-              { icon: Zap, title: "Fast-Track Learning", description: "Accelerate your career with our focused curriculum" }
-            ].map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-200 dark:border-gray-700"
-              >
-                <feature.icon className="h-12 w-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{feature.title}</h3>
-                <p className="text-gray-700 dark:text-gray-300">{feature.description}</p>
-              </motion.div>
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            variants={fadeInVariants}
+          >
+            {FEATURES.map((feature, index) => (
+              <FeatureCard key={index} {...feature} />
             ))}
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </section>
   );
-}
+};
+
+export default memo(Hero);
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import CodeEditor from '../../Components/Code Components/CodeEditor';
+import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
 
 const WhatIsCodeEditor = () => {
   const simpleExample = `public class HelloWorld {

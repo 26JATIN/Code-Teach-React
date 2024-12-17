@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useTheme } from './ThemeProvider';
 import { Moon, Sun, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, Link } from 'react-router-dom';
-import GitHubAuthButton from '../../../Authentication/components/GitHubAuthButton';
 // Memoize menu items to prevent unnecessary re-renders
 const MENU_ITEMS = [
   { name: 'Home', href: '/' },
@@ -39,7 +38,30 @@ const menuItemVariants = {
   })
 };
 
-export default function Header() {
+// Memoize individual menu item component
+const MenuItem = memo(({ item, isActive, onClick }) => (
+  <motion.li
+    custom={item.index}
+    variants={menuItemVariants}
+    initial="initial"
+    animate="animate"
+  >
+    <Link
+      to={item.href}
+      className={`text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200 relative group ${
+        isActive ? 'text-purple-600 dark:text-purple-400 font-semibold' : ''
+      }`}
+      onClick={onClick}
+    >
+      {item.name}
+      <span className={`absolute inset-x-0 bottom-0 h-0.5 bg-purple-600 dark:bg-purple-400 transform ${
+        isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+      } transition-transform duration-200 origin-left`}></span>
+    </Link>
+  </motion.li>
+));
+
+const Header = memo(() => {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -59,6 +81,23 @@ export default function Header() {
   useEffect(() => {
     setMounted(true);
   }, []); // Empty dependency array ensures this runs only once
+
+  // Cleanup effect for event listeners
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Memoize handlers
+  const handleMenuToggle = useCallback(() => {
+    setIsMenuOpen(prev => !prev);
+  }, []);
 
   // Early return if not mounted to prevent unnecessary renders
   if (!mounted) return null;
@@ -93,29 +132,12 @@ export default function Header() {
             <nav className="hidden md:block">
               <ul className="flex space-x-1">
                 {MENU_ITEMS.map((item, index) => (
-                  <motion.li
+                  <MenuItem
                     key={item.name}
-                    custom={index}
-                    variants={menuItemVariants}
-                    initial="initial"
-                    animate="animate"
-                  >
-                    <Link
-                      to={item.href}
-                      className={`text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200 relative group ${
-                        location.pathname === item.href 
-                          ? 'text-purple-600 dark:text-purple-400 font-semibold' 
-                          : ''
-                      }`}
-                    >
-                      {item.name}
-                      <span className={`absolute inset-x-0 bottom-0 h-0.5 bg-purple-600 dark:bg-purple-400 transform ${
-                        location.pathname === item.href 
-                          ? 'scale-x-100' 
-                          : 'scale-x-0 group-hover:scale-x-100'
-                      } transition-transform duration-200 origin-left`}></span>
-                    </Link>
-                  </motion.li>
+                    item={{ ...item, index }}
+                    isActive={location.pathname === item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                  />
                 ))}
               </ul>
             </nav>
@@ -133,11 +155,10 @@ export default function Header() {
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </motion.button>
 
-            <GitHubAuthButton/>
 
             <motion.button
               className="md:hidden p-2 rounded-full bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-200 transition-colors duration-200 hover:bg-purple-200 dark:hover:bg-purple-700"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={handleMenuToggle}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               aria-label="Toggle menu"
@@ -187,4 +208,6 @@ export default function Header() {
       </AnimatePresence>
     </motion.header>
   );
-}
+});
+
+export default Header;

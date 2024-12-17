@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import CodeEditor from '../../Components/Code Components/CodeEditor';
-import CodeSnippet from '../../Components/Code Components/CodeSnippet';
+import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
 
 const Set1Datatypes = () => {
   const [selectedAnswers, setSelectedAnswers] = useState({});

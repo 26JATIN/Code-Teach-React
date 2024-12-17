@@ -1,6 +1,6 @@
 import React from 'react';
-import CodeSnippet from '../../Components/Code Components/CodeSnippet';
-import CodeEditor from '../../Components/Code Components/CodeEditor';
+import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
+import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
 
 const DatatypesinJava = () => {
   const examples = {

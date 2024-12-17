@@ -1,5 +1,5 @@
 import React from 'react';
-import CodeSnippet from '../../Components/Code Components/CodeSnippet';
+import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
 
 const WhatIsInterpreter = ({ nextModule, onNext }) => {
   const interpreterSteps = [

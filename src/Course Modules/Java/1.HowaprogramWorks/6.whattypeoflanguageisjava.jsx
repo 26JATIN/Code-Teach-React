@@ -1,5 +1,5 @@
 import React from 'react';
-import CodeExample from '../../Components/Code Components/CodeEditor';
+import CodeExample from '../../../Frontend/Components/Code Components/CodeEditor';
 
 const WhatTypeOfLanguageIsJava = () => {
   const simpleExample = `public class Main {

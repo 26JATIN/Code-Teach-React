@@ -1,6 +1,6 @@
 import React from 'react';
-import CourseLayout from '../Components/Interface Components/CourseLayout';
-import { modules } from '../Components/Module Component/Java Modules';
+import CourseLayout from '../../Frontend/Components/Interface Components/interface';
+import { modules } from '../../Frontend/Components/Module Component/Java Modules';
 
 const LearnJava = () => {
   return (

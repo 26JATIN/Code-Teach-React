@@ -1,22 +1,22 @@
 // Module 0: Introduction To Java
-import History from '../../Java/0.Intoduction To Java/1.History';
-import WhyJava from '../../Java/0.Intoduction To Java/2.WhyJava';
-import TopicsCovered from '../../Java/0.Intoduction To Java/3.TopicsCovered';
-import InstallationOfJavaOnWindows from '../../Java/0.Intoduction To Java/4.InstallationOfJavaOnWindows';
+import History from '../../../Course Modules/Java/0.Intoduction To Java/1.History';
+import WhyJava from '../../../Course Modules/Java/0.Intoduction To Java/2.WhyJava';
+import TopicsCovered from '../../../Course Modules/Java/0.Intoduction To Java/3.TopicsCovered';
+import InstallationOfJavaOnWindows from '../../../Course Modules/Java/0.Intoduction To Java/4.InstallationOfJavaOnWindows';
 
 // Module 1: How Programs Work
-import WhatIsAProgram from '../../Java/1.HowaprogramWorks/1.whatisaprogram';
-import HowDoesAProgramWork from '../../Java/1.HowaprogramWorks/2.howdoesprogramworks';
-import WhatIsCompiler from '../../Java/1.HowaprogramWorks/3.whatisacompiler';
-import WhatIsInterpreter from '../../Java/1.HowaprogramWorks/4.whatisainterpreter';
-import WhatIsCodeEditor from '../../Java/1.HowaprogramWorks/5.whatisacodeeditor';
-import WhatTypeOfLanguageIsJava from '../../Java/1.HowaprogramWorks/6.whattypeoflanguageisjava';
+import WhatIsAProgram from '../../../Course Modules/Java/1.HowaprogramWorks/1.whatisaprogram';
+import HowDoesAProgramWork from '../../../Course Modules/Java/1.HowaprogramWorks/2.howdoesprogramworks';
+import WhatIsCompiler from '../../../Course Modules/Java/1.HowaprogramWorks/3.whatisacompiler';
+import WhatIsInterpreter from '../../../Course Modules/Java/1.HowaprogramWorks/4.whatisainterpreter';
+import WhatIsCodeEditor from '../../../Course Modules/Java/1.HowaprogramWorks/5.whatisacodeeditor';
+import WhatTypeOfLanguageIsJava from '../../../Course Modules/Java/1.HowaprogramWorks/6.whattypeoflanguageisjava';
 
 // Module 2: Syntax And Variables
-import Syntexofjava from '../../Java/2.Syntex And Variables/1.Syntexofjava';
-import VariablesinJava from '../../Java/2.Syntex And Variables/2.VariablesinJava';
-import DatatypesinJava from '../../Java/2.Syntex And Variables/3.DatatypesinJava';
-import Set1Datatypes from '../../Java/2.Syntex And Variables/PracticeSet1Datatypes';
+import Syntexofjava from '../../../Course Modules/Java/2.Syntex And Variables/1.Syntexofjava';
+import VariablesinJava from '../../../Course Modules/Java/2.Syntex And Variables/2.VariablesinJava';
+import DatatypesinJava from '../../../Course Modules/Java/2.Syntex And Variables/3.DatatypesinJava';
+import Set1Datatypes from '../../../Course Modules/Java/2.Syntex And Variables/PracticeSet1Datatypes';
 
 export const modules = [
   {

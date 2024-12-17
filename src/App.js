@@ -1,72 +1,52 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, memo } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useGitHubAuth } from './Frontend/Authentication/login&&signup/useGitHubAuth';
+import { ThemeProvider } from './Frontend/Components/ThemeProvider';
 
-// Lazy load the components
+// Custom loading component
+const LoadingSpinner = memo(() => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"/>
+  </div>
+));
+
+// Error boundary component
+class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div>Something went wrong. Please refresh the page.</div>;
+    }
+    return this.props.children;
+  }
+}
+
+// Lazy load components with proper loading handling
 const Home = lazy(() => import('./Frontend/pages/home/homepage'));
 const Courses = lazy(() => import('./Frontend/pages/Courses/Courses'));
-const LearnJava = lazy(() => import('./Content/Java/LearnJava'));
-const EnrolledCourses = lazy(() => import('./Frontend/pages/Courses/EnrolledCourses'));
+const LearnJava = lazy(() => import('./Course Modules/Java/LearnJava'));
 
-// GitHub callback handler component
-const GitHubCallback = () => {
-  const { error } = useGitHubAuth();
-  const [timeoutId, setTimeoutId] = React.useState(null);
-
-  React.useEffect(() => {
-    // Set a timeout to redirect if stuck
-    const id = setTimeout(() => {
-      console.log('Callback timeout - redirecting to home');
-      window.location.replace('/');
-    }, 10000);
-    setTimeoutId(id);
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [timeoutId]); // Added timeoutId to dependencies
-
+const App = memo(() => {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-        <h2 className="text-xl font-semibold mb-2">
-          {error ? 'Authentication Failed' : 'Completing Sign In...'}
-        </h2>
-        <p className="text-gray-600">
-          {error || 'Please wait while we process your authentication.'}
-        </p>
-      </div>
-    </div>
+    <ThemeProvider defaultTheme="dark" storageKey="app-theme">
+      <Router>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/homepage" element={<Home />} />
+              <Route path="/courses" element={<Courses />} />
+              <Route path="/modules/java/*" element={<LearnJava />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
+      </Router>
+    </ThemeProvider>
   );
-};
-
-// Define the routes
-const routes = [
-  { path: '/', component: Home },
-  { path: '/homepage', component: Home },
-  { path: '/courses', component: Courses },
-  { path: '/github/oauth/callback', component: GitHubCallback },
-  { path: '/modules/java/*', component: LearnJava }, // Updated this line
-  { path: '/enrolled-courses', component: EnrolledCourses },
-];
-
-const App = () => {
-  return (
-    <Router>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Routes>
-          {routes.map((route, index) => (
-            <Route
-              key={index}
-              path={route.path}
-              element={<route.component />}
-            />
-          ))}
-        </Routes>
-      </Suspense>
-    </Router>
-  );
-};
+});
 
 export default App;

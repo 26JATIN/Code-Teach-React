@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, FileText } from 'lucide-react';
+import { Eye, FileText, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
@@ -15,7 +15,7 @@ const Button = React.memo(({ children, onClick, variant = 'default', className =
   };
 
   return (
-    <button 
+    <button
       onClick={onClick}
       className={`${baseStyles} ${variantStyles[variant]} ${className}`}
       aria-label={typeof children === 'string' ? children : 'Button'}
@@ -28,10 +28,26 @@ const Button = React.memo(({ children, onClick, variant = 'default', className =
 // Page component with Performance Optimizations
 function CoursesPage() {
   const navigate = useNavigate();
+  const [enrolledCourses, setEnrolledCourses] = useState(() => {
+    const saved = localStorage.getItem('enrolledCourses');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Memoized event handlers
   const handleViewCourse = useCallback((course) => {
     navigate(course.path);
+  }, [navigate]);
+
+  const handleEnrollCourse = useCallback((courseId) => {
+    setEnrolledCourses(prev => {
+      const newEnrolled = [...prev, courseId];
+      localStorage.setItem('enrolledCourses', JSON.stringify(newEnrolled));
+      return newEnrolled;
+    });
+  }, []);
+
+  const handleOpenDashboard = useCallback(() => {
+    navigate('/learning-dashboard');
   }, [navigate]);
 
   // Memoized course rendering
@@ -59,15 +75,34 @@ function CoursesPage() {
             {course.duration}
           </span>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={() => handleViewCourse(course)}
-        >
-          <Eye className="mr-2" size={16} />
-          View Course
-        </Button>
+        <div className="flex gap-2 mt-4">
+          <Button 
+            variant="outline" 
+            onClick={() => handleViewCourse(course)}
+          >
+            <Eye className="mr-2" size={16} />
+            View Course
+          </Button>
+          
+          {enrolledCourses.includes(course.id) ? (
+            <Button 
+              onClick={handleOpenDashboard}
+              className="bg-green-500 hover:bg-green-600 text-white"
+            >
+              <BookOpen className="mr-2" size={16} />
+              Open Dashboard
+            </Button>
+          ) : (
+            <Button 
+              onClick={() => handleEnrollCourse(course.id)}
+              className="bg-purple-500 hover:bg-purple-600 text-white"
+            >
+              Enroll Now
+            </Button>
+          )}
+        </div>
       </motion.div>
-    )), [handleViewCourse]
+    )), [handleViewCourse, handleEnrollCourse, handleOpenDashboard, enrolledCourses]
   );
 
   return (

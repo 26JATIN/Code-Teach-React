@@ -29,6 +29,7 @@ class ErrorBoundary extends React.Component {
 const Home = lazy(() => import('./Frontend/pages/home/homepage'));
 const Courses = lazy(() => import('./Frontend/pages/Courses/Courses'));
 const LearnJava = lazy(() => import('./Course Modules/Java/LearnJava'));
+const LearningDashboard = lazy(() => import('./Frontend/pages/EnrolledCourse/learningdashboard'));
 
 const App = memo(() => {
   return (
@@ -41,6 +42,7 @@ const App = memo(() => {
               <Route path="/homepage" element={<Home />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/modules/java/*" element={<LearnJava />} />
+              <Route path="/learning-dashboard" element={<LearningDashboard />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>

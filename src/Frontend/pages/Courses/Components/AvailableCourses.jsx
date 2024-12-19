@@ -3,37 +3,37 @@ import React from 'react';
 
 export const COURSES = [
   {
-    id: 1,
+    _id: '1',
     title: 'Java Programming',
     description: 'Comprehensive course covering Java fundamentals, object-oriented programming, and advanced concepts.',
-    level: 'Beginner to Advanced',
+    difficulty: 'Beginner to Advanced',
     icon: <Code size={32} className="text-purple-600 dark:text-purple-400" />,
-    duration: '8 weeks',
+    duration: '40',
     path: '/modules/java'
   },
   {
-    id: 2,
+    _id: '2',
     title: 'C++ Mastery',
     description: 'Deep dive into C++ programming, covering language intricacies, system-level programming, and best practices.',
-    level: 'Intermediate to Advanced',
+    difficulty: 'Intermediate to Advanced',
     icon: <Book size={32} className="text-blue-600 dark:text-blue-400" />,
-    duration: '10 weeks',
+    duration: '50',
     path: '/modules/cpp'
   },
   {
-    id: 3,
+    _id: '3',
     title: 'Data Structures & Algorithms',
     description: 'Comprehensive course on data structures, algorithm design, analysis, and problem-solving techniques.',
-    level: 'Advanced',
+    difficulty: 'Advanced',
     icon: <Video size={32} className="text-green-600 dark:text-green-400" />,
     duration: '12 weeks',
     path: '/modules/dsa'
   },
   {
-    id: 4,
+    _id: '4',
     title: 'Web Development Bootcamp',
     description: 'Full-stack web development course covering frontend, backend, and modern web technologies.',
-    level: 'Comprehensive',
+    difficulty: 'Comprehensive',
     icon: <FileText size={32} className="text-red-600 dark:text-red-400" />,
     duration: '16 weeks',
     path: '/modules/web-development'

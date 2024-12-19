@@ -1,10 +1,11 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, FileText, BookOpen } from 'lucide-react';
+import { Eye, FileText, BookOpen, Code, Book } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
-import { COURSES } from './Components/AvailableCourses';
+// Remove COURSES import as it's not being used
+// import { COURSES } from './Components/AvailableCourses';
 
 // Optimized Button Component with Memoization
 const Button = React.memo(({ children, onClick, variant = 'default', className = '' }) => {
@@ -28,94 +29,209 @@ const Button = React.memo(({ children, onClick, variant = 'default', className =
 // Page component with Performance Optimizations
 function CoursesPage() {
   const navigate = useNavigate();
-  const [enrolledCourses, setEnrolledCourses] = useState(() => {
-    const saved = localStorage.getItem('enrolledCourses');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [courses, setCourses] = useState([]);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Memoized event handlers
+  // Move hooks before any conditional returns
   const handleViewCourse = useCallback((course) => {
     navigate(course.path);
   }, [navigate]);
 
-  const handleEnrollCourse = useCallback((courseId) => {
-    setEnrolledCourses(prev => {
-      const newEnrolled = [...prev, courseId];
-      localStorage.setItem('enrolledCourses', JSON.stringify(newEnrolled));
-      return newEnrolled;
-    });
-  }, []);
+  const handleEnrollCourse = useCallback(async (courseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/auth');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/courses/enroll/${courseId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to enroll in course');
+      }
+
+      // Update token and user data in localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+
+      // Update enrolled courses state
+      setEnrolledCourses(prev => [...prev, courseId]);
+      navigate('/learning-dashboard');
+
+    } catch (error) {
+      console.error('Enrollment error:', error);
+      alert(error.message || 'Failed to enroll in course');
+    }
+  }, [navigate]);
 
   const handleOpenDashboard = useCallback(() => {
     navigate('/learning-dashboard');
   }, [navigate]);
 
-  // Memoized course rendering
+  // Move useMemo before any conditional returns
   const courseCards = useMemo(() => 
-    COURSES.map((course) => (
-      <motion.div
-        key={course.id}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 dark:border-gray-700 flex flex-col"
-      >
-        <div className="flex items-center mb-4">
-          {course.icon}
-          <h2 className="ml-4 text-xl font-semibold text-gray-800 dark:text-gray-100">
-            {course.title}
-          </h2>
-        </div>
-        <p className="text-gray-600 dark:text-gray-400 mb-4 flex-grow">
-          {course.description}
-        </p>
-        <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
-          <span className="bg-purple-50 dark:bg-purple-900 px-2 py-1 rounded-full text-purple-600 dark:text-purple-300">
-            {course.level}
-          </span>
-          <span>
-            <FileText size={16} className="inline-block mr-2" />
-            {course.duration}
-          </span>
-        </div>
-        <div className="flex gap-2 mt-4">
-          <Button 
-            variant="outline" 
-            onClick={() => handleViewCourse(course)}
-          >
-            <Eye className="mr-2" size={16} />
-            View Course
-          </Button>
-          
-          {enrolledCourses.includes(course.id) ? (
+    courses.map((course) => {
+      // Safety check for course._id
+      const courseId = course?._id?.toString();
+      const isEnrolled = courseId && enrolledCourses.includes(courseId);
+
+      // Create icon based on course type/category
+      const getIcon = () => {
+        switch(course.category) {
+          case 'programming':
+            return <Code size={32} className="text-purple-600 dark:text-purple-400" />;
+          case 'web':
+            return <FileText size={32} className="text-red-600 dark:text-red-400" />;
+          default:
+            return <Book size={32} className="text-blue-600 dark:text-blue-400" />;
+        }
+      };
+
+      return (
+        <motion.div
+          key={courseId || Math.random()}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 dark:border-gray-700 flex flex-col"
+        >
+          <div className="flex items-center mb-4">
+            {getIcon()}
+            <h2 className="ml-4 text-xl font-semibold text-gray-800 dark:text-gray-100">
+              {course.title}
+            </h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-4 flex-grow">
+            {course.description}
+          </p>
+          <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
+            <span className="bg-purple-50 dark:bg-purple-900 px-2 py-1 rounded-full text-purple-600 dark:text-purple-300">
+              {course.difficulty}
+            </span>
+            <span>
+              <FileText size={16} className="inline-block mr-2" />
+              {course.duration} hours
+            </span>
+          </div>
+          <div className="flex gap-2 mt-4">
             <Button 
-              onClick={handleOpenDashboard}
-              className="bg-green-500 hover:bg-green-600 text-white"
+              variant="outline" 
+              onClick={() => course && handleViewCourse(course)}
             >
-              <BookOpen className="mr-2" size={16} />
-              Open Dashboard
+              <Eye className="mr-2" size={16} />
+              View Course
             </Button>
-          ) : (
-            <Button 
-              onClick={() => handleEnrollCourse(course.id)}
-              className="bg-purple-500 hover:bg-purple-600 text-white"
-            >
-              Enroll Now
-            </Button>
-          )}
-        </div>
-      </motion.div>
-    )), [handleViewCourse, handleEnrollCourse, handleOpenDashboard, enrolledCourses]
+            
+            {isEnrolled ? (
+              <Button 
+                onClick={handleOpenDashboard}
+                className="bg-green-500 hover:bg-green-600 text-white"
+              >
+                <BookOpen className="mr-2" size={16} />
+                Continue Learning
+              </Button>
+            ) : (
+              <Button 
+                onClick={() => courseId && handleEnrollCourse(courseId)}
+                className="bg-purple-500 hover:bg-purple-600 text-white"
+              >
+                Enroll Now
+              </Button>
+            )}
+          </div>
+        </motion.div>
+      );
+    }), [courses, enrolledCourses, handleViewCourse, handleEnrollCourse, handleOpenDashboard]
   );
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        
+        // Fetch courses
+        const coursesResponse = await fetch('http://localhost:5000/api/courses');
+        if (!coursesResponse.ok) throw new Error('Failed to fetch courses');
+        const coursesData = await coursesResponse.json();
+        setCourses(coursesData);
+        
+        // Fetch enrolled courses if logged in
+        if (token) {
+          const enrolledResponse = await fetch('http://localhost:5000/api/courses/enrolled', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (enrolledResponse.ok) {
+            const enrolledData = await enrolledResponse.json();
+            console.log('Enrolled courses:', enrolledData);
+            
+            // Extract just the course IDs for enrollment check
+            const enrolledIds = enrolledData.map(course => course._id?.toString());
+            console.log('Enrolled IDs:', enrolledIds);
+            setEnrolledCourses(enrolledIds || []);
+          } else {
+            console.error('Failed to fetch enrolled courses');
+            setEnrolledCourses([]);
+          }
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []); // Empty dependency array
+
+  if (loading) {
+    return (
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  if (error) {
+    return (
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <div className="min-h-screen flex items-center justify-center text-red-500">
+          {error}
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  // Main render
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-200 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
         <Header />
-    
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
           className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8"
         >
+          {/* ...existing content... */}
           <div className="max-w-7xl mx-auto">
             <motion.div
               initial={{ y: -50, opacity: 0 }}

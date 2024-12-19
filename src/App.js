@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, memo } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './Frontend/Components/ThemeProvider';
+import { isAuthenticated } from './config/config';
 
 // Custom loading component
 const LoadingSpinner = memo(() => (
@@ -9,46 +10,68 @@ const LoadingSpinner = memo(() => (
   </div>
 ));
 
-// Error boundary component
-class ErrorBoundary extends React.Component {
-  state = { hasError: false };
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <div>Something went wrong. Please refresh the page.</div>;
-    }
-    return this.props.children;
-  }
-}
-
-// Lazy load components with proper loading handling
+// Lazy load components
 const Home = lazy(() => import('./Frontend/pages/home/homepage'));
 const Courses = lazy(() => import('./Frontend/pages/Courses/Courses'));
 const LearnJava = lazy(() => import('./Course Modules/Java/LearnJava'));
 const LearningDashboard = lazy(() => import('./Frontend/pages/EnrolledCourse/learningdashboard'));
+const Auth = lazy(() => import('./Frontend/pages/Authentication/signup&&login'));
 
-const App = memo(() => {
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  if (!isAuthenticated()) {
+    return <Navigate to="/auth" replace />;
+  }
+  return children;
+};
+
+// Public Route Component
+const PublicRoute = ({ children }) => {
+  if (isAuthenticated()) {
+    return <Navigate to="/learning-dashboard" replace />;
+  }
+  return children;
+};
+
+const App = () => {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="app-theme">
       <Router>
-        <ErrorBoundary>
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/homepage" element={<Home />} />
-              <Route path="/courses" element={<Courses />} />
-              <Route path="/modules/java/*" element={<LearnJava />} />
-              <Route path="/learning-dashboard" element={<LearningDashboard />} />
-            </Routes>
-          </Suspense>
-        </ErrorBoundary>
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/homepage" element={<Home />} />
+            <Route path="/auth" element={
+              <PublicRoute>
+                <Auth />
+              </PublicRoute>
+            } />
+
+            {/* Protected Routes */}
+            <Route path="/courses" element={
+              <ProtectedRoute>
+                <Courses />
+              </ProtectedRoute>
+            } />
+            <Route path="/modules/java/*" element={
+              <ProtectedRoute>
+                <LearnJava />
+              </ProtectedRoute>
+            } />
+            <Route path="/learning-dashboard" element={
+              <ProtectedRoute>
+                <LearningDashboard />
+              </ProtectedRoute>
+            } />
+
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </Router>
     </ThemeProvider>
   );
-});
+};
 
 export default App;

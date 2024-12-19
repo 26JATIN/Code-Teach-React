@@ -1,38 +1,92 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Clock, Award, XCircle } from 'lucide-react';
+import { BookOpen, Clock, Award, XCircle, Code, Book, FileText } from 'lucide-react';
 import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
-import { COURSES } from '../Courses/Components/AvailableCourses';
 
 function LearningDashboard() {
   const [showConfirmation, setShowConfirmation] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  
-  const [enrolledCourses, setEnrolledCourses] = useState(() => {
-    const saved = localStorage.getItem('enrolledCourses');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [error, setError] = useState(null);
 
-  React.useEffect(() => {
-    setTimeout(() => setIsLoading(false), 500);
+  // Fetch enrolled courses from backend
+  useEffect(() => {
+    const fetchEnrolledCourses = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await fetch('http://localhost:5000/api/courses/enrolled', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch enrolled courses');
+        }
+
+        const data = await response.json();
+        console.log('Fetched enrolled courses:', data);
+        setEnrolledCourses(data);
+      } catch (err) {
+        console.error('Error fetching enrolled courses:', err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEnrolledCourses();
   }, []);
 
-  const handleUnenroll = useCallback((courseId) => {
+  const handleUnenroll = async (courseId) => {
     setShowConfirmation(courseId);
-  }, []);
+  };
 
-  const confirmUnenroll = useCallback((courseId) => {
-    const newEnrolled = enrolledCourses.filter(id => id !== courseId);
-    localStorage.setItem('enrolledCourses', JSON.stringify(newEnrolled));
-    setEnrolledCourses(newEnrolled);
-    setShowConfirmation(null);
-  }, [enrolledCourses]);
+  const confirmUnenroll = async (courseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-  const enrolledCourseDetails = useMemo(() => 
-    COURSES.filter(course => enrolledCourses.includes(course.id)),
-    [enrolledCourses]
-  );
+      const response = await fetch(`http://localhost:5000/api/courses/enroll/${courseId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to unenroll from course');
+      }
+
+      // Remove course from state
+      setEnrolledCourses(prev => prev.filter(course => course._id !== courseId));
+      setShowConfirmation(null);
+    } catch (err) {
+      console.error('Error unenrolling:', err);
+      alert(err.message || 'Failed to unenroll from course');
+    }
+  };
+
+  // Get icon based on course category
+  const getIcon = (category) => {
+    switch(category) {
+      case 'programming':
+        return <Code size={32} className="text-purple-600 dark:text-purple-400" />;
+      case 'web':
+        return <FileText size={32} className="text-red-600 dark:text-red-400" />;
+      default:
+        return <Book size={32} className="text-blue-600 dark:text-blue-400" />;
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -64,11 +118,41 @@ function LearningDashboard() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  // Optional: Add error handling in UI if you want to keep the error state
+  if (error) {
+    return (
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-red-500 text-center">
+            <p>Error: {error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-200 dark:from-gray-900 dark:to-gray-800">
         <Header />
         
+        {/* Confirmation Modal */}
         {showConfirmation && (
           <motion.div 
             initial={{ opacity: 0 }}
@@ -114,11 +198,7 @@ function LearningDashboard() {
             animate={isLoading ? "hidden" : "show"}
             variants={containerVariants}
           >
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-              </div>
-            ) : enrolledCourseDetails.length === 0 ? (
+            {enrolledCourses.length === 0 ? (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -138,22 +218,22 @@ function LearningDashboard() {
               </motion.div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {enrolledCourseDetails.map(course => (
+                {enrolledCourses.map(course => (
                   <motion.div
-                    key={course.id}
+                    key={course._id}
                     variants={itemVariants}
                     layout
                     className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transform transition-all duration-300 hover:shadow-xl"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center">
-                        {course.icon}
+                        {getIcon(course.category)}
                         <h2 className="ml-4 text-xl font-semibold text-gray-800 dark:text-gray-100">
                           {course.title}
                         </h2>
                       </div>
                       <button
-                        onClick={() => handleUnenroll(course.id)}
+                        onClick={() => handleUnenroll(course._id)}
                         className="text-gray-400 hover:text-red-500 transition-colors"
                         title="Unenroll"
                       >
@@ -169,21 +249,24 @@ function LearningDashboard() {
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center text-purple-500">
                           <Award size={16} className="mr-2" />
-                          <span>{course.level}</span>
+                          <span>{course.difficulty}</span>
                         </div>
                         <div className="flex items-center text-gray-500">
                           <Clock size={16} className="mr-2" />
-                          <span>{course.duration}</span>
+                          <span>{course.duration} hours</span>
                         </div>
                       </div>
 
                       <div className="mt-4">
                         <div className="flex justify-between text-sm mb-1">
                           <span className="text-gray-600 dark:text-gray-400">Progress</span>
-                          <span className="text-purple-500">0%</span>
+                          <span className="text-purple-500">{course.progress || 0}%</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                          <div className="bg-purple-500 h-2 rounded-full w-0"></div>
+                          <div 
+                            className="bg-purple-500 h-2 rounded-full" 
+                            style={{ width: `${course.progress || 0}%` }}
+                          ></div>
                         </div>
                       </div>
 
@@ -191,6 +274,7 @@ function LearningDashboard() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className="w-full mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center justify-center"
+                        onClick={() => window.location.href = course.path}
                       >
                         <BookOpen size={16} className="mr-2" />
                         Continue Learning
@@ -208,4 +292,3 @@ function LearningDashboard() {
 }
 
 export default React.memo(LearningDashboard);
- 

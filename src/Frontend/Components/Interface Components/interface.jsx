@@ -18,6 +18,7 @@ const ModuleButton = ({ module, isExpanded, toggleModule }) => (
         ${isExpanded ? 'text-sky-400' : 'text-gray-400 group-hover/module:text-gray-300'}`}>
         {module.title}
       </span>
+      
     </div>
     <ChevronDown size={16} 
       className={`text-gray-500 transition-transform duration-200

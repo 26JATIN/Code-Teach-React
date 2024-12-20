@@ -21,16 +21,24 @@ function LearningDashboard() {
 
         const response = await fetch('https://key-shrimp-novel.ngrok-free.app/api/courses/enrolled', {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           }
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch enrolled courses');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Fetched enrolled courses:', data);
+        console.log('Enrolled courses data:', data);
+
+        if (!Array.isArray(data)) {
+          console.error('Unexpected data format:', data);
+          throw new Error('Server returned unexpected data format');
+        }
+
         setEnrolledCourses(data);
       } catch (err) {
         console.error('Error fetching enrolled courses:', err);

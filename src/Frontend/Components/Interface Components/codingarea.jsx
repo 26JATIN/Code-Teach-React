@@ -26,6 +26,19 @@ const CopyButton = ({ textToCopy, className = '' }) => {
   );
 };
 
+const getDefaultContent = (filename) => {
+  if (filename.endsWith('.java')) {
+    const className = filename.replace('.java', '');
+    return `public class ${className} {
+    public static void main(String[] args) {
+        // Write your code here
+        System.out.println("Hello World!");
+    }
+}`;
+  }
+  return '// Write your code here';
+};
+
 const CodingArea = ({ onClose }) => {
   const [files, setFiles] = useState(() => {
     const savedFiles = localStorage.getItem('codeFiles');
@@ -52,7 +65,7 @@ const CodingArea = ({ onClose }) => {
     const newFile = {
       id: Date.now(),
       name: newFileName.includes('.') ? newFileName : `${newFileName}.js`,
-      content: '',
+      content: getDefaultContent(newFileName.includes('.') ? newFileName : `${newFileName}.js`),
       created: new Date().toISOString()
     };
     setFiles(prev => [...prev, newFile]);
@@ -123,18 +136,40 @@ const CodingArea = ({ onClose }) => {
     setError(null);
     
     try {
+      const isJava = language === 'java';
+      let content = fileContent;
+      
+      // For Java files, ensure the class name matches the file name
+      if (isJava && activeFile) {
+        const className = activeFile.name.replace('.java', '');
+        if (!fileContent.includes(`class ${className}`)) {
+          setError(`Class name must match the file name: ${className}`);
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          language: language || 'javascript',
-          version: language === 'java' ? '15.0.2' : '*',
-          files: [{ content: fileContent }],
+          language: isJava ? 'java' : 'javascript',
+          version: isJava ? '15.0.2' : '*',
+          files: [{
+            name: isJava ? 'Main.java' : 'index.js',
+            content: content
+          }],
           stdin: input
         }),
       });
 
       const data = await response.json();
+      
+      if (data.message) {
+        setError(data.message);
+        return;
+      }
+
       setOutput(data.run.output || data.run.stderr);
     } catch (err) {
       setError('Failed to execute code. Please try again.');
@@ -142,7 +177,7 @@ const CodingArea = ({ onClose }) => {
       setIsLoading(false);
       setShowInputModal(false);
     }
-  }, [input]);
+  }, [input, activeFile]);
 
   const handleEditorDidMount = (editor) => {
     editorRef.current = editor;

@@ -4,8 +4,7 @@ import { Eye, FileText, BookOpen, Code, Book } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
-// Remove COURSES import as it's not being used
-// import { COURSES } from './Components/AvailableCourses';
+import config, { apiRequest } from '../../../config/config';
 
 // Optimized Button Component with Memoization
 const Button = React.memo(({ children, onClick, variant = 'default', className = '' }) => {
@@ -41,38 +40,13 @@ function CoursesPage() {
 
   const handleEnrollCourse = useCallback(async (courseId) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/auth');
-        return;
-      }
-
-      const response = await fetch(`https://key-shrimp-novel.ngrok-free.app/api/courses/enroll/${courseId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const data = await apiRequest(config.api.endpoints.courses.enroll(courseId), {
+        method: 'POST'
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to enroll in course');
-      }
-
-      // Update token and user data in localStorage
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
-      if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-      }
-
-      // Update enrolled courses state
+      // Update enrolled courses state and navigate
       setEnrolledCourses(prev => [...prev, courseId]);
       navigate('/learning-dashboard');
-
     } catch (error) {
       console.error('Enrollment error:', error);
       alert(error.message || 'Failed to enroll in course');
@@ -160,34 +134,21 @@ function CoursesPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token');
         
-        // Fetch courses
-        const coursesResponse = await fetch('https://key-shrimp-novel.ngrok-free.app/api/courses');
-        if (!coursesResponse.ok) throw new Error('Failed to fetch courses');
-        const coursesData = await coursesResponse.json();
+        // Fetch all courses
+        const coursesData = await apiRequest(config.api.endpoints.courses.list);
         setCourses(coursesData);
         
-        // Fetch enrolled courses if logged in
-        if (token) {
-          const enrolledResponse = await fetch('https://key-shrimp-novel.ngrok-free.app/api/courses/enrolled', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          if (enrolledResponse.ok) {
-            const enrolledData = await enrolledResponse.json();
-            console.log('Enrolled courses:', enrolledData);
-            
-            // Extract just the course IDs for enrollment check
-            const enrolledIds = enrolledData.map(course => course._id?.toString());
-            console.log('Enrolled IDs:', enrolledIds);
-            setEnrolledCourses(enrolledIds || []);
-          } else {
-            console.error('Failed to fetch enrolled courses');
-            setEnrolledCourses([]);
-          }
+        try {
+          // Fetch enrolled courses if user is authenticated
+          const enrolledData = await apiRequest(config.api.endpoints.courses.enrolled);
+          // Extract just the course IDs for enrollment check
+          const enrolledIds = enrolledData.map(course => course._id?.toString());
+          setEnrolledCourses(enrolledIds || []);
+        } catch (enrolledError) {
+          // If this fails, just set empty enrolled courses
+          console.error('Failed to fetch enrolled courses:', enrolledError);
+          setEnrolledCourses([]);
         }
       } catch (err) {
         console.error('Error:', err);

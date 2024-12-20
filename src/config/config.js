@@ -101,8 +101,11 @@ export const apiRequest = async (endpoint, options = {}) => {
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-    }
+    },
+    mode: 'cors',
+    credentials: 'include'
   };
 
   try {
@@ -117,8 +120,23 @@ export const apiRequest = async (endpoint, options = {}) => {
       throw new Error('Session expired');
     }
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'API request failed');
+    // First get the response as text
+    const responseText = await response.text();
+    
+    // Try to parse it as JSON
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : null;
+    } catch (parseError) {
+      console.error('Failed to parse response as JSON:', responseText);
+      throw new Error('Invalid JSON response from server');
+    }
+
+    // Check if the response was ok
+    if (!response.ok) {
+      throw new Error(data?.error || data?.message || 'API request failed');
+    }
+
     return data;
   } catch (error) {
     console.error('API Request error:', error);

@@ -20,21 +20,20 @@ function LearningDashboard() {
           throw new Error('No authentication token found');
         }
 
-        const data = await apiRequest(config.api.endpoints.courses.enrolled);
-        
-        if (!Array.isArray(data)) {
-          if (typeof data === 'object' && data.courses && Array.isArray(data.courses)) {
-            setEnrolledCourses(data.courses);
-          } else {
-            console.error('Unexpected data format:', data);
-            throw new Error('Server returned unexpected data format');
+        const data = await apiRequest(config.api.endpoints.courses.enrolled, {
+          headers: {
+            'ngrok-skip-browser-warning': 'true'
           }
-        } else {
-          setEnrolledCourses(data);
+        });
+
+        if (!data) {
+          throw new Error('Empty response from server');
         }
+
+        setEnrolledCourses(Array.isArray(data) ? data : (data.courses || []));
       } catch (err) {
         console.error('Error fetching enrolled courses:', err);
-        setError(err.message);
+        setError(err.message || 'Failed to fetch enrolled courses');
       } finally {
         setIsLoading(false);
       }
@@ -50,7 +49,10 @@ function LearningDashboard() {
   const confirmUnenroll = async (courseId) => {
     try {
       await apiRequest(config.api.endpoints.courses.enroll(courseId), {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
       });
       
       setEnrolledCourses(prev => prev.filter(course => course._id !== courseId));

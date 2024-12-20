@@ -1,27 +1,37 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Folder, File, X, Plus, Save, Trash, Copy } from 'lucide-react';
+import { Folder, File, X, Plus, Save, Trash, Copy, Download, Play } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { debounce } from 'lodash';
 
-// Import CopyButton component from CodeEditor
-const CopyButton = ({ textToCopy, className = '' }) => {
-  const [copied, setCopied] = useState(false);
+// Add download helper function
+const downloadCode = (content, filename) => {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+};
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(textToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+// Update CopyButton with more modern styling
+const ActionButton = ({ icon: Icon, label, onClick, variant = 'default' }) => {
+  const variants = {
+    default: 'bg-gray-800/50 hover:bg-gray-700/50 text-gray-300',
+    primary: 'bg-blue-600/80 hover:bg-blue-700/80 text-white',
+    success: 'bg-green-600/80 hover:bg-green-700/80 text-white',
   };
 
   return (
     <button
-      onClick={handleCopy}
-      className={`px-3 py-1.5 text-xs bg-gray-800/50 text-gray-300 rounded-md
-        hover:bg-gray-700/50 transition-all duration-200 flex items-center gap-2
-        border border-gray-700/50 ${className}`}
+      onClick={onClick}
+      className={`px-3 py-1.5 text-xs rounded-md transition-all duration-200 
+        flex items-center gap-2 border border-gray-700/50 ${variants[variant]}`}
     >
-      <Copy size={14} />
-      <span>{copied ? 'Copied!' : 'Copy'}</span>
+      <Icon size={14} />
+      <span>{label}</span>
     </button>
   );
 };
@@ -111,6 +121,13 @@ const CodingArea = ({ onClose }) => {
     contextmenu: false,
     cursorBlinking: 'smooth',
     smoothScrolling: true,
+    padding: { top: 20, bottom: 20 },
+    lineDecorationsWidth: 5,
+    renderIndentGuides: true,
+    colorDecorators: true,
+    bracketPairColorization: {
+      enabled: true,
+    },
   }), [fontSize]);
 
   const debouncedResize = useCallback(
@@ -192,27 +209,31 @@ const CodingArea = ({ onClose }) => {
   };
 
   return (
-    <div className="flex-1 flex h-full bg-gray-900/95"> {/* Slightly transparent background */}
-      {/* File Explorer - Make it slightly narrower */}
-      <div className="w-56 border-r border-gray-800/50 flex flex-col backdrop-blur-sm">
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-          <h2 className="text-gray-200 font-medium">Files</h2>
+    <div className="flex-1 flex h-full bg-gradient-to-b from-gray-900 to-gray-950">
+      {/* File Explorer */}
+      <div className="w-56 border-r border-gray-800/50 flex flex-col bg-gray-900/50 backdrop-blur-sm">
+        <div className="p-4 border-b border-gray-800/50 flex items-center justify-between">
+          <h2 className="text-gray-200 font-medium tracking-wide">Files</h2>
           <button
             onClick={() => setShowNewFileDialog(true)}
-            className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"
-            title="New File"
+            className="p-1.5 rounded-lg hover:bg-gray-800/70 text-gray-400 
+              transition-colors duration-200"
           >
             <Plus size={16} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2">
+        {/* File list with refined styling */}
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {files.map(file => (
             <div
               key={file.id}
               onClick={() => setActiveFile(file)}
-              className={`flex items-center justify-between p-2 rounded-lg cursor-pointer ${
-                activeFile?.id === file.id ? 'bg-gray-800' : 'hover:bg-gray-800/50'
+              className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer
+                transition-all duration-200 ${
+                activeFile?.id === file.id 
+                  ? 'bg-gray-800/90 shadow-lg' 
+                  : 'hover:bg-gray-800/50'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -235,80 +256,96 @@ const CodingArea = ({ onClose }) => {
 
       {/* Editor Area */}
       <div className="flex-1 flex flex-col">
-        <div className="px-4 py-3 border-b border-gray-800/50 backdrop-blur-sm flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h2 className="text-gray-200 font-medium">
-              {activeFile ? activeFile.name : 'No file selected'}
-            </h2>
-            {activeFile && (
-              <div className="flex items-center gap-2">
-                <CopyButton textToCopy={activeFile.content} />
-                <button
-                  onClick={() => executeCode(activeFile.content, activeFile.name.endsWith('.java') ? 'java' : 'javascript')}
-                  disabled={isLoading}
-                  className="px-3 py-1.5 bg-blue-600/80 text-white rounded-md hover:bg-blue-700/80 
-                    transition-all duration-200 text-xs font-medium flex items-center gap-2
-                    disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? 'Running...' : 'Run Code'}
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">Font Size:</span>
-              <input
-                type="range"
-                min="12"
-                max="24"
-                value={fontSize}
-                onChange={(e) => setFontSize(Number(e.target.value))}
-                className="w-24 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-              />
-              <span className="text-xs text-gray-400">{fontSize}px</span>
+        {/* Editor Header */}
+        <div className="px-4 py-3 border-b border-gray-800/50 bg-gray-900/50 backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h2 className="text-gray-200 font-medium">
+                {activeFile ? activeFile.name : 'No file selected'}
+              </h2>
+              {activeFile && (
+                <div className="flex items-center gap-2">
+                  <ActionButton 
+                    icon={Copy} 
+                    label="Copy" 
+                    onClick={() => navigator.clipboard.writeText(activeFile.content)}
+                  />
+                  <ActionButton 
+                    icon={Download} 
+                    label="Download" 
+                    onClick={() => downloadCode(activeFile.content, activeFile.name)}
+                  />
+                  <ActionButton 
+                    icon={Play} 
+                    label={isLoading ? 'Running...' : 'Run'} 
+                    variant="primary"
+                    onClick={() => executeCode(activeFile.content, 
+                      activeFile.name.endsWith('.java') ? 'java' : 'javascript')}
+                  />
+                </div>
+              )}
             </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"
-              title="Close Editor"
-            >
-              <X size={16} />
-            </button>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">Font Size:</span>
+                <input
+                  type="range"
+                  min="12"
+                  max="24"
+                  value={fontSize}
+                  onChange={(e) => setFontSize(Number(e.target.value))}
+                  className="w-24 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+                <span className="text-xs text-gray-400">{fontSize}px</span>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"
+                title="Close Editor"
+              >
+                <X size={16} />
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Editor and Output */}
         <div className="flex-1 flex flex-col">
           <div className="flex-1 relative" ref={containerRef}>
             {activeFile ? (
-              <div className="absolute inset-0">
-                <Editor
-                  height="100%"
-                  defaultLanguage={activeFile.name.endsWith('.java') ? 'java' : 'javascript'}
-                  theme="vs-dark"
-                  value={activeFile.content}
-                  onChange={handleFileChange}
-                  onMount={handleEditorDidMount}
-                  options={editorOptions}
-                  className="rounded-lg overflow-hidden" // Add rounded corners
-                />
+              <div className="absolute inset-0 p-2">
+                <div className="w-full h-full rounded-lg overflow-hidden shadow-lg border border-gray-800/50">
+                  <Editor
+                    height="100%"
+                    defaultLanguage={activeFile.name.endsWith('.java') ? 'java' : 'javascript'}
+                    theme="vs-dark"
+                    value={activeFile.content}
+                    onChange={handleFileChange}
+                    onMount={handleEditorDidMount}
+                    options={editorOptions}
+                    className="rounded-lg"
+                  />
+                </div>
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400">
-                <div className="text-center space-y-2">
-                  <div className="text-lg">No File Selected</div>
-                  <div className="text-sm text-gray-500">Select or create a file to start coding</div>
+                <div className="text-center space-y-3">
+                  <File size={40} className="mx-auto text-gray-500/50" />
+                  <div className="text-lg font-medium">No File Selected</div>
+                  <div className="text-sm text-gray-500">
+                    Select an existing file or create a new one to start coding
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Output Terminal */}
+          {/* Output Terminal with refined styling */}
           {activeFile && (
-            <div className="h-48 border-t border-gray-800/50 bg-gray-950/80 backdrop-blur-sm">
+            <div className="h-48 border-t border-gray-800/50 bg-gray-950/90 backdrop-blur-sm">
               <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800/30">
                 <span className="text-xs font-medium text-gray-400">Output Terminal</span>
-                {output && <CopyButton textToCopy={output} />}
+                {output && <ActionButton icon={Copy} label="Copy" onClick={() => navigator.clipboard.writeText(output)} />}
               </div>
               <div className="p-4 font-mono text-sm h-36 overflow-auto">
                 {error ? (
@@ -327,7 +364,8 @@ const CodingArea = ({ onClose }) => {
       {/* New File Dialog */}
       {showNewFileDialog && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-800/90 p-6 rounded-xl w-96 shadow-2xl border border-gray-700/50">
+          <div className="bg-gray-800/90 p-6 rounded-xl w-96 shadow-2xl border border-gray-700/50
+            backdrop-blur-md transform transition-all duration-200">
             <h3 className="text-gray-200 mb-4">Create New File</h3>
             <input
               type="text"

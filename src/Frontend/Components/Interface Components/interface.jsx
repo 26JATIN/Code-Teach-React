@@ -298,12 +298,10 @@ const CourseLayout = ({
     const isRightSwipe = distance < -50;
 
     if (isLeftSwipe) {
-      // Changed: Set direction to 'right' for left swipe to match the animation
-      setSwipeDirection('right');
+      setSwipeDirection('left'); // Changed from 'right' to 'left'
       navigateModules('next');
     } else if (isRightSwipe) {
-      // Changed: Set direction to 'left' for right swipe to match the animation
-      setSwipeDirection('left');
+      setSwipeDirection('right'); // Changed from 'left' to 'right'
       navigateModules('prev');
     }
 
@@ -314,7 +312,7 @@ const CourseLayout = ({
   // Page transition variants for animations
   const pageTransitionVariants = {
     enter: (direction) => ({
-      x: direction === 'right' ? 1000 : -1000,
+      x: direction === 'left' ? 1000 : -1000, // Changed 'right' to 'left'
       opacity: 0
     }),
     center: {
@@ -326,7 +324,7 @@ const CourseLayout = ({
       }
     },
     exit: (direction) => ({
-      x: direction === 'right' ? -1000 : 1000,
+      x: direction === 'left' ? -1000 : 1000, // Changed 'right' to 'left'
       opacity: 0,
       transition: {
         x: { type: "spring", stiffness: 200, damping: 25 },

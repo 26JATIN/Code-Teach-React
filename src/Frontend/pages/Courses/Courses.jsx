@@ -13,7 +13,6 @@ const Button = React.memo(({ children, onClick, variant = 'default', className =
     default: "bg-blue-500 text-white hover:bg-blue-600 active:scale-95",
     outline: "border border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 active:scale-95",
   };
-
   return (
     <button
       onClick={onClick}

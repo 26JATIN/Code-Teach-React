@@ -31,12 +31,26 @@ function LearningDashboard() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-        console.log('Enrolled courses data:', data);
+        const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          console.error('Failed to parse response:', text);
+          throw new Error('Invalid JSON response from server');
+        }
+
+        if (!data) {
+          throw new Error('Empty response from server');
+        }
 
         if (!Array.isArray(data)) {
-          console.error('Unexpected data format:', data);
-          throw new Error('Server returned unexpected data format');
+          if (typeof data === 'object' && data.courses && Array.isArray(data.courses)) {
+            data = data.courses;
+          } else {
+            console.error('Unexpected data format:', data);
+            throw new Error('Server returned unexpected data format');
+          }
         }
 
         setEnrolledCourses(data);

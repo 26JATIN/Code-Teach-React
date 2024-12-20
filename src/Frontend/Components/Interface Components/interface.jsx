@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, ChevronRight, ChevronDown, ArrowRight, Code } from 'lucide-react';
 import { useMediaQuery } from 'react-responsive';
+import CodingArea from './codingarea';  // Add this import
 
 // Internal ModuleButton component
 const ModuleButton = ({ module, isExpanded, toggleModule }) => (

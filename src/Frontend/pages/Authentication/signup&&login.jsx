@@ -43,7 +43,18 @@ const AuthPage = () => {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || 'Authentication failed');
+        // Handle specific error cases
+        if (response.status === 401) {
+          throw new Error('Invalid email or password');
+        } else if (response.status === 409) {
+          throw new Error('Email already exists');
+        } else {
+          throw new Error(data.message || data.error || 'Authentication failed');
+        }
+      }
+
+      if (!data.token || !data.user) {
+        throw new Error('Invalid response from server');
       }
 
       setAuthToken(data.token);
@@ -52,7 +63,7 @@ const AuthPage = () => {
       
     } catch (error) {
       console.error('Auth error:', error);
-      alert(error.message || 'An error occurred during authentication');
+      alert(error.message || 'An unexpected error occurred. Please try again.');
     }
   };
 

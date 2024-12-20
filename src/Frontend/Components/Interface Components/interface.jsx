@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, ChevronRight, ChevronDown, ArrowRight } from 'lucide-react';
+import { Menu, ChevronRight, ChevronDown, ArrowRight, Code } from 'lucide-react';
 import { useMediaQuery } from 'react-responsive';
 
 // Internal ModuleButton component
@@ -82,6 +82,7 @@ const CourseLayout = ({
   const [isMenuOpen, setIsMenuOpen] = useState(!isMobile);
   const [expandedModules, setExpandedModules] = useState({});
   const [activeModule, setActiveModule] = useState(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -269,6 +270,10 @@ const CourseLayout = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [smoothScroll, navigateModules]);
 
+  const toggleEditor = useCallback(() => {
+    setIsEditorOpen(prev => !prev);
+  }, []);
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-950 overflow-hidden">
       {isMobile && (
@@ -390,94 +395,108 @@ const CourseLayout = ({
       >
         <div className="absolute inset-0 flex flex-col">
           <div className="sticky top-0 z-10 px-4 sm:px-6 py-3 border-b border-gray-800/50 bg-gray-900/80 backdrop-blur-xl flex-shrink-0">
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <span className="text-gray-300 font-medium text-sm">{courseShortName}</span>
-              <svg className="w-3 h-3 text-slate-600 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              {modules.map(m => m.subModules.find(s => `${m.id}.${s.id}` === activeModule))
-                .filter(Boolean)
-                .map(subModule => (
-                  <span key={subModule.id} 
-                    className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800/50 text-gray-200 border border-gray-700/50">
-                    {subModule.title}
-                  </span>
-                ))}
+            <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <span className="text-gray-300 font-medium text-sm">{courseShortName}</span>
+                <svg className="w-3 h-3 text-slate-600 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                {modules.map(m => m.subModules.find(s => `${m.id}.${s.id}` === activeModule))
+                  .filter(Boolean)
+                  .map(subModule => (
+                    <span key={subModule.id} 
+                      className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800/50 text-gray-200 border border-gray-700/50">
+                      {subModule.title}
+                    </span>
+                  ))}
+              </div>
+              <button
+                onClick={toggleEditor}
+                className="p-2 rounded-lg bg-gray-800/50 text-gray-300 hover:text-gray-100 
+                  hover:bg-gray-700/50 transition-colors duration-200 border border-gray-700/50"
+                title="Open Code Editor"
+              >
+                <Code size={20} />
+              </button>
             </div>
           </div>
-              
-          <div className="flex-1 overflow-y-auto content-scroll-area">
-            <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
-              <div className="prose prose-invert max-w-none
-                prose-headings:text-gray-100 
-                prose-h1:text-xl sm:prose-h1:text-2xl md:prose-h1:text-3xl
-                prose-h2:text-lg sm:prose-h2:text-xl md:prose-h2:text-2xl
-                prose-p:text-gray-300 
-                prose-p:text-sm sm:prose-p:text-base
-                prose-strong:text-gray-200
-                prose-code:text-gray-300 
-                prose-code:bg-gray-800/50
-                prose-code:px-1.5 
-                prose-code:py-0.5 
-                prose-code:text-sm
-                prose-code:rounded-md
-                prose-a:text-gray-300 
-                prose-a:no-underline 
-                prose-a:hover:text-gray-100
-                prose-li:text-gray-300
-                prose-li:text-sm sm:prose-li:text-base
-                prose-pre:bg-gray-800/50
-                prose-pre:border
-                prose-pre:border-gray-700/50
-                prose-pre:p-3 sm:prose-pre:p-4
-                prose-pre:text-sm sm:prose-pre:text-base
-                prose-img:rounded-lg">
-                <Routes>
-                  <Route 
-                    index 
-                    element={
-                      <div className="text-center p-8">
-                        <h1>Welcome to {courseName}</h1>
-                        <p>Select a topic from the sidebar to begin</p>
-                      </div>
-                    } 
-                  />
-                  {modules.map((module) =>
-                    module.subModules.map((subModule) => (
-                      <Route
-                        key={`${module.id}-${subModule.id}`}
-                        path={`${module.id}/${subModule.id}`}
-                        element={
-                          <ErrorBoundary>
-                            <React.Suspense fallback={<LoadingSpinner />}>
-                              <>
-                                <subModule.component />
-                                <div className="mt-8 flex justify-end">
-                                  <NextButton 
-                                    nextModule={findNextModule(module.id, subModule.id)} 
-                                    onNext={navigateToContent}
-                                  />
-                                </div>
-                              </>
-                            </React.Suspense>
-                          </ErrorBoundary>
-                        }
-                      />
-                    ))
-                  )}
-                  <Route 
-                    path="*" 
-                    element={
-                      <div className="text-center p-8">
-                        <h1>Topic Not Found</h1>
-                        <p>The requested topic could not be found.</p>
-                      </div>
-                    } 
-                  />
-                </Routes>
+
+          {isEditorOpen ? (
+            <CodingArea onClose={toggleEditor} />
+          ) : (
+            <div className="flex-1 overflow-y-auto content-scroll-area">
+              <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
+                <div className="prose prose-invert max-w-none
+                  prose-headings:text-gray-100 
+                  prose-h1:text-xl sm:prose-h1:text-2xl md:prose-h1:text-3xl
+                  prose-h2:text-lg sm:prose-h2:text-xl md:prose-h2:text-2xl
+                  prose-p:text-gray-300 
+                  prose-p:text-sm sm:prose-p:text-base
+                  prose-strong:text-gray-200
+                  prose-code:text-gray-300 
+                  prose-code:bg-gray-800/50
+                  prose-code:px-1.5 
+                  prose-code:py-0.5 
+                  prose-code:text-sm
+                  prose-code:rounded-md
+                  prose-a:text-gray-300 
+                  prose-a:no-underline 
+                  prose-a:hover:text-gray-100
+                  prose-li:text-gray-300
+                  prose-li:text-sm sm:prose-li:text-base
+                  prose-pre:bg-gray-800/50
+                  prose-pre:border
+                  prose-pre:border-gray-700/50
+                  prose-pre:p-3 sm:prose-pre:p-4
+                  prose-pre:text-sm sm:prose-pre:text-base
+                  prose-img:rounded-lg">
+                  <Routes>
+                    <Route 
+                      index 
+                      element={
+                        <div className="text-center p-8">
+                          <h1>Welcome to {courseName}</h1>
+                          <p>Select a topic from the sidebar to begin</p>
+                        </div>
+                      } 
+                    />
+                    {modules.map((module) =>
+                      module.subModules.map((subModule) => (
+                        <Route
+                          key={`${module.id}-${subModule.id}`}
+                          path={`${module.id}/${subModule.id}`}
+                          element={
+                            <ErrorBoundary>
+                              <React.Suspense fallback={<LoadingSpinner />}>
+                                <>
+                                  <subModule.component />
+                                  <div className="mt-8 flex justify-end">
+                                    <NextButton 
+                                      nextModule={findNextModule(module.id, subModule.id)} 
+                                      onNext={navigateToContent}
+                                    />
+                                  </div>
+                                </>
+                              </React.Suspense>
+                            </ErrorBoundary>
+                          }
+                        />
+                      ))
+                    )}
+                    <Route 
+                      path="*" 
+                      element={
+                        <div className="text-center p-8">
+                          <h1>Topic Not Found</h1>
+                          <p>The requested topic could not be found.</p>
+                        </div>
+                      } 
+                    />
+                  </Routes>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

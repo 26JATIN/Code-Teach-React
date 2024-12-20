@@ -15,21 +15,7 @@ function LearningDashboard() {
   useEffect(() => {
     const fetchEnrolledCourses = async () => {
       try {
-        const token = getAuthToken();
-        if (!token) {
-          throw new Error('No authentication token found');
-        }
-
-        const data = await apiRequest(config.api.endpoints.courses.enrolled, {
-          headers: {
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
-
-        if (!data) {
-          throw new Error('Empty response from server');
-        }
-
+        const data = await apiRequest(config.api.endpoints.courses.enrolled);
         setEnrolledCourses(Array.isArray(data) ? data : (data.courses || []));
       } catch (err) {
         console.error('Error fetching enrolled courses:', err);
@@ -49,10 +35,7 @@ function LearningDashboard() {
   const confirmUnenroll = async (courseId) => {
     try {
       await apiRequest(config.api.endpoints.courses.enroll(courseId), {
-        method: 'DELETE',
-        headers: {
-          'ngrok-skip-browser-warning': 'true'
-        }
+        method: 'DELETE'
       });
       
       setEnrolledCourses(prev => prev.filter(course => course._id !== courseId));

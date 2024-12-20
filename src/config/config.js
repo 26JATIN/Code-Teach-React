@@ -102,17 +102,26 @@ export const apiRequest = async (endpoint, options = {}) => {
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      'ngrok-skip-browser-warning': 'true',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...(options.headers || {})
     },
-    mode: 'cors',
-    credentials: 'include'
+    mode: 'cors'
   };
 
   try {
     const response = await fetch(
       `${config.api.baseUrl}${endpoint}`,
-      { ...defaultOptions, ...options }
+      { 
+        ...defaultOptions,
+        ...options,
+        headers: { ...defaultOptions.headers, ...(options.headers || {}) }
+      }
     );
+
+    if (!response) {
+      throw new Error('No response received from server');
+    }
 
     if (response.status === 401) {
       clearAuth();
@@ -120,11 +129,9 @@ export const apiRequest = async (endpoint, options = {}) => {
       throw new Error('Session expired');
     }
 
-    // First get the response as text
     const responseText = await response.text();
-    
-    // Try to parse it as JSON
     let data;
+    
     try {
       data = responseText ? JSON.parse(responseText) : null;
     } catch (parseError) {
@@ -132,9 +139,8 @@ export const apiRequest = async (endpoint, options = {}) => {
       throw new Error('Invalid JSON response from server');
     }
 
-    // Check if the response was ok
     if (!response.ok) {
-      throw new Error(data?.error || data?.message || 'API request failed');
+      throw new Error(data?.error || data?.message || `API request failed with status ${response.status}`);
     }
 
     return data;

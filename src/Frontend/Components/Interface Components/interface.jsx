@@ -298,10 +298,12 @@ const CourseLayout = ({
     const isRightSwipe = distance < -50;
 
     if (isLeftSwipe) {
-      setSwipeDirection('left');
+      // Changed: Set direction to 'right' for left swipe to match the animation
+      setSwipeDirection('right');
       navigateModules('next');
     } else if (isRightSwipe) {
-      setSwipeDirection('right');
+      // Changed: Set direction to 'left' for right swipe to match the animation
+      setSwipeDirection('left');
       navigateModules('prev');
     }
 

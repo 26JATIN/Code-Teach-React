@@ -3,9 +3,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Clock, Award, XCircle, Code, Book, FileText } from 'lucide-react';
 import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
-
-// API base URL configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://key-shrimp-novel.ngrok-free.app';
+import config, { apiRequest, getAuthToken } from '../../../config/config';
 
 function LearningDashboard() {
   const [showConfirmation, setShowConfirmation] = useState(null);
@@ -17,53 +15,26 @@ function LearningDashboard() {
   useEffect(() => {
     const fetchEnrolledCourses = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getAuthToken();
         if (!token) {
           throw new Error('No authentication token found');
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/courses/enrolled`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Origin': window.location.origin
-          },
-          mode: 'cors'
-        });
-
-        if (!response.ok) {
-          if (response.status === 0) {
-            throw new Error('Network error - CORS issue or server unreachable');
-          }
-          const errorText = await response.text();
-          console.error('Server response:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await apiRequest(config.api.endpoints.courses.enrolled);
         
-        if (!data) {
-          throw new Error('Empty response from server');
-        }
-
         if (!Array.isArray(data)) {
           if (typeof data === 'object' && data.courses && Array.isArray(data.courses)) {
-            data = data.courses;
+            setEnrolledCourses(data.courses);
           } else {
             console.error('Unexpected data format:', data);
             throw new Error('Server returned unexpected data format');
           }
+        } else {
+          setEnrolledCourses(data);
         }
-
-        setEnrolledCourses(data);
       } catch (err) {
         console.error('Error fetching enrolled courses:', err);
-        const errorMessage = err.message === 'Network error - CORS issue or server unreachable' 
-          ? 'Unable to connect to server. Please check if the server is running and accessible.'
-          : err.message;
-        setError(errorMessage);
+        setError(err.message);
       } finally {
         setIsLoading(false);
       }
@@ -78,37 +49,15 @@ function LearningDashboard() {
 
   const confirmUnenroll = async (courseId) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/courses/enroll/${courseId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Origin': window.location.origin
-        },
-        mode: 'cors'
+      await apiRequest(config.api.endpoints.courses.enroll(courseId), {
+        method: 'DELETE'
       });
-
-      if (!response.ok) {
-        if (response.status === 0) {
-          throw new Error('Network error - CORS issue or server unreachable');
-        }
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to unenroll from course');
-      }
-
+      
       setEnrolledCourses(prev => prev.filter(course => course._id !== courseId));
       setShowConfirmation(null);
     } catch (err) {
       console.error('Error unenrolling:', err);
-      const errorMessage = err.message === 'Network error - CORS issue or server unreachable'
-        ? 'Unable to connect to server. Please check if the server is running and accessible.'
-        : err.message;
-      alert(errorMessage);
+      alert(err.message || 'Failed to unenroll from course');
     }
   };
 

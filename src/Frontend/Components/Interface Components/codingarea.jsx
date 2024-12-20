@@ -73,6 +73,7 @@ const CodingArea = ({ onClose }) => {
   const [currentContent, setCurrentContent] = useState('');
   const isMobile = useMediaQuery({ maxWidth: 768 });
   const [isFileExplorerOpen, setIsFileExplorerOpen] = useState(!isMobile);
+  const fileExplorerRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem('codeFiles', JSON.stringify(files));
@@ -287,6 +288,26 @@ const CodingArea = ({ onClose }) => {
     setIsFileExplorerOpen(prev => !prev);
   }, []);
 
+  // Add click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMobile && 
+          fileExplorerRef.current && 
+          !fileExplorerRef.current.contains(event.target) &&
+          !event.target.closest('button[aria-label="toggle-file-explorer"]')) {
+        setIsFileExplorerOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isMobile]);
+
   return (
     <div className="flex-1 flex flex-col md:flex-row h-full bg-gradient-to-b from-gray-900 to-gray-950">
       {/* Mobile Header */}
@@ -294,6 +315,7 @@ const CodingArea = ({ onClose }) => {
         <div className="flex items-center justify-between p-2 border-b border-gray-800/50">
           <button
             onClick={toggleFileExplorer}
+            aria-label="toggle-file-explorer"
             className="p-2 rounded-lg bg-gray-800/50 text-gray-400"
           >
             <Folder size={20} />
@@ -311,7 +333,9 @@ const CodingArea = ({ onClose }) => {
       )}
 
       {/* File Explorer - Make it conditionally visible */}
-      <div className={`
+      <div 
+        ref={fileExplorerRef}
+        className={`
         ${isFileExplorerOpen ? 'translate-x-0' : '-translate-x-full'}
         ${isMobile ? 'absolute z-20 h-full' : 'relative'}
         w-56 md:w-64 border-r border-gray-800/50 flex flex-col bg-gray-900/50 

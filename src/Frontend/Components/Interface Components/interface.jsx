@@ -120,35 +120,14 @@ const CourseLayout = ({
     }));
   };
 
-  const scrollToTop = useCallback(() => {
-    const contentArea = document.querySelector('.content-scroll-area');
-    if (!contentArea) return;
-
-    const scroll = () => {
-      contentArea.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    };
-
-    requestAnimationFrame(scroll);
-  }, []);
-
   const navigateToContent = useCallback((moduleId, subModuleId) => {
     setActiveModule(`${moduleId}.${subModuleId}`);
     setExpandedModules(prev => ({ ...prev, [moduleId]: true }));
-    scrollToTop();
     if (isMobile) {
       setIsMenuOpen(false);
     }
-    setTimeout(() => {
-      navigate(`${basePath}/${moduleId}/${subModuleId}`);
-    }, 100);
-  }, [navigate, scrollToTop, isMobile, basePath]);
-
-  useEffect(() => {
-    scrollToTop();
-  }, [location.pathname, scrollToTop]);
+    navigate(`${basePath}/${moduleId}/${subModuleId}`);
+  }, [navigate, isMobile, basePath]);
 
   const toggleSidebar = useCallback(() => {
     setIsMenuOpen(prev => !prev);
@@ -313,22 +292,31 @@ const CourseLayout = ({
   const pageTransitionVariants = {
     enter: (direction) => ({
       x: direction === 'left' ? 1000 : -1000, // Changed 'right' to 'left'
-      opacity: 0
+      opacity: 0,
+      position: 'absolute', // Add this to prevent layout shifts
+      width: '100%', // Add this to maintain consistent width
+      willChange: 'transform, opacity' // Add this for performance
     }),
     center: {
       x: 0,
       opacity: 1,
+      position: 'relative', // Reset position when centered
+      width: '100%',
+      willChange: 'transform, opacity',
       transition: {
-        x: { type: "spring", stiffness: 200, damping: 25 },
-        opacity: { duration: 0.3 }
+        x: { type: "spring", stiffness: 350, damping: 30 },
+        opacity: { duration: 0.2 }
       }
     },
     exit: (direction) => ({
       x: direction === 'left' ? -1000 : 1000, // Changed 'right' to 'left'
       opacity: 0,
+      position: 'absolute',
+      width: '100%',
+      willChange: 'transform, opacity',
       transition: {
-        x: { type: "spring", stiffness: 200, damping: 25 },
-        opacity: { duration: 0.3 }
+        x: { type: "spring", stiffness: 350, damping: 30 },
+        opacity: { duration: 0.2 }
       }
     })
   };
@@ -487,7 +475,18 @@ const CourseLayout = ({
             <CodingArea onClose={toggleEditor} />
           ) : (
             <div className="flex-1 overflow-hidden">
-              <AnimatePresence mode="wait" initial={false} custom={swipeDirection}>
+              <AnimatePresence 
+                mode="wait" 
+                initial={false} 
+                custom={swipeDirection}
+                onExitComplete={() => {
+                  // Reset scroll position after animation completes
+                  const contentArea = document.querySelector('.content-scroll-area');
+                  if (contentArea) {
+                    contentArea.scrollTop = 0;
+                  }
+                }}
+              >
                 <motion.div
                   key={location.pathname}
                   custom={swipeDirection}
@@ -495,11 +494,12 @@ const CourseLayout = ({
                   initial="enter"
                   animate="center"
                   exit="exit"
-                  transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.2 }
-                  }}
                   className="h-full overflow-y-auto content-scroll-area"
+                  style={{
+                    isolation: 'isolate', // Create new stacking context
+                    backfaceVisibility: 'hidden', // Prevent flickering
+                    WebkitBackfaceVisibility: 'hidden'
+                  }}
                 >
                   <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
                     <div className="prose prose-invert max-w-none

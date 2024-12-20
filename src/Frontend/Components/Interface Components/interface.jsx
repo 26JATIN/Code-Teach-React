@@ -85,7 +85,7 @@ const WelcomePage = () => {
       <div className="mt-8 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
         {isMobile ? (
           <p className="text-gray-300">
-            👆 Swipe left to start learning, or use the menu button in the top-left corner to explore topics
+               Swipe left to start learning, or use the menu button in the top-left corner to explore topics
           </p>
         ) : (
           <p className="text-gray-300">

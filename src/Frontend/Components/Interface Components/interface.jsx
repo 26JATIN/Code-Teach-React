@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, ChevronRight, ChevronDown, ArrowRight, Code } from 'lucide-react';
 import { useMediaQuery } from 'react-responsive';
 import CodingArea from './codingarea';  // Add this import
+import { motion, AnimatePresence } from 'framer-motion'; // Add this import
 
 // Internal ModuleButton component
 const ModuleButton = ({ module, isExpanded, toggleModule }) => (
@@ -84,6 +85,9 @@ const CourseLayout = ({
   const [expandedModules, setExpandedModules] = useState({});
   const [activeModule, setActiveModule] = useState(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [swipeDirection, setSwipeDirection] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -275,6 +279,51 @@ const CourseLayout = ({
     setIsEditorOpen(prev => !prev);
   }, []);
 
+  // Add touch handlers
+  const handleTouchStart = (e) => {
+    setTouchStart(e.touches[0].clientX);
+    setTouchEnd(null);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      setSwipeDirection('left');
+      navigateModules('next');
+    } else if (isRightSwipe) {
+      setSwipeDirection('right');
+      navigateModules('prev');
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
+  // Page transition variants for animations
+  const pageTransitionVariants = {
+    enter: (direction) => ({
+      x: direction === 'left' ? 1000 : -1000,
+      opacity: 0
+    }),
+    center: {
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction) => ({
+      x: direction === 'left' ? -1000 : 1000,
+      opacity: 0
+    })
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-950 overflow-hidden">
       {isMobile && (
@@ -394,7 +443,10 @@ const CourseLayout = ({
           ${isMobile && isMenuOpen ? 'opacity-50' : 'opacity-100'}`}
         style={{ willChange: 'opacity' }}
       >
-        <div className="absolute inset-0 flex flex-col">
+        <div className="absolute inset-0 flex flex-col"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}>
           <div className="sticky top-0 z-10 px-4 sm:px-6 py-3 border-b border-gray-800/50 bg-gray-900/80 backdrop-blur-xl flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -425,77 +477,93 @@ const CourseLayout = ({
           {isEditorOpen ? (
             <CodingArea onClose={toggleEditor} />
           ) : (
-            <div className="flex-1 overflow-y-auto content-scroll-area">
-              <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
-                <div className="prose prose-invert max-w-none
-                  prose-headings:text-gray-100 
-                  prose-h1:text-xl sm:prose-h1:text-2xl md:prose-h1:text-3xl
-                  prose-h2:text-lg sm:prose-h2:text-xl md:prose-h2:text-2xl
-                  prose-p:text-gray-300 
-                  prose-p:text-sm sm:prose-p:text-base
-                  prose-strong:text-gray-200
-                  prose-code:text-gray-300 
-                  prose-code:bg-gray-800/50
-                  prose-code:px-1.5 
-                  prose-code:py-0.5 
-                  prose-code:text-sm
-                  prose-code:rounded-md
-                  prose-a:text-gray-300 
-                  prose-a:no-underline 
-                  prose-a:hover:text-gray-100
-                  prose-li:text-gray-300
-                  prose-li:text-sm sm:prose-li:text-base
-                  prose-pre:bg-gray-800/50
-                  prose-pre:border
-                  prose-pre:border-gray-700/50
-                  prose-pre:p-3 sm:prose-pre:p-4
-                  prose-pre:text-sm sm:prose-pre:text-base
-                  prose-img:rounded-lg">
-                  <Routes>
-                    <Route 
-                      index 
-                      element={
-                        <div className="text-center p-8">
-                          <h1>Welcome to {courseName}</h1>
-                          <p>Select a topic from the sidebar to begin</p>
-                        </div>
-                      } 
-                    />
-                    {modules.map((module) =>
-                      module.subModules.map((subModule) => (
-                        <Route
-                          key={`${module.id}-${subModule.id}`}
-                          path={`${module.id}/${subModule.id}`}
+            <div className="flex-1 overflow-hidden">
+              <AnimatePresence initial={false} custom={swipeDirection}>
+                <motion.div
+                  key={location.pathname}
+                  custom={swipeDirection}
+                  variants={pageTransitionVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 }
+                  }}
+                  className="h-full overflow-y-auto content-scroll-area"
+                >
+                  <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
+                    <div className="prose prose-invert max-w-none
+                      prose-headings:text-gray-100 
+                      prose-h1:text-xl sm:prose-h1:text-2xl md:prose-h1:text-3xl
+                      prose-h2:text-lg sm:prose-h2:text-xl md:prose-h2:text-2xl
+                      prose-p:text-gray-300 
+                      prose-p:text-sm sm:prose-p:text-base
+                      prose-strong:text-gray-200
+                      prose-code:text-gray-300 
+                      prose-code:bg-gray-800/50
+                      prose-code:px-1.5 
+                      prose-code:py-0.5 
+                      prose-code:text-sm
+                      prose-code:rounded-md
+                      prose-a:text-gray-300 
+                      prose-a:no-underline 
+                      prose-a:hover:text-gray-100
+                      prose-li:text-gray-300
+                      prose-li:text-sm sm:prose-li:text-base
+                      prose-pre:bg-gray-800/50
+                      prose-pre:border
+                      prose-pre:border-gray-700/50
+                      prose-pre:p-3 sm:prose-pre:p-4
+                      prose-pre:text-sm sm:prose-pre:text-base
+                      prose-img:rounded-lg">
+                      <Routes>
+                        <Route 
+                          index 
                           element={
-                            <ErrorBoundary>
-                              <React.Suspense fallback={<LoadingSpinner />}>
-                                <>
-                                  <subModule.component />
-                                  <div className="mt-8 flex justify-end">
-                                    <NextButton 
-                                      nextModule={findNextModule(module.id, subModule.id)} 
-                                      onNext={navigateToContent}
-                                    />
-                                  </div>
-                                </>
-                              </React.Suspense>
-                            </ErrorBoundary>
-                          }
+                            <div className="text-center p-8">
+                              <h1>Welcome to {courseName}</h1>
+                              <p>Select a topic from the sidebar to begin</p>
+                            </div>
+                          } 
                         />
-                      ))
-                    )}
-                    <Route 
-                      path="*" 
-                      element={
-                        <div className="text-center p-8">
-                          <h1>Topic Not Found</h1>
-                          <p>The requested topic could not be found.</p>
-                        </div>
-                      } 
-                    />
-                  </Routes>
-                </div>
-              </div>
+                        {modules.map((module) =>
+                          module.subModules.map((subModule) => (
+                            <Route
+                              key={`${module.id}-${subModule.id}`}
+                              path={`${module.id}/${subModule.id}`}
+                              element={
+                                <ErrorBoundary>
+                                  <React.Suspense fallback={<LoadingSpinner />}>
+                                    <>
+                                      <subModule.component />
+                                      <div className="mt-8 flex justify-end">
+                                        <NextButton 
+                                          nextModule={findNextModule(module.id, subModule.id)} 
+                                          onNext={navigateToContent}
+                                        />
+                                      </div>
+                                    </>
+                                  </React.Suspense>
+                                </ErrorBoundary>
+                              }
+                            />
+                          ))
+                        )}
+                        <Route 
+                          path="*" 
+                          element={
+                            <div className="text-center p-8">
+                              <h1>Topic Not Found</h1>
+                              <p>The requested topic could not be found.</p>
+                            </div>
+                          } 
+                        />
+                      </Routes>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
           )}
         </div>

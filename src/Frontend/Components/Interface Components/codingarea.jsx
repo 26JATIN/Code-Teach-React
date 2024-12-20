@@ -530,7 +530,7 @@ const CodingArea = ({ onClose }) => {
               type="text"
               value={newFileName}
               onChange={(e) => setNewFileName(e.target.value)}
-              placeholder="filename.js"
+              placeholder="filename.java"
               className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-gray-200"
             />
             <div className="flex justify-end gap-2 mt-4">

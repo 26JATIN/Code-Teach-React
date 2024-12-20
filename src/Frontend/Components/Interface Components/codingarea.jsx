@@ -68,6 +68,7 @@ const CodingArea = ({ onClose }) => {
   const [saveStatus, setSaveStatus] = useState(''); // Add save status state
   const [autoExecute, setAutoExecute] = useState(false);
   const latestContentRef = useRef('');  // To track latest content
+  const [currentContent, setCurrentContent] = useState('');
 
   useEffect(() => {
     localStorage.setItem('codeFiles', JSON.stringify(files));
@@ -108,10 +109,10 @@ const CodingArea = ({ onClose }) => {
     
     try {
       const isJava = language === 'java';
+      const contentToExecute = fileContent || currentContent;
       
-      // Validate Java class name before execution
       if (isJava && activeFile) {
-        if (!validateJavaClassName(fileContent, activeFile.name)) {
+        if (!validateJavaClassName(contentToExecute, activeFile.name)) {
           setIsLoading(false);
           return;
         }
@@ -125,7 +126,7 @@ const CodingArea = ({ onClose }) => {
           version: isJava ? '15.0.2' : '*',
           files: [{
             name: isJava ? 'Main.java' : 'index.js',
-            content: fileContent
+            content: contentToExecute
           }],
           stdin: input
         }),
@@ -145,7 +146,7 @@ const CodingArea = ({ onClose }) => {
       setIsLoading(false);
       setShowInputModal(false);
     }
-  }, [input, activeFile, validateJavaClassName]);
+  }, [input, activeFile, validateJavaClassName, currentContent]);
 
   // Update handleFileChange to use a debounced execute
   const debouncedExecute = useCallback(
@@ -159,7 +160,8 @@ const CodingArea = ({ onClose }) => {
   const handleFileChange = useCallback((value) => {
     if (!activeFile) return;
 
-    latestContentRef.current = value;  // Store latest content
+    setCurrentContent(value);
+    latestContentRef.current = value;
 
     // Validate Java class name
     if (activeFile.name.endsWith('.java')) {
@@ -270,6 +272,12 @@ const CodingArea = ({ onClose }) => {
     editorRef.current = editor;
   };
 
+  useEffect(() => {
+    if (activeFile) {
+      setCurrentContent(activeFile.content);
+    }
+  }, [activeFile]);
+
   return (
     <div className="flex-1 flex h-full bg-gradient-to-b from-gray-900 to-gray-950">
       {/* File Explorer */}
@@ -346,7 +354,7 @@ const CodingArea = ({ onClose }) => {
                     icon={Play} 
                     label={isLoading ? 'Running...' : 'Run'} 
                     variant="primary"
-                    onClick={() => executeCode(activeFile.content, 
+                    onClick={() => executeCode(currentContent, 
                       activeFile.name.endsWith('.java') ? 'java' : 'javascript')}
                   />
                 </div>

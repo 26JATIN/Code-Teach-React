@@ -346,19 +346,7 @@ const CourseLayout = ({
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-950 overflow-hidden">
-      {/* Update the menu button position and styling */}
-      {isMobile && (
-        <button
-          onClick={toggleSidebar}
-          className="fixed top-3 right-3 z-50 p-2.5 rounded-lg bg-gray-800/90 
-            border border-gray-700/50 text-gray-400 shadow-lg backdrop-blur-sm
-            hover:text-gray-200 transition-all duration-200"
-          title="Toggle Menu"
-        >
-          <Menu size={20} />
-        </button>
-      )}
-
+      {/* Remove the left-side menu button */}
       <div 
         className={`fixed md:relative z-40 h-full sidebar-transition
           ${isMenuOpen ? 'w-[280px] md:w-[320px] translate-x-0' : 'w-[60px] -translate-x-full md:translate-x-0'}
@@ -468,10 +456,33 @@ const CourseLayout = ({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}>
-          {/* Update the header section to hide code editor on mobile */}
           <div className="sticky top-0 z-10 px-4 sm:px-6 py-3 border-b border-gray-800/50 bg-gray-900/80 backdrop-blur-xl flex-shrink-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <span className="text-gray-300 font-medium text-sm">{courseShortName}</span>
+                <svg className="w-3 h-3 text-slate-600 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                {modules.map(m => m.subModules.find(s => `${m.id}.${s.id}` === activeModule))
+                  .filter(Boolean)
+                  .map(subModule => (
+                    <span key={subModule.id} 
+                      className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800/50 text-gray-200 border border-gray-700/50">
+                      {subModule.title}
+                    </span>
+                  ))}
+              </div>
+              <div className="flex items-center gap-2">
+                {!isMobile && (
+                  <button
+                    onClick={toggleEditor}
+                    className="p-2 rounded-lg bg-gray-800/50 text-gray-300 hover:text-gray-100 
+                      hover:bg-gray-700/50 transition-colors duration-200 border border-gray-700/50"
+                    title="Open Code Editor"
+                  >
+                    <Code size={20} />
+                  </button>
+                )}
                 {isMobile && (
                   <button
                     onClick={toggleSidebar}
@@ -483,32 +494,7 @@ const CourseLayout = ({
                     <Menu size={18} />
                   </button>
                 )}
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <span className="text-gray-300 font-medium text-sm">{courseShortName}</span>
-                  <svg className="w-3 h-3 text-slate-600 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                  {modules.map(m => m.subModules.find(s => `${m.id}.${s.id}` === activeModule))
-                    .filter(Boolean)
-                    .map(subModule => (
-                      <span key={subModule.id} 
-                        className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800/50 text-gray-200 border border-gray-700/50">
-                        {subModule.title}
-                      </span>
-                    ))}
-                </div>
               </div>
-              {/* Only show code editor button on non-mobile devices */}
-              {!isMobile && (
-                <button
-                  onClick={toggleEditor}
-                  className="p-2 rounded-lg bg-gray-800/50 text-gray-300 hover:text-gray-100 
-                    hover:bg-gray-700/50 transition-colors duration-200 border border-gray-700/50"
-                  title="Open Code Editor"
-                >
-                  <Code size={20} />
-                </button>
-              )}
             </div>
           </div>
 

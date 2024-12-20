@@ -19,24 +19,47 @@ function LearningDashboard() {
           throw new Error('No authentication token found');
         }
 
+        // First request to handle ngrok warning
+        await fetch('https://key-shrimp-novel.ngrok-free.app', {
+          method: 'GET',
+          headers: {
+            'Bypass-Tunnel-Reminder': 'true'
+          }
+        });
+
+        // Actual API request
         const response = await fetch('https://key-shrimp-novel.ngrok-free.app/api/courses/enrolled', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+            'Bypass-Tunnel-Reminder': 'true',
+            'ngrok-skip-browser-warning': 'true'
+          },
+          credentials: 'include'
         });
 
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server response:', errorText);
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const text = await response.text();
+        if (!text) {
+          throw new Error('Empty response from server');
+        }
+
+        // Check if response is HTML (ngrok warning page)
+        if (text.includes('<!DOCTYPE html>')) {
+          throw new Error('Received HTML instead of JSON. API endpoint may be incorrect or ngrok tunnel issue.');
+        }
+
         let data;
         try {
           data = JSON.parse(text);
         } catch (parseError) {
-          console.error('Failed to parse response:', text);
+          console.error('Raw response:', text);
           throw new Error('Invalid JSON response from server');
         }
 

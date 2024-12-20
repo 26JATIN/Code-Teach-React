@@ -65,6 +65,7 @@ const CodingArea = ({ onClose }) => {
   const containerRef = useRef(null);
   const [input, setInput] = useState('');
   const [showInputModal, setShowInputModal] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(''); // Add save status state
 
   useEffect(() => {
     localStorage.setItem('codeFiles', JSON.stringify(files));
@@ -84,12 +85,48 @@ const CodingArea = ({ onClose }) => {
     setShowNewFileDialog(false);
   };
 
-  const handleFileChange = (value) => {
+  // Add function to validate Java class name
+  const validateJavaClassName = useCallback((content, filename) => {
+    if (!filename.endsWith('.java')) return true;
+    
+    const className = filename.replace('.java', '');
+    const classPattern = new RegExp(`public\\s+class\\s+${className}\\s*{`);
+    
+    if (!classPattern.test(content)) {
+      setError(`Error: Class name must be "${className}" to match the file name`);
+      return false;
+    }
+    return true;
+  }, []);
+
+  // Update handleFileChange to include auto-save and validation
+  const handleFileChange = useCallback((value) => {
     if (!activeFile) return;
+
+    // Validate Java class name
+    if (activeFile.name.endsWith('.java')) {
+      validateJavaClassName(value, activeFile.name);
+    }
+
+    // Update file content
     setFiles(prev => prev.map(f => 
       f.id === activeFile.id ? { ...f, content: value } : f
     ));
-  };
+
+    // Show saving status
+    setSaveStatus('Saving...');
+
+    // Debounced save to localStorage
+    const saveToStorage = debounce(() => {
+      localStorage.setItem('codeFiles', JSON.stringify(files));
+      setSaveStatus('All changes saved');
+      setTimeout(() => setSaveStatus(''), 2000);
+    }, 1000);
+
+    saveToStorage();
+
+    return () => saveToStorage.cancel();
+  }, [activeFile, files, validateJavaClassName]);
 
   const handleDeleteFile = (fileId) => {
     setFiles(prev => prev.filter(f => f.id !== fileId));
@@ -162,13 +199,10 @@ const CodingArea = ({ onClose }) => {
     
     try {
       const isJava = language === 'java';
-      let content = fileContent;
       
-      // For Java files, ensure the class name matches the file name
+      // Validate Java class name before execution
       if (isJava && activeFile) {
-        const className = activeFile.name.replace('.java', '');
-        if (!fileContent.includes(`class ${className}`)) {
-          setError(`Class name must match the file name: ${className}`);
+        if (!validateJavaClassName(fileContent, activeFile.name)) {
           setIsLoading(false);
           return;
         }
@@ -202,7 +236,7 @@ const CodingArea = ({ onClose }) => {
       setIsLoading(false);
       setShowInputModal(false);
     }
-  }, [input, activeFile]);
+  }, [input, activeFile, validateJavaClassName]);
 
   const handleEditorDidMount = (editor) => {
     editorRef.current = editor;
@@ -263,6 +297,11 @@ const CodingArea = ({ onClose }) => {
               <h2 className="text-gray-200 font-medium">
                 {activeFile ? activeFile.name : 'No file selected'}
               </h2>
+              {saveStatus && (
+                <span className="text-xs text-gray-400 animate-fade-in">
+                  {saveStatus}
+                </span>
+              )}
               {activeFile && (
                 <div className="flex items-center gap-2">
                   <ActionButton 

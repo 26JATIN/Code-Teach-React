@@ -216,7 +216,7 @@ const CodingArea = ({ onClose }) => {
           version: isJava ? '15.0.2' : '*',
           files: [{
             name: isJava ? 'Main.java' : 'index.js',
-            content: content
+            content: fileContent  // Changed from content to fileContent
           }],
           stdin: input
         }),

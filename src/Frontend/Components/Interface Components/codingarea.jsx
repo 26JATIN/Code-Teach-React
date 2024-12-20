@@ -66,6 +66,8 @@ const CodingArea = ({ onClose }) => {
   const [input, setInput] = useState('');
   const [showInputModal, setShowInputModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState(''); // Add save status state
+  const [autoExecute, setAutoExecute] = useState(false);
+  const latestContentRef = useRef('');  // To track latest content
 
   useEffect(() => {
     localStorage.setItem('codeFiles', JSON.stringify(files));
@@ -103,6 +105,8 @@ const CodingArea = ({ onClose }) => {
   const handleFileChange = useCallback((value) => {
     if (!activeFile) return;
 
+    latestContentRef.current = value;  // Store latest content
+
     // Validate Java class name
     if (activeFile.name.endsWith('.java')) {
       validateJavaClassName(value, activeFile.name);
@@ -112,6 +116,14 @@ const CodingArea = ({ onClose }) => {
     setFiles(prev => prev.map(f => 
       f.id === activeFile.id ? { ...f, content: value } : f
     ));
+
+    // Auto-execute if enabled
+    if (autoExecute && !error) {
+      executeCode(
+        value,
+        activeFile.name.endsWith('.java') ? 'java' : 'javascript'
+      );
+    }
 
     // Show saving status
     setSaveStatus('Saving...');
@@ -126,7 +138,7 @@ const CodingArea = ({ onClose }) => {
     saveToStorage();
 
     return () => saveToStorage.cancel();
-  }, [activeFile, files, validateJavaClassName]);
+  }, [activeFile, files, validateJavaClassName, autoExecute, executeCode, error]);
 
   const handleDeleteFile = (fileId) => {
     setFiles(prev => prev.filter(f => f.id !== fileId));
@@ -326,6 +338,17 @@ const CodingArea = ({ onClose }) => {
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-xs text-gray-400">
+                  <input
+                    type="checkbox"
+                    checked={autoExecute}
+                    onChange={(e) => setAutoExecute(e.target.checked)}
+                    className="rounded border-gray-600"
+                  />
+                  Auto-run
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-400">Font Size:</span>
                 <input
                   type="range"
@@ -450,7 +473,13 @@ const CodingArea = ({ onClose }) => {
                 Cancel
               </button>
               <button
-                onClick={() => executeCode(activeFile.content)}
+                onClick={() => {
+                  const currentContent = latestContentRef.current || activeFile.content;
+                  executeCode(
+                    currentContent,
+                    activeFile.name.endsWith('.java') ? 'java' : 'javascript'
+                  );
+                }}
                 className="px-4 py-2 rounded bg-blue-600 text-white"
               >
                 Run with Input

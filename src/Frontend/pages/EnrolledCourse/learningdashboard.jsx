@@ -4,6 +4,9 @@ import { BookOpen, Clock, Award, XCircle, Code, Book, FileText } from 'lucide-re
 import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
 
+// API base URL configuration
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://key-shrimp-novel.ngrok-free.app';
+
 function LearningDashboard() {
   const [showConfirmation, setShowConfirmation] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,50 +22,28 @@ function LearningDashboard() {
           throw new Error('No authentication token found');
         }
 
-        // First request to handle ngrok warning
-        await fetch('https://key-shrimp-novel.ngrok-free.app', {
+        const response = await fetch(`${API_BASE_URL}/api/courses/enrolled`, {
           method: 'GET',
-          headers: {
-            'Bypass-Tunnel-Reminder': 'true'
-          }
-        });
-
-        // Actual API request
-        const response = await fetch('https://key-shrimp-novel.ngrok-free.app/api/courses/enrolled', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'Bypass-Tunnel-Reminder': 'true',
-            'ngrok-skip-browser-warning': 'true'
+            'Origin': window.location.origin
           },
-          credentials: 'include'
+          mode: 'cors'
         });
 
         if (!response.ok) {
+          if (response.status === 0) {
+            throw new Error('Network error - CORS issue or server unreachable');
+          }
           const errorText = await response.text();
           console.error('Server response:', errorText);
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const text = await response.text();
-        if (!text) {
-          throw new Error('Empty response from server');
-        }
-
-        // Check if response is HTML (ngrok warning page)
-        if (text.includes('<!DOCTYPE html>')) {
-          throw new Error('Received HTML instead of JSON. API endpoint may be incorrect or ngrok tunnel issue.');
-        }
-
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (parseError) {
-          console.error('Raw response:', text);
-          throw new Error('Invalid JSON response from server');
-        }
-
+        const data = await response.json();
+        
         if (!data) {
           throw new Error('Empty response from server');
         }
@@ -79,7 +60,10 @@ function LearningDashboard() {
         setEnrolledCourses(data);
       } catch (err) {
         console.error('Error fetching enrolled courses:', err);
-        setError(err.message);
+        const errorMessage = err.message === 'Network error - CORS issue or server unreachable' 
+          ? 'Unable to connect to server. Please check if the server is running and accessible.'
+          : err.message;
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -99,25 +83,32 @@ function LearningDashboard() {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`https://key-shrimp-novel.ngrok-free.app/api/courses/enroll/${courseId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/courses/enroll/${courseId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        },
+        mode: 'cors'
       });
 
       if (!response.ok) {
+        if (response.status === 0) {
+          throw new Error('Network error - CORS issue or server unreachable');
+        }
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to unenroll from course');
       }
 
-      // Remove course from state
       setEnrolledCourses(prev => prev.filter(course => course._id !== courseId));
       setShowConfirmation(null);
     } catch (err) {
       console.error('Error unenrolling:', err);
-      alert(err.message || 'Failed to unenroll from course');
+      const errorMessage = err.message === 'Network error - CORS issue or server unreachable'
+        ? 'Unable to connect to server. Please check if the server is running and accessible.'
+        : err.message;
+      alert(errorMessage);
     }
   };
 

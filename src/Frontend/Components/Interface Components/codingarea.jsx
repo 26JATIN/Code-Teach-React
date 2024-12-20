@@ -93,6 +93,7 @@ const CodingArea = ({ onClose }) => {
     fontSize: Math.max(12, fontSize),
     scrollBeyondLastLine: false,
     lineNumbers: 'on',
+    lineNumbersMinChars: 3,  // Make line numbers width smaller
     roundedSelection: false,
     padding: { top: 16 },
     automaticLayout: true,
@@ -102,7 +103,14 @@ const CodingArea = ({ onClose }) => {
       useShadows: true,
       verticalScrollbarSize: 8,
       horizontalScrollbarSize: 8
-    }
+    },
+    glyphMargin: false,  // Disable glyph margin to save space
+    folding: true,
+    // Modern editor styling
+    renderLineHighlight: 'all',
+    contextmenu: false,
+    cursorBlinking: 'smooth',
+    smoothScrolling: true,
   }), [fontSize]);
 
   const debouncedResize = useCallback(
@@ -184,9 +192,9 @@ const CodingArea = ({ onClose }) => {
   };
 
   return (
-    <div className="flex-1 flex h-full bg-gray-900">
-      {/* File Explorer */}
-      <div className="w-64 border-r border-gray-800 flex flex-col">
+    <div className="flex-1 flex h-full bg-gray-900/95"> {/* Slightly transparent background */}
+      {/* File Explorer - Make it slightly narrower */}
+      <div className="w-56 border-r border-gray-800/50 flex flex-col backdrop-blur-sm">
         <div className="p-4 border-b border-gray-800 flex items-center justify-between">
           <h2 className="text-gray-200 font-medium">Files</h2>
           <button
@@ -227,7 +235,7 @@ const CodingArea = ({ onClose }) => {
 
       {/* Editor Area */}
       <div className="flex-1 flex flex-col">
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+        <div className="px-4 py-3 border-b border-gray-800/50 backdrop-blur-sm flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h2 className="text-gray-200 font-medium">
               {activeFile ? activeFile.name : 'No file selected'}
@@ -271,29 +279,35 @@ const CodingArea = ({ onClose }) => {
         </div>
 
         <div className="flex-1 flex flex-col">
-          <div className="flex-1" ref={containerRef}>
+          <div className="flex-1 relative" ref={containerRef}>
             {activeFile ? (
-              <Editor
-                height="100%"
-                defaultLanguage={activeFile.name.endsWith('.java') ? 'java' : 'javascript'}
-                theme="vs-dark"
-                value={activeFile.content}
-                onChange={handleFileChange}
-                onMount={handleEditorDidMount}
-                options={editorOptions}
-              />
+              <div className="absolute inset-0">
+                <Editor
+                  height="100%"
+                  defaultLanguage={activeFile.name.endsWith('.java') ? 'java' : 'javascript'}
+                  theme="vs-dark"
+                  value={activeFile.content}
+                  onChange={handleFileChange}
+                  onMount={handleEditorDidMount}
+                  options={editorOptions}
+                  className="rounded-lg overflow-hidden" // Add rounded corners
+                />
+              </div>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400">
-                Select or create a file to start coding
+                <div className="text-center space-y-2">
+                  <div className="text-lg">No File Selected</div>
+                  <div className="text-sm text-gray-500">Select or create a file to start coding</div>
+                </div>
               </div>
             )}
           </div>
 
           {/* Output Terminal */}
           {activeFile && (
-            <div className="h-48 border-t border-gray-800 bg-gray-950/90">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800/50">
-                <span className="text-xs text-gray-400">Output Terminal</span>
+            <div className="h-48 border-t border-gray-800/50 bg-gray-950/80 backdrop-blur-sm">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800/30">
+                <span className="text-xs font-medium text-gray-400">Output Terminal</span>
                 {output && <CopyButton textToCopy={output} />}
               </div>
               <div className="p-4 font-mono text-sm h-36 overflow-auto">
@@ -312,8 +326,8 @@ const CodingArea = ({ onClose }) => {
 
       {/* New File Dialog */}
       {showNewFileDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-gray-800 p-6 rounded-lg w-96">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800/90 p-6 rounded-xl w-96 shadow-2xl border border-gray-700/50">
             <h3 className="text-gray-200 mb-4">Create New File</h3>
             <input
               type="text"
@@ -342,8 +356,8 @@ const CodingArea = ({ onClose }) => {
 
       {/* Input Modal */}
       {showInputModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 p-6 rounded-lg w-96">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800/90 p-6 rounded-xl w-96 shadow-2xl border border-gray-700/50">
             <h3 className="text-gray-200 mb-4">Program Input</h3>
             <textarea
               value={input}

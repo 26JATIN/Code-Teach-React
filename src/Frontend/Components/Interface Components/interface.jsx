@@ -240,6 +240,7 @@ const CourseLayout = ({
       currentIndex - 1;
 
     if (targetIndex >= 0 && targetIndex < flatModules.length) {
+      setSwipeDirection(direction === 'next' ? 'left' : 'right');
       const targetModule = flatModules[targetIndex];
       navigateToContent(targetModule.moduleId, targetModule.id);
     }
@@ -311,16 +312,24 @@ const CourseLayout = ({
   // Page transition variants for animations
   const pageTransitionVariants = {
     enter: (direction) => ({
-      x: direction === 'left' ? 1000 : -1000,
+      x: direction === 'right' ? 1000 : -1000,
       opacity: 0
     }),
     center: {
       x: 0,
-      opacity: 1
+      opacity: 1,
+      transition: {
+        x: { type: "spring", stiffness: 200, damping: 25 },
+        opacity: { duration: 0.3 }
+      }
     },
     exit: (direction) => ({
-      x: direction === 'left' ? -1000 : 1000,
-      opacity: 0
+      x: direction === 'right' ? -1000 : 1000,
+      opacity: 0,
+      transition: {
+        x: { type: "spring", stiffness: 200, damping: 25 },
+        opacity: { duration: 0.3 }
+      }
     })
   };
 
@@ -478,7 +487,7 @@ const CourseLayout = ({
             <CodingArea onClose={toggleEditor} />
           ) : (
             <div className="flex-1 overflow-hidden">
-              <AnimatePresence initial={false} custom={swipeDirection}>
+              <AnimatePresence mode="wait" initial={false} custom={swipeDirection}>
                 <motion.div
                   key={location.pathname}
                   custom={swipeDirection}

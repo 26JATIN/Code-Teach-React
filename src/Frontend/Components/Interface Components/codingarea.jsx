@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Folder, File, X, Plus, Save, Trash, Copy, Download, Play } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { debounce } from 'lodash';
+import { useMediaQuery } from 'react-responsive';  // Add this import
 
 // Add download helper function
 const downloadCode = (content, filename) => {
@@ -18,6 +19,7 @@ const downloadCode = (content, filename) => {
 
 // Update CopyButton with more modern styling
 const ActionButton = ({ icon: Icon, label, onClick, variant = 'default' }) => {
+  const isMobile = useMediaQuery({ maxWidth: 768 });
   const variants = {
     default: 'bg-gray-800/50 hover:bg-gray-700/50 text-gray-300',
     primary: 'bg-blue-600/80 hover:bg-blue-700/80 text-white',
@@ -27,11 +29,11 @@ const ActionButton = ({ icon: Icon, label, onClick, variant = 'default' }) => {
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 text-xs rounded-md transition-all duration-200 
-        flex items-center gap-2 border border-gray-700/50 ${variants[variant]}`}
+      className={`p-1.5 md:px-3 md:py-1.5 text-xs rounded-md transition-all duration-200 
+        flex items-center gap-1 md:gap-2 border border-gray-700/50 ${variants[variant]}`}
     >
-      <Icon size={14} />
-      <span>{label}</span>
+      <Icon size={isMobile ? 16 : 14} />
+      {label && <span className="hidden md:inline">{label}</span>}
     </button>
   );
 };
@@ -69,6 +71,8 @@ const CodingArea = ({ onClose }) => {
   const [autoExecute, setAutoExecute] = useState(false);
   const latestContentRef = useRef('');  // To track latest content
   const [currentContent, setCurrentContent] = useState('');
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const [isFileExplorerOpen, setIsFileExplorerOpen] = useState(!isMobile);
 
   useEffect(() => {
     localStorage.setItem('codeFiles', JSON.stringify(files));
@@ -204,10 +208,10 @@ const CodingArea = ({ onClose }) => {
   };
 
   const editorOptions = useMemo(() => ({
-    minimap: { enabled: false },
-    fontSize: Math.max(12, fontSize),
+    minimap: { enabled: !isMobile },
+    fontSize: isMobile ? Math.max(14, fontSize) : Math.max(12, fontSize),
     scrollBeyondLastLine: false,
-    lineNumbers: 'on',
+    lineNumbers: isMobile ? 'off' : 'on',
     lineNumbersMinChars: 3,  // Make line numbers width smaller
     roundedSelection: false,
     padding: { top: 16 },
@@ -216,8 +220,8 @@ const CodingArea = ({ onClose }) => {
       vertical: 'auto',
       horizontal: 'visible',
       useShadows: true,
-      verticalScrollbarSize: 8,
-      horizontalScrollbarSize: 8
+      verticalScrollbarSize: isMobile ? 4 : 8,
+      horizontalScrollbarSize: isMobile ? 4 : 8
     },
     glyphMargin: false,  // Disable glyph margin to save space
     folding: true,
@@ -233,7 +237,8 @@ const CodingArea = ({ onClose }) => {
     bracketPairColorization: {
       enabled: true,
     },
-  }), [fontSize]);
+    wordWrap: isMobile ? 'on' : 'off',
+  }), [fontSize, isMobile]);
 
   const debouncedResize = useCallback(
     debounce((editor) => {
@@ -278,10 +283,40 @@ const CodingArea = ({ onClose }) => {
     }
   }, [activeFile]);
 
+  const toggleFileExplorer = useCallback(() => {
+    setIsFileExplorerOpen(prev => !prev);
+  }, []);
+
   return (
-    <div className="flex-1 flex h-full bg-gradient-to-b from-gray-900 to-gray-950">
-      {/* File Explorer */}
-      <div className="w-56 border-r border-gray-800/50 flex flex-col bg-gray-900/50 backdrop-blur-sm">
+    <div className="flex-1 flex flex-col md:flex-row h-full bg-gradient-to-b from-gray-900 to-gray-950">
+      {/* Mobile Header */}
+      {isMobile && (
+        <div className="flex items-center justify-between p-2 border-b border-gray-800/50">
+          <button
+            onClick={toggleFileExplorer}
+            className="p-2 rounded-lg bg-gray-800/50 text-gray-400"
+          >
+            <Folder size={20} />
+          </button>
+          <span className="text-gray-200 font-medium">
+            {activeFile?.name || 'Code Editor'}
+          </span>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg bg-gray-800/50 text-gray-400"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      )}
+
+      {/* File Explorer - Make it conditionally visible */}
+      <div className={`
+        ${isFileExplorerOpen ? 'translate-x-0' : '-translate-x-full'}
+        ${isMobile ? 'absolute z-20 h-full' : 'relative'}
+        w-56 md:w-64 border-r border-gray-800/50 flex flex-col bg-gray-900/50 
+        backdrop-blur-sm transition-transform duration-200
+      `}>
         <div className="p-4 border-b border-gray-800/50 flex items-center justify-between">
           <h2 className="text-gray-200 font-medium tracking-wide">Files</h2>
           <button
@@ -325,34 +360,36 @@ const CodingArea = ({ onClose }) => {
       </div>
 
       {/* Editor Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Editor Header */}
-        <div className="px-4 py-3 border-b border-gray-800/50 bg-gray-900/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h2 className="text-gray-200 font-medium">
-                {activeFile ? activeFile.name : 'No file selected'}
-              </h2>
+      <div className="flex-1 flex flex-col h-full">
+        {/* Editor Header - Responsive version */}
+        <div className="px-2 md:px-4 py-2 md:py-3 border-b border-gray-800/50 bg-gray-900/50">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 md:gap-4 overflow-x-auto">
+              {!isMobile && (
+                <h2 className="text-gray-200 font-medium">
+                  {activeFile ? activeFile.name : 'No file selected'}
+                </h2>
+              )}
               {saveStatus && (
-                <span className="text-xs text-gray-400 animate-fade-in">
+                <span className="text-xs text-gray-400 animate-fade-in whitespace-nowrap">
                   {saveStatus}
                 </span>
               )}
               {activeFile && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2">
                   <ActionButton 
                     icon={Copy} 
-                    label="Copy" 
-                    onClick={() => navigator.clipboard.writeText(activeFile.content)}
+                    label={isMobile ? '' : "Copy"}
+                    onClick={() => navigator.clipboard.writeText(currentContent)}
                   />
                   <ActionButton 
                     icon={Download} 
-                    label="Download" 
-                    onClick={() => downloadCode(activeFile.content, activeFile.name)}
+                    label={isMobile ? '' : "Download"}
+                    onClick={() => downloadCode(currentContent, activeFile.name)}
                   />
                   <ActionButton 
                     icon={Play} 
-                    label={isLoading ? 'Running...' : 'Run'} 
+                    label={isMobile ? '' : (isLoading ? 'Running...' : 'Run')}
                     variant="primary"
                     onClick={() => executeCode(currentContent, 
                       activeFile.name.endsWith('.java') ? 'java' : 'javascript')}
@@ -360,44 +397,42 @@ const CodingArea = ({ onClose }) => {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 text-xs text-gray-400">
-                  <input
-                    type="checkbox"
-                    checked={autoExecute}
-                    onChange={(e) => setAutoExecute(e.target.checked)}
-                    className="rounded border-gray-600"
-                  />
-                  Auto-run
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400">Font Size:</span>
-                <input
-                  type="range"
-                  min="12"
-                  max="24"
-                  value={fontSize}
-                  onChange={(e) => setFontSize(Number(e.target.value))}
-                  className="w-24 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                />
-                <span className="text-xs text-gray-400">{fontSize}px</span>
-              </div>
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"
-                title="Close Editor"
-              >
-                <X size={16} />
-              </button>
+            
+            <div className="flex items-center gap-2 md:gap-4">
+              {!isMobile && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-2 text-xs text-gray-400">
+                      <input
+                        type="checkbox"
+                        checked={autoExecute}
+                        onChange={(e) => setAutoExecute(e.target.checked)}
+                        className="rounded border-gray-600"
+                      />
+                      Auto-run
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">Font Size:</span>
+                    <input
+                      type="range"
+                      min="12"
+                      max="24"
+                      value={fontSize}
+                      onChange={(e) => setFontSize(Number(e.target.value))}
+                      className="w-24 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    />
+                    <span className="text-xs text-gray-400">{fontSize}px</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Editor and Output */}
+        {/* Editor and Output - Responsive */}
         <div className="flex-1 flex flex-col">
-          <div className="flex-1 relative" ref={containerRef}>
+          <div className="flex-1 relative min-h-0" ref={containerRef}>
             {activeFile ? (
               <div className="absolute inset-0 p-2">
                 <div className="w-full h-full rounded-lg overflow-hidden shadow-lg border border-gray-800/50">
@@ -426,9 +461,9 @@ const CodingArea = ({ onClose }) => {
             )}
           </div>
 
-          {/* Output Terminal with refined styling */}
+          {/* Output Terminal - Responsive */}
           {activeFile && (
-            <div className="h-48 border-t border-gray-800/50 bg-gray-950/90 backdrop-blur-sm">
+            <div className="h-32 md:h-48 border-t border-gray-800/50 bg-gray-950/90">
               <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800/30">
                 <span className="text-xs font-medium text-gray-400">Output Terminal</span>
                 {output && <ActionButton icon={Copy} label="Copy" onClick={() => navigator.clipboard.writeText(output)} />}
@@ -447,11 +482,10 @@ const CodingArea = ({ onClose }) => {
         </div>
       </div>
 
-      {/* New File Dialog */}
+      {/* Responsive Modals */}
       {showNewFileDialog && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-800/90 p-6 rounded-xl w-96 shadow-2xl border border-gray-700/50
-            backdrop-blur-md transform transition-all duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800/90 p-4 md:p-6 rounded-xl w-full max-w-sm md:max-w-md">
             <h3 className="text-gray-200 mb-4">Create New File</h3>
             <input
               type="text"
@@ -478,10 +512,9 @@ const CodingArea = ({ onClose }) => {
         </div>
       )}
 
-      {/* Input Modal */}
       {showInputModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-800/90 p-6 rounded-xl w-96 shadow-2xl border border-gray-700/50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800/90 p-4 md:p-6 rounded-xl w-full max-w-sm md:max-w-md">
             <h3 className="text-gray-200 mb-4">Program Input</h3>
             <textarea
               value={input}

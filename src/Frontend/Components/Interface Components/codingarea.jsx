@@ -208,6 +208,15 @@ const CodingArea = ({ onClose }) => {
     }
   };
 
+  // Update file selection to close menu on mobile
+  const handleFileSelect = useCallback((file) => {
+    setActiveFile(file);
+    if (isMobile) {
+      setIsFileExplorerOpen(false);
+    }
+  }, [isMobile]);
+
+  // Update editor options for better mobile scrolling
   const editorOptions = useMemo(() => ({
     minimap: { enabled: !isMobile },
     fontSize: isMobile ? Math.max(14, fontSize) : Math.max(12, fontSize),
@@ -218,12 +227,18 @@ const CodingArea = ({ onClose }) => {
     padding: { top: 16 },
     automaticLayout: true,
     scrollbar: {
-      vertical: 'auto',
+      vertical: 'visible',
       horizontal: 'visible',
       useShadows: true,
-      verticalScrollbarSize: isMobile ? 4 : 8,
-      horizontalScrollbarSize: isMobile ? 4 : 8
+      verticalScrollbarSize: isMobile ? 12 : 8,
+      horizontalScrollbarSize: isMobile ? 12 : 8,
+      alwaysConsumeMouseWheel: false,
+      arrowSize: isMobile ? 15 : 11
     },
+    mouseWheelScrollSensitivity: isMobile ? 2 : 1,
+    touchScrollSensitivity: 2,
+    overviewRulerBorder: false,
+    overviewRulerLanes: 0,
     glyphMargin: false,  // Disable glyph margin to save space
     folding: true,
     // Modern editor styling
@@ -357,7 +372,7 @@ const CodingArea = ({ onClose }) => {
           {files.map(file => (
             <div
               key={file.id}
-              onClick={() => setActiveFile(file)}
+              onClick={() => handleFileSelect(file)}
               className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer
                 transition-all duration-200 ${
                 activeFile?.id === file.id 

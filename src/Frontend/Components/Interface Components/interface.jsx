@@ -74,6 +74,29 @@ const NextButton = memo(({ nextModule, onNext }) => {
   );
 });
 
+// Add this new component before CourseLayout
+const WelcomePage = () => {
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  
+  return (
+    <div className="text-center p-8 space-y-6">
+      <h1 className="text-3xl font-bold text-gray-100">Welcome to Interactive Learning!</h1>
+      <p className="text-gray-300 text-lg">Let's start your coding journey together.</p>
+      <div className="mt-8 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+        {isMobile ? (
+          <p className="text-gray-300">
+            👆 Swipe left to start learning, or use the menu button in the top-left corner to explore topics
+          </p>
+        ) : (
+          <p className="text-gray-300">
+            ➡️ Press the right arrow key to begin, or explore topics from the sidebar
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const CourseLayout = ({ 
   courseName, 
   courseShortName, 
@@ -529,12 +552,7 @@ const CourseLayout = ({
                       <Routes>
                         <Route 
                           index 
-                          element={
-                            <div className="text-center p-8">
-                              <h1>Welcome to {courseName}</h1>
-                              <p>Select a topic from the sidebar to begin</p>
-                            </div>
-                          } 
+                          element={<WelcomePage />} 
                         />
                         {modules.map((module) =>
                           module.subModules.map((subModule) => (

@@ -47,7 +47,7 @@ function CoursesPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/courses/enroll/${courseId}`, {
+      const response = await fetch(`https://key-shrimp-novel.ngrok-free.app/api/courses/enroll/${courseId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -163,14 +163,14 @@ function CoursesPage() {
         const token = localStorage.getItem('token');
         
         // Fetch courses
-        const coursesResponse = await fetch('http://localhost:5000/api/courses');
+        const coursesResponse = await fetch('https://key-shrimp-novel.ngrok-free.app/api/courses');
         if (!coursesResponse.ok) throw new Error('Failed to fetch courses');
         const coursesData = await coursesResponse.json();
         setCourses(coursesData);
         
         // Fetch enrolled courses if logged in
         if (token) {
-          const enrolledResponse = await fetch('http://localhost:5000/api/courses/enrolled', {
+          const enrolledResponse = await fetch('https://key-shrimp-novel.ngrok-free.app/api/courses/enrolled', {
             headers: {
               'Authorization': `Bearer ${token}`
             }

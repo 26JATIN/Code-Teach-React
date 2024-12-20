@@ -19,7 +19,7 @@ function LearningDashboard() {
           throw new Error('No authentication token found');
         }
 
-        const response = await fetch('http://localhost:5000/api/courses/enrolled', {
+        const response = await fetch('https://key-shrimp-novel.ngrok-free.app/api/courses/enrolled', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -54,7 +54,7 @@ function LearningDashboard() {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`http://localhost:5000/api/courses/enroll/${courseId}`, {
+      const response = await fetch(`https://key-shrimp-novel.ngrok-free.app/api/courses/enroll/${courseId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -101,6 +101,60 @@ const CodingArea = ({ onClose }) => {
     return true;
   }, []);
 
+  const executeCode = useCallback(async (fileContent, language) => {
+    if (!fileContent) return;
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const isJava = language === 'java';
+      
+      // Validate Java class name before execution
+      if (isJava && activeFile) {
+        if (!validateJavaClassName(fileContent, activeFile.name)) {
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      const response = await fetch('https://emkc.org/api/v2/piston/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: isJava ? 'java' : 'javascript',
+          version: isJava ? '15.0.2' : '*',
+          files: [{
+            name: isJava ? 'Main.java' : 'index.js',
+            content: fileContent
+          }],
+          stdin: input
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.message) {
+        setError(data.message);
+        return;
+      }
+
+      setOutput(data.run.output || data.run.stderr);
+    } catch (err) {
+      setError('Failed to execute code. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setShowInputModal(false);
+    }
+  }, [input, activeFile, validateJavaClassName]);
+
+  // Update handleFileChange to use a debounced execute
+  const debouncedExecute = useCallback(
+    debounce((content, language) => {
+      executeCode(content, language);
+    }, 1000),
+    [executeCode]
+  );
+
   // Update handleFileChange to include auto-save and validation
   const handleFileChange = useCallback((value) => {
     if (!activeFile) return;
@@ -119,7 +173,7 @@ const CodingArea = ({ onClose }) => {
 
     // Auto-execute if enabled
     if (autoExecute && !error) {
-      executeCode(
+      debouncedExecute(
         value,
         activeFile.name.endsWith('.java') ? 'java' : 'javascript'
       );
@@ -138,7 +192,7 @@ const CodingArea = ({ onClose }) => {
     saveToStorage();
 
     return () => saveToStorage.cancel();
-  }, [activeFile, files, validateJavaClassName, autoExecute, executeCode, error]);
+  }, [activeFile, files, validateJavaClassName, autoExecute, debouncedExecute, error]);
 
   const handleDeleteFile = (fileId) => {
     setFiles(prev => prev.filter(f => f.id !== fileId));
@@ -205,50 +259,12 @@ const CodingArea = ({ onClose }) => {
     };
   }, [debouncedResize]);
 
-  const executeCode = useCallback(async (fileContent, language) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const isJava = language === 'java';
-      
-      // Validate Java class name before execution
-      if (isJava && activeFile) {
-        if (!validateJavaClassName(fileContent, activeFile.name)) {
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      const response = await fetch('https://emkc.org/api/v2/piston/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          language: isJava ? 'java' : 'javascript',
-          version: isJava ? '15.0.2' : '*',
-          files: [{
-            name: isJava ? 'Main.java' : 'index.js',
-            content: fileContent  // Changed from content to fileContent
-          }],
-          stdin: input
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.message) {
-        setError(data.message);
-        return;
-      }
-
-      setOutput(data.run.output || data.run.stderr);
-    } catch (err) {
-      setError('Failed to execute code. Please try again.');
-    } finally {
-      setIsLoading(false);
-      setShowInputModal(false);
-    }
-  }, [input, activeFile, validateJavaClassName]);
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      debouncedExecute.cancel();
+    };
+  }, [debouncedExecute]);
 
   const handleEditorDidMount = (editor) => {
     editorRef.current = editor;

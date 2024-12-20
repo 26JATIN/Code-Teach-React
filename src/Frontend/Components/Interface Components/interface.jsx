@@ -471,19 +471,32 @@ const CourseLayout = ({
           {/* Update the header section to hide code editor on mobile */}
           <div className="sticky top-0 z-10 px-4 sm:px-6 py-3 border-b border-gray-800/50 bg-gray-900/80 backdrop-blur-xl flex-shrink-0">
             <div className="flex items-center justify-between">
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                <span className="text-gray-300 font-medium text-sm">{courseShortName}</span>
-                <svg className="w-3 h-3 text-slate-600 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-                {modules.map(m => m.subModules.find(s => `${m.id}.${s.id}` === activeModule))
-                  .filter(Boolean)
-                  .map(subModule => (
-                    <span key={subModule.id} 
-                      className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800/50 text-gray-200 border border-gray-700/50">
-                      {subModule.title}
-                    </span>
-                  ))}
+              <div className="flex items-center gap-3">
+                {isMobile && (
+                  <button
+                    onClick={toggleSidebar}
+                    className="p-2 rounded-lg bg-gray-800/50 text-gray-400 
+                      hover:text-gray-200 transition-colors duration-200 
+                      border border-gray-700/50"
+                    title="Toggle Menu"
+                  >
+                    <Menu size={18} />
+                  </button>
+                )}
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-gray-300 font-medium text-sm">{courseShortName}</span>
+                  <svg className="w-3 h-3 text-slate-600 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  {modules.map(m => m.subModules.find(s => `${m.id}.${s.id}` === activeModule))
+                    .filter(Boolean)
+                    .map(subModule => (
+                      <span key={subModule.id} 
+                        className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800/50 text-gray-200 border border-gray-700/50">
+                        {subModule.title}
+                      </span>
+                    ))}
+                </div>
               </div>
               {/* Only show code editor button on non-mobile devices */}
               {!isMobile && (

@@ -68,119 +68,92 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-lg backdrop-blur-lg bg-white/10 dark:bg-gray-900/70 p-8 rounded-2xl shadow-2xl"
+      >
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="max-w-md w-full space-y-8"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-6"
         >
-          <div className="text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="mx-auto h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center"
-            >
-              <Book className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-            </motion.div>
-            <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
-              {isLogin ? 'Welcome back!' : 'Create your account'}
-            </h2>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {isLogin 
-                ? 'Sign in to access your learning journey'
-                : 'Start your learning journey today'}
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-            <div className="space-y-4">
-              {!isLogin && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white sm:text-sm"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
-                </motion.div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Email address
-                </label>
-                <input
-                  type="email"
-                  required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white sm:text-sm"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white sm:text-sm"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-            >
-              {isLogin ? 'Sign in' : 'Sign up'}
-            </motion.button>
-          </form>
-
-          <div className="text-center">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-purple-600 hover:text-purple-500 font-medium"
-            >
-              {isLogin
-                ? "Don't have an account? Sign up"
-                : 'Already have an account? Sign in'}
-            </button>
-          </div>
+          <Book className="h-8 w-8 text-white" />
         </motion.div>
-      </div>
 
-      {/* Right side - Image/Illustration */}
-      <div className="hidden lg:block relative flex-1">
-        <div className="absolute inset-0 bg-gradient-to-tr from-purple-600 to-blue-500 opacity-90" />
-        <img
-          className="absolute inset-0 w-full h-full object-cover mix-blend-multiply"
-          src="https://images.unsplash.com/photo-1617854818583-09e7f077a156?ixlib=rb-4.0.3"
-          alt="Learning illustration"
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-white max-w-md px-4">
-            <h2 className="text-4xl font-bold mb-4">Transform Your Future</h2>
-            <p className="text-lg">
-              Join thousands of learners who have advanced their careers through our courses.
-            </p>
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-4xl font-bold text-center mb-2 bg-gradient-to-r from-white to-gray-100 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent"
+        >
+          {isLogin ? 'Welcome Back!' : 'Join Us Today'}
+        </motion.h2>
+
+        <p className="text-center text-gray-200 dark:text-gray-400 mb-8">
+          {isLogin 
+            ? 'Continue your learning journey'
+            : 'Begin your path to mastery'}
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            {!isLogin && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <input
+                  type="text"
+                  required
+                  placeholder="Username"
+                  className="w-full px-4 py-3 rounded-lg bg-white/20 dark:bg-gray-800/50 border-2 border-transparent backdrop-blur-sm placeholder-gray-300 text-white focus:border-purple-400 focus:ring-0 transition-all duration-300"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </motion.div>
+            )}
+
+            <input
+              type="email"
+              required
+              placeholder="Email address"
+              className="w-full px-4 py-3 rounded-lg bg-white/20 dark:bg-gray-800/50 border-2 border-transparent backdrop-blur-sm placeholder-gray-300 text-white focus:border-purple-400 focus:ring-0 transition-all duration-300"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+
+            <input
+              type="password"
+              required
+              placeholder="Password"
+              className="w-full px-4 py-3 rounded-lg bg-white/20 dark:bg-gray-800/50 border-2 border-transparent backdrop-blur-sm placeholder-gray-300 text-white focus:border-purple-400 focus:ring-0 transition-all duration-300"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="submit"
+            className="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-lg shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
+          >
+            {isLogin ? 'Sign in' : 'Sign up'}
+          </motion.button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-gray-200 hover:text-white transition-colors duration-300"
+          >
+            {isLogin
+              ? "Don't have an account? Sign up"
+              : 'Already have an account? Sign in'}
+          </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

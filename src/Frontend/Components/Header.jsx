@@ -227,7 +227,7 @@ const Header = memo(() => {
             ) : (
               <Link to="/auth">
                 <motion.button
-                  className="px-4 py-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200"
+                  className="h-10 px-4 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200 whitespace-nowrap"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >

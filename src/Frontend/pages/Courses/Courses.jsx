@@ -141,11 +141,16 @@ function CoursesPage() {
         try {
           // Fetch enrolled courses if user is authenticated
           const enrolledData = await apiRequest(config.api.endpoints.courses.enrolled);
+          // Handle both array and object response formats
+          const enrolledCoursesData = enrolledData.courses || enrolledData;
           // Extract just the course IDs for enrollment check
-          const enrolledIds = enrolledData.map(course => course._id?.toString());
-          setEnrolledCourses(enrolledIds || []);
+          const enrolledIds = (enrolledCoursesData || [])
+            .map(course => course._id?.toString())
+            .filter(Boolean);
+          
+          console.log('Enrolled course IDs:', enrolledIds);
+          setEnrolledCourses(enrolledIds);
         } catch (enrolledError) {
-          // If this fails, just set empty enrolled courses
           console.error('Failed to fetch enrolled courses:', enrolledError);
           setEnrolledCourses([]);
         }

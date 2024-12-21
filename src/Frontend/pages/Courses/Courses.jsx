@@ -221,5 +221,4 @@ function CoursesPage() {
     </ThemeProvider>
   );
 }
-
 export default React.memo(CoursesPage);

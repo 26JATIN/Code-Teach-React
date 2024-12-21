@@ -97,7 +97,6 @@ function LearningDashboard() {
       </ThemeProvider>
     );
   }
-
   // Optional: Add error handling in UI if you want to keep the error state
   if (error) {
     return (

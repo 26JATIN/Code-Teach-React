@@ -68,16 +68,16 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-300 p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-lg backdrop-blur-lg bg-white/10 dark:bg-gray-900/70 p-8 rounded-2xl shadow-2xl"
+        className="w-full max-w-lg bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
       >
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-6"
+          className="mx-auto h-16 w-16 rounded-xl bg-blue-600 dark:bg-blue-500 flex items-center justify-center mb-6"
         >
           <Book className="h-8 w-8 text-white" />
         </motion.div>
@@ -85,12 +85,12 @@ const AuthPage = () => {
         <motion.h2
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-4xl font-bold text-center mb-2 bg-gradient-to-r from-white to-gray-100 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent"
+          className="text-4xl font-bold text-center mb-2 text-gray-900 dark:text-gray-100"
         >
           {isLogin ? 'Welcome Back!' : 'Join Us Today'}
         </motion.h2>
 
-        <p className="text-center text-gray-200 dark:text-gray-400 mb-8">
+        <p className="text-center text-gray-700 dark:text-gray-300 mb-8">
           {isLogin 
             ? 'Continue your learning journey'
             : 'Begin your path to mastery'}
@@ -107,7 +107,7 @@ const AuthPage = () => {
                   type="text"
                   required
                   placeholder="Username"
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 dark:bg-gray-800/50 border-2 border-transparent backdrop-blur-sm placeholder-gray-300 text-white focus:border-purple-400 focus:ring-0 transition-all duration-300"
+                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
@@ -118,7 +118,7 @@ const AuthPage = () => {
               type="email"
               required
               placeholder="Email address"
-              className="w-full px-4 py-3 rounded-lg bg-white/20 dark:bg-gray-800/50 border-2 border-transparent backdrop-blur-sm placeholder-gray-300 text-white focus:border-purple-400 focus:ring-0 transition-all duration-300"
+              className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -127,7 +127,7 @@ const AuthPage = () => {
               type="password"
               required
               placeholder="Password"
-              className="w-full px-4 py-3 rounded-lg bg-white/20 dark:bg-gray-800/50 border-2 border-transparent backdrop-blur-sm placeholder-gray-300 text-white focus:border-purple-400 focus:ring-0 transition-all duration-300"
+              className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -137,7 +137,7 @@ const AuthPage = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
-            className="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-lg shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
+            className="w-full py-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold text-lg shadow-lg transition-all duration-300"
           >
             {isLogin ? 'Sign in' : 'Sign up'}
           </motion.button>
@@ -146,7 +146,7 @@ const AuthPage = () => {
         <div className="mt-6 text-center">
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-gray-200 hover:text-white transition-colors duration-300"
+            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors duration-300"
           >
             {isLogin
               ? "Don't have an account? Sign up"

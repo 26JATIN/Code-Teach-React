@@ -13,13 +13,29 @@ function LearningDashboard() {
 
   // Fetch enrolled courses from backend
   useEffect(() => {
-    const fetchEnrolledCourses = async () => {
+    const fetchEnrolledCourses = async (retryCount = 0) => {
       try {
+        setIsLoading(true);
         const data = await apiRequest(config.api.endpoints.courses.enrolled);
-        setEnrolledCourses(Array.isArray(data) ? data : (data.courses || []));
+        
+        // Handle the new response format
+        const courses = Array.isArray(data) ? data : (data.courses || []);
+        
+        if (courses.length === 0 && retryCount < 3) {
+          console.log(`Attempt ${retryCount + 1}: No courses found, retrying in 2 seconds...`);
+          setTimeout(() => fetchEnrolledCourses(retryCount + 1), 2000);
+          return;
+        }
+        
+        setEnrolledCourses(courses);
       } catch (err) {
         console.error('Error fetching enrolled courses:', err);
-        setError(err.message || 'Failed to fetch enrolled courses');
+        if (retryCount < 3) {
+          console.log(`Attempt ${retryCount + 1}: Retrying in 2 seconds...`);
+          setTimeout(() => fetchEnrolledCourses(retryCount + 1), 2000);
+        } else {
+          setError(err.message || 'Failed to fetch enrolled courses');
+        }
       } finally {
         setIsLoading(false);
       }

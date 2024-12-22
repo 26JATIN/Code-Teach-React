@@ -251,16 +251,12 @@ const CodeEditor = ({ defaultCode }) => {
       }
 
       const fullOutput = data.run.output || '';
-      const newOutput = fullOutput.substring(programState.current.lastOutput.length);
       
-      if (newOutput.trim()) {
-        setTerminalHistory(prev => [...prev, { type: 'output', content: newOutput.trim() }]);
-        programState.current.lastOutput = fullOutput;
+      if (fullOutput.trim()) {
+        setTerminalHistory(prev => [...prev, { type: 'output', content: fullOutput.trim() }]);
       }
 
       const shouldWaitForInput = 
-        newOutput.trim().endsWith('?') || 
-        newOutput.toLowerCase().includes('enter') ||
         code.includes('Scanner') && !data.run.stderr;
 
       setIsWaitingForInput(shouldWaitForInput);

@@ -173,7 +173,8 @@ const CodeEditor = ({ defaultCode }) => {
     });
     
     try {
-      const response = await fetch('https://emkc.org/api/v2/piston/execute', {
+      // First, just compile the program
+      const compileResponse = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -182,15 +183,15 @@ const CodeEditor = ({ defaultCode }) => {
           files: [{ content: code, name: 'Main.java' }],
           stdin: '',
           compile_timeout: 5000,
-          run_timeout: 10000 // Increased timeout
+          run_timeout: 10000
         }),
       });
 
-      const result = await response.json();
-      
-      if (result.run.stderr) {
+      const compileResult = await compileResponse.json();
+    
+      if (compileResult.run?.stderr) {
         setTerminalHistory(prev => [...prev, 
-          { type: 'error', content: result.run.stderr }
+          { type: 'error', content: compileResult.run.stderr }
         ]);
         setIsCompiling(false);
         return;
@@ -201,23 +202,36 @@ const CodeEditor = ({ defaultCode }) => {
         { type: 'system', content: '▶ Running program...' }
       ]);
 
-      // Update execution state
-      setExecutionState(prev => ({
-        ...prev,
-        running: true,
-        outputBuffer: result.run.output || ''
-      }));
+      // If program uses Scanner, immediately set waiting for input
+      if (needsInput) {
+        setIsWaitingForInput(true);
+        setIsProgramRunning(true);
+      }
 
-      // Display initial output and check if program is waiting for input
-      if (result.run.output) {
-        setTerminalHistory(prev => [...prev, 
-          { type: 'output', content: result.run.output }
-        ]);
-        setIsWaitingForInput(needsInput);
+      // Only execute if no Scanner is detected
+      if (!needsInput) {
+        const runResponse = await fetch('https://emkc.org/api/v2/piston/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            language: 'java',
+            version: '15.0.2',
+            files: [{ content: code, name: 'Main.java' }],
+            stdin: '',
+            run_timeout: 10000
+          }),
+        });
+
+        const runResult = await runResponse.json();
+      
+        if (runResult.run?.output) {
+          setTerminalHistory(prev => [...prev, 
+            { type: 'output', content: runResult.run.output }
+          ]);
+        }
       }
 
       setIsCompiling(false);
-      setIsProgramRunning(true);
 
     } catch (err) {
       setTerminalHistory(prev => [...prev, 
@@ -231,6 +245,7 @@ const CodeEditor = ({ defaultCode }) => {
   const handleInput = useCallback(async (inputValue) => {
     if (!inputValue.trim()) return;
 
+    // Add input to terminal history
     setTerminalHistory(prev => [...prev, { type: 'input', content: inputValue }]);
     
     const newBuffer = executionState.inputBuffer + inputValue + '\n';
@@ -249,8 +264,8 @@ const CodeEditor = ({ defaultCode }) => {
       });
 
       const result = await response.json();
-      
-      if (result.run.stderr) {
+    
+      if (result.run?.stderr) {
         setTerminalHistory(prev => [...prev, 
           { type: 'error', content: result.run.stderr }
         ]);
@@ -259,8 +274,15 @@ const CodeEditor = ({ defaultCode }) => {
         return;
       }
 
-      // Get only new output by comparing with previous buffer
-      const newOutput = result.run.output.substring(executionState.outputBuffer.length);
+      // Get only the new output by comparing with previous buffer
+      const previousOutput = executionState.outputBuffer;
+      const currentOutput = result.run.output || '';
+      
+      // Find the new output by removing the previous output
+      let newOutput = currentOutput;
+      if (previousOutput && currentOutput.startsWith(previousOutput)) {
+        newOutput = currentOutput.substring(previousOutput.length);
+      }
       
       if (newOutput.trim()) {
         setTerminalHistory(prev => [...prev, 
@@ -272,16 +294,12 @@ const CodeEditor = ({ defaultCode }) => {
       setExecutionState(prev => ({
         ...prev,
         inputBuffer: newBuffer,
-        outputBuffer: result.run.output
+        outputBuffer: currentOutput
       }));
 
-      // Check if program needs more input
-      const needsMoreInput = result.run.output.endsWith('?') || 
-                           result.run.output.toLowerCase().includes('enter') ||
-                           code.includes('Scanner');
-
-      setIsWaitingForInput(needsMoreInput);
-      setIsProgramRunning(needsMoreInput);
+      // Keep waiting for input if program still needs it
+      setIsWaitingForInput(needsInput);
+      setIsProgramRunning(needsInput);
 
     } catch (err) {
       setTerminalHistory(prev => [...prev, 
@@ -290,7 +308,7 @@ const CodeEditor = ({ defaultCode }) => {
       setIsWaitingForInput(false);
       setIsProgramRunning(false);
     }
-  }, [code, executionState]);
+  }, [code, executionState, needsInput]);
 
   // Handle terminal input submission
   const handleTerminalSubmit = useCallback((e) => {

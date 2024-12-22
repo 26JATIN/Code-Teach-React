@@ -47,20 +47,7 @@ const CodeEditor = ({ defaultCode }) => {
 
 public class Main {
     public static void main(String[] args) {
-        // Step 1: Create our Scanner tool
-        Scanner scan = new Scanner(System.in);
-        
-        // Step 2: Ask the user for their name
-        System.out.println("What is your name? ");
-        
-        // Step 3: Wait for user to type their name and save it
-        String name = scan.nextLine();
-        
-        // Step 4: Say hello to the user
-        System.out.println("Hello " + name + "! Nice to meet you!");
-        
-        // Step 5: Always clean up - close the scanner
-        scan.close();
+        System.out.println("Hello World!");
     }
 }`);
   const [output, setOutput] = useState('');

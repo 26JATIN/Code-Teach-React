@@ -133,7 +133,9 @@ const CodeEditor = ({ defaultCode }) => {
 
   // Simplified scanner detection
   const hasScanner = useMemo(() => {
-    return code.includes('Scanner') || code.includes('System.in');
+    const scannerPatterns = ['Scanner', 'System.in', 'next', 'nextLine', 'nextInt'];
+    console.log('Checking for scanner patterns...'); // Debug log
+    return scannerPatterns.some(pattern => code.includes(pattern));
   }, [code]);
 
   // Updated execute function
@@ -179,8 +181,11 @@ const CodeEditor = ({ defaultCode }) => {
 
   // Simplified execute click handler
   const handleExecuteClick = useCallback(() => {
+    console.log('Execute clicked, hasScanner:', hasScanner); // Debug log
     if (hasScanner) {
+      setInput('');
       setShowInputModal(true);
+      console.log('Showing input modal'); // Debug log
     } else {
       executeWithInput();
     }
@@ -204,8 +209,18 @@ const CodeEditor = ({ defaultCode }) => {
     />
   ), [code, handleEditorChange, handleEditorDidMount, editorOptions]);
 
+  // Update the modal component to be mounted at the document root level
+  useEffect(() => {
+    if (showInputModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    console.log('Modal visibility:', showInputModal); // Debug log
+  }, [showInputModal]);
+
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto relative"> {/* Add relative here */}
       <div className="min-w-[320px] w-full space-y-2 md:space-y-4 bg-gray-900/50 p-2 sm:p-3 md:p-6 rounded-xl border border-gray-700/50">
         {/* Editor Section */}
         <div className="relative">
@@ -277,8 +292,11 @@ const CodeEditor = ({ defaultCode }) => {
 
         {/* Replace the input section with this modal */}
         {showInputModal && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-lg border border-gray-700 p-6 max-w-lg w-full mx-4 shadow-xl">
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
+            <div 
+              className="bg-gray-900 rounded-lg border border-gray-700 p-6 max-w-lg w-full mx-4 shadow-xl"
+              onClick={e => e.stopPropagation()}
+            >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-white text-xl font-medium">Program Input Required</h3>
                 <button

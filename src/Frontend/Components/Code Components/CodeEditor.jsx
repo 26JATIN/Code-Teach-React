@@ -25,7 +25,9 @@ const CodeEditor = ({ defaultCode }) => {
   const [state, setState] = useState({
     status: 'idle', // idle, running, waiting_input, error
     output: '',
-    error: null
+    error: null,
+    inputHistory: [],
+    historyIndex: -1
   });
   
   const terminalHandler = useRef(new TerminalHandler());
@@ -62,17 +64,6 @@ public class Main {
   const [terminalHistory, setTerminalHistory] = useState([]);
   const inputRef = useRef(null);
   const terminalRef = useRef(null);
-
-  const [executionState, setExecutionState] = useState({
-    running: false,
-    inputBuffer: '',
-    outputBuffer: '',
-    pid: null
-  });
-
-  const [inputHistory, setInputHistory] = useState([]);
-  const [inputHistoryIndex, setInputHistoryIndex] = useState(-1);
-  const [currentInput, setCurrentInput] = useState('');
 
   const needsInput = useMemo(() => {
     const inputPatterns = [
@@ -259,11 +250,13 @@ public class Main {
   }, []);
 
   const stopExecution = useCallback(() => {
-    setExecutionContext(prev => ({
-      ...prev,
+    setState({
       status: 'idle',
-      error: null
-    }));
+      output: '',
+      error: null,
+      inputHistory: [],
+      historyIndex: -1
+    });
     clearTerminal();
   }, [clearTerminal]);
 

@@ -176,7 +176,7 @@ const CodeEditor = ({ defaultCode }) => {
 
       const compileResult = await compileCheck.json();
       
-      if (compileResult.run.stderr && !compileResult.run.stderr.includes('waiting for input')) {
+      if (compileResult.run.stderr) {
         setTerminalHistory(prev => [...prev, { type: 'error', content: compileResult.run.stderr }]);
         setIsCompiling(false);
         return;
@@ -243,7 +243,7 @@ const CodeEditor = ({ defaultCode }) => {
 
       const data = await response.json();
       
-      if (data.run.stderr && !data.run.stderr.includes('waiting for input')) {
+      if (data.run.stderr) {
         setTerminalHistory(prev => [...prev, { type: 'error', content: data.run.stderr }]);
         setIsWaitingForInput(false);
         setIsProgramRunning(false);

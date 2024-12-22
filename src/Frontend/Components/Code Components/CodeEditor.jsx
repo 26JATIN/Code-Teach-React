@@ -47,6 +47,10 @@ public class Main {
     pid: null
   });
 
+  const [inputHistory, setInputHistory] = useState([]);
+  const [inputHistoryIndex, setInputHistoryIndex] = useState(-1);
+  const [currentInput, setCurrentInput] = useState('');
+
   const needsInput = useMemo(() => {
     const inputPatterns = [
       'Scanner',
@@ -259,12 +263,43 @@ public class Main {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const input = e.target.value.trim();
-      e.target.value = '';
       if (input) {
+        setInputHistory(prev => [...prev, input]);
+        setInputHistoryIndex(-1);
+        setCurrentInput('');
         handleInput(input);
       }
+      e.target.value = '';
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (inputHistory.length > 0) {
+        const newIndex = inputHistoryIndex + 1;
+        if (newIndex < inputHistory.length) {
+          setInputHistoryIndex(newIndex);
+          setCurrentInput(inputHistory[inputHistory.length - 1 - newIndex]);
+          e.target.value = inputHistory[inputHistory.length - 1 - newIndex];
+        }
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (inputHistoryIndex > 0) {
+        const newIndex = inputHistoryIndex - 1;
+        setInputHistoryIndex(newIndex);
+        setCurrentInput(inputHistory[inputHistory.length - 1 - newIndex]);
+        e.target.value = inputHistory[inputHistory.length - 1 - newIndex];
+      } else if (inputHistoryIndex === 0) {
+        setInputHistoryIndex(-1);
+        setCurrentInput('');
+        e.target.value = '';
+      }
     }
-  }, [handleInput]);
+  }, [handleInput, inputHistory, inputHistoryIndex]);
+
+  useEffect(() => {
+    if (isWaitingForInput && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isWaitingForInput]);
 
   const handleExecuteClick = useCallback(() => {
     setTerminalHistory([]);
@@ -296,6 +331,27 @@ public class Main {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
   }, [terminalHistory]);
+
+  const renderTerminalInput = () => (
+    <div className="flex items-center gap-2 mt-2 group">
+      <div className="flex items-center gap-1 text-green-400">
+        <span className="animate-pulse">{'>'}</span>
+        {isWaitingForInput && <span className="text-xs text-gray-500">[Press Enter to submit, Up/Down for history]</span>}
+      </div>
+      <input
+        ref={inputRef}
+        type="text"
+        value={currentInput}
+        onChange={(e) => setCurrentInput(e.target.value)}
+        className="w-full bg-transparent text-gray-300 outline-none border-b border-transparent 
+                   focus:border-gray-700 transition-colors duration-200"
+        placeholder={isWaitingForInput ? "Type your input here..." : ""}
+        onKeyDown={handleTerminalSubmit}
+        disabled={!isWaitingForInput || isCompiling}
+        autoFocus
+      />
+    </div>
+  );
 
   return (
     <div className="overflow-x-auto relative">
@@ -392,20 +448,7 @@ public class Main {
               </div>
             ))}
             
-            {(isWaitingForInput && !isCompiling) && (
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-green-400">{'>'}</span>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  className="w-full bg-transparent text-gray-300 outline-none"
-                  placeholder="Enter your input..."
-                  onKeyDown={handleTerminalSubmit}
-                  disabled={!isWaitingForInput || isCompiling}
-                  autoFocus
-                />
-              </div>
-            )}
+            {(isWaitingForInput && !isCompiling) && renderTerminalInput()}
           </div>
         </div>
       </div>

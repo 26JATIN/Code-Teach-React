@@ -22,6 +22,9 @@ const CodeEditor = ({ defaultCode }) => {
   const [input, setInput] = useState(''); // Add this new state
   const [showInputModal, setShowInputModal] = useState(false);
   const [terminalInput, setTerminalInput] = useState('');
+  const [terminalHistory, setTerminalHistory] = useState([]);
+  const [isWaitingForInput, setIsWaitingForInput] = useState(false);
+  const [currentInputBuffer, setCurrentInputBuffer] = useState('');
   const terminalRef = useRef(null);
 
   // Update needsInput logic to be more sensitive
@@ -140,10 +143,11 @@ const CodeEditor = ({ defaultCode }) => {
     return scannerPatterns.some(pattern => code.includes(pattern));
   }, [code]);
 
-  // Updated execute function
+  // Updated execute function for interactive input/output
   const executeWithInput = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setTerminalHistory(prev => [...prev, { type: 'system', content: '▶ Running program...' }]);
     
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
@@ -152,11 +156,8 @@ const CodeEditor = ({ defaultCode }) => {
         body: JSON.stringify({
           language: 'java',
           version: '15.0.2',
-          files: [{ 
-            content: code,
-            name: 'Main.java'
-          }],
-          stdin: terminalInput
+          files: [{ content: code, name: 'Main.java' }],
+          stdin: currentInputBuffer
         }),
       });
 
@@ -164,27 +165,51 @@ const CodeEditor = ({ defaultCode }) => {
       console.log('API Response:', data);
 
       if (data.run.stderr) {
-        setError(data.run.stderr);
-        setOutput('');
+        setTerminalHistory(prev => [...prev, { type: 'error', content: data.run.stderr }]);
       } else {
-        setOutput(data.run.output || data.run.stdout || '');
+        // Split output by newlines to simulate line-by-line execution
+        const outputLines = (data.run.output || '').split('\n');
+        
+        for (const line of outputLines) {
+          if (line.trim()) {
+            if (line.includes('?') || line.toLowerCase().includes('enter')) {
+              // This looks like an input prompt
+              setTerminalHistory(prev => [...prev, { type: 'output', content: line }]);
+              setIsWaitingForInput(true);
+              return;
+            } else {
+              setTerminalHistory(prev => [...prev, { type: 'output', content: line }]);
+            }
+          }
+        }
       }
     } catch (err) {
-      console.error('Execution error:', err); // Debug log
-      setError('Failed to execute code. Please try again.');
+      setTerminalHistory(prev => [...prev, { type: 'error', content: 'Failed to execute code.' }]);
     } finally {
       setIsLoading(false);
-      setTerminalInput('');
     }
-  }, [code, terminalInput]);
+  }, [code, currentInputBuffer]);
 
   // Handle terminal input submission
   const handleTerminalSubmit = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      executeWithInput();
+      const input = e.target.value.trim();
+      
+      if (input) {
+        // Add input to terminal history
+        setTerminalHistory(prev => [...prev, { type: 'input', content: `> ${input}` }]);
+        setCurrentInputBuffer(prev => prev + input + '\n');
+        
+        if (isWaitingForInput) {
+          setIsWaitingForInput(false);
+          executeWithInput();
+        }
+      }
+      
+      e.target.value = '';
     }
-  }, [executeWithInput]);
+  }, [isWaitingForInput, executeWithInput]);
 
   // Simplified execute click handler
   const handleExecuteClick = useCallback(() => {
@@ -225,6 +250,13 @@ const CodeEditor = ({ defaultCode }) => {
     }
     console.log('Modal visibility:', showInputModal); // Debug log
   }, [showInputModal]);
+
+  // Scroll terminal to bottom whenever history updates
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
+  }, [terminalHistory]);
 
   return (
     <div className="overflow-x-auto relative"> {/* Add relative here */}
@@ -297,43 +329,47 @@ const CodeEditor = ({ defaultCode }) => {
           </div>
         </div>
 
-        {/* Integrated Terminal */}
+        {/* Interactive Terminal */}
         <div className="bg-gray-950/90 rounded-lg border border-gray-800/50 mt-4">
-          <div className="flex items-center justify-between px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 border-b border-gray-800/50">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800/50">
             <div className="flex items-center gap-2">
-              <svg className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span className="text-xs sm:text-sm text-gray-400">Terminal</span>
+              <span className="text-sm text-gray-400">Interactive Terminal</span>
             </div>
           </div>
           
-          <div className="p-2 sm:p-3 md:p-4 font-mono text-xs sm:text-sm min-h-[200px] max-h-[300px] overflow-auto">
-            {/* Output Area */}
-            <div className="text-gray-300 whitespace-pre-wrap mb-2">
-              {error ? (
-                <span className="text-red-400">{error}</span>
-              ) : output ? (
-                output
-              ) : (
-                <span className="text-gray-500">Program output will appear here...</span>
-              )}
-            </div>
-
-            {/* Input Area */}
-            <div className="flex items-center gap-2 mt-2 border-t border-gray-800/50 pt-2">
-              <span className="text-green-400">{'>'}</span>
-              <textarea
-                ref={terminalRef}
-                value={terminalInput}
-                onChange={(e) => setTerminalInput(e.target.value)}
-                onKeyDown={handleTerminalSubmit}
-                placeholder={isLoading ? "Running..." : "Type your input here and press Enter..."}
-                className="w-full bg-transparent text-gray-300 outline-none resize-none overflow-hidden"
-                rows={1}
-                disabled={isLoading}
-              />
-            </div>
+          <div ref={terminalRef} className="p-4 font-mono text-sm h-[300px] overflow-auto">
+            {/* Terminal History */}
+            {terminalHistory.map((entry, index) => (
+              <div 
+                key={index} 
+                className={`whitespace-pre-wrap ${
+                  entry.type === 'error' ? 'text-red-400' :
+                  entry.type === 'input' ? 'text-blue-400' :
+                  entry.type === 'system' ? 'text-gray-500' :
+                  'text-gray-300'
+                }`}
+              >
+                {entry.content}
+              </div>
+            ))}
+            
+            {/* Input Line */}
+            {!isLoading && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-green-400">{'>'}</span>
+                <input
+                  type="text"
+                  className="w-full bg-transparent text-gray-300 outline-none"
+                  placeholder={isWaitingForInput ? "Enter your input..." : "Press Run to execute code..."}
+                  disabled={!isWaitingForInput && !isLoading}
+                  onKeyDown={handleTerminalSubmit}
+                  autoFocus
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

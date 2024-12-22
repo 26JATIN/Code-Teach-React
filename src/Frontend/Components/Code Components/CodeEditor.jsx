@@ -6,28 +6,38 @@ import CopyButton from './CopyButton';
 // Simplify the Terminal class
 class TerminalHandler {
   constructor() {
-    this.buffer = '';
-    this.inputHistory = [];
+    this.inputs = [];
+    this.expectedInputs = 0;
   }
 
-  clearBuffer() {
-    this.buffer = '';
-    this.inputHistory = [];
+  clear() {
+    this.inputs = [];
+    this.expectedInputs = 0;
   }
 
   addInput(input) {
-    this.inputHistory.push(input);
-    this.buffer += input + '\n';
+    this.inputs.push(input);
+  }
+
+  getAllInputs() {
+    return this.inputs.join('\n');
+  }
+
+  setExpectedInputs(count) {
+    this.expectedInputs = count;
+  }
+
+  isComplete() {
+    return this.inputs.length >= this.expectedInputs;
   }
 }
 
 const CodeEditor = ({ defaultCode }) => {
   const [state, setState] = useState({
-    status: 'idle', // idle, running, waiting_input, error
-    output: '',
-    error: null,
-    inputHistory: [],
-    historyIndex: -1
+    status: 'idle',
+    currentInputIndex: 0,
+    expectedInputs: 0,
+    error: null
   });
   
   const terminalHandler = useRef(new TerminalHandler());
@@ -155,17 +165,17 @@ public class Main {
     setLineCount(code.split('\n').length);
   }, [code]);
 
-  const handleInput = useCallback(async (inputValue) => {
-    if (!inputValue?.trim()) return;
+  const countExpectedInputs = useCallback((code) => {
+    const matches = code.match(/\b(nextInt|nextLine|nextDouble|nextFloat|nextBoolean|next|readLine|read)\b/g);
+    return matches ? matches.length : 0;
+  }, []);
 
-    const terminal = terminalHandler.current;
-    terminal.addInput(inputValue);
-
-    setTerminalHistory(prev => [...prev, 
-      { type: 'input', content: `> ${inputValue}` }
-    ]);
-
+  const runWithInputs = async (inputs) => {
     try {
+      setTerminalHistory(prev => [...prev, 
+        { type: 'system', content: '⚡ Executing program with inputs...' }
+      ]);
+
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -173,80 +183,79 @@ public class Main {
           language: 'java',
           version: '15.0.2',
           files: [{ content: code }],
-          stdin: terminal.buffer,
-        }),
-      });
-
-      const result = await response.json();
-      const output = result.run?.output || '';
-      
-      // Show new output after the input
-      const newOutput = output.split('\n').slice(-2).join('\n');
-      
-      if (newOutput.trim()) {
-        setTerminalHistory(prev => [...prev, { 
-          type: 'output', 
-          content: newOutput.trim()
-        }]);
-      }
-
-      // Simple check if more input is needed
-      if (needsInput && (newOutput.includes('?') || newOutput.includes(':'))) {
-        setState({ status: 'waiting_input', output: newOutput, error: null });
-      } else {
-        setState({ status: 'idle', output: newOutput, error: null });
-      }
-
-    } catch (err) {
-      setState({ status: 'error', output: '', error: err.message });
-      setTerminalHistory(prev => [...prev, { type: 'error', content: err.message }]);
-    }
-  }, [code, needsInput]);
-
-  const executeCode = useCallback(async () => {
-    const terminal = terminalHandler.current;
-    terminal.clearBuffer();
-    
-    setState({ status: 'running', output: '', error: null });
-    setTerminalHistory([{ type: 'system', content: '⚡ Running program...' }]);
-
-    try {
-      const response = await fetch('https://emkc.org/api/v2/piston/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          language: 'java',
-          version: '15.0.2',
-          files: [{ content: code }],
-          stdin: '',
+          stdin: inputs,
         }),
       });
 
       const result = await response.json();
 
       if (result.run?.output) {
-        setTerminalHistory(prev => [...prev, { 
-          type: 'output', 
-          content: result.run.output.trim()
-        }]);
-
-        // Simple check for input needed
-        if (needsInput && result.run.output.includes('?') || result.run.output.includes(':')) {
-          setState({ status: 'waiting_input', output: result.run.output, error: null });
-        } else {
-          setState({ status: 'idle', output: result.run.output, error: null });
-        }
+        setTerminalHistory(prev => [...prev, 
+          { type: 'output', content: result.run.output.trim() }
+        ]);
       }
+
+      setState({ status: 'idle', currentInputIndex: 0, expectedInputs: 0, error: null });
+
     } catch (err) {
-      setState({ status: 'error', output: '', error: err.message });
+      setState(prev => ({ ...prev, status: 'error', error: err.message }));
       setTerminalHistory(prev => [...prev, { type: 'error', content: err.message }]);
     }
-  }, [code, needsInput]);
+  };
+
+  const handleInput = useCallback((inputValue) => {
+    if (!inputValue?.trim() || state.status !== 'waiting_input') return;
+
+    const terminal = terminalHandler.current;
+    terminal.addInput(inputValue.trim());
+
+    setTerminalHistory(prev => [...prev, 
+      { type: 'input', content: `Input ${state.currentInputIndex + 1}: ${inputValue}` }
+    ]);
+
+    if (terminal.isComplete()) {
+      // All inputs collected, run the program
+      runWithInputs(terminal.getAllInputs());
+    } else {
+      // Wait for next input
+      setState(prev => ({
+        ...prev,
+        currentInputIndex: prev.currentInputIndex + 1
+      }));
+    }
+  }, [state.status, state.currentInputIndex]);
+
+  const executeCode = useCallback(async () => {
+    const terminal = terminalHandler.current;
+    terminal.clear();
+    
+    const inputCount = countExpectedInputs(code);
+    terminal.setExpectedInputs(inputCount);
+    
+    setState({
+      status: inputCount > 0 ? 'waiting_input' : 'running',
+      currentInputIndex: 0,
+      expectedInputs: inputCount,
+      error: null
+    });
+
+    setTerminalHistory([
+      { type: 'system', content: '⚡ Program started...' },
+      ...(inputCount > 0 ? [{
+        type: 'system',
+        content: `Program expects ${inputCount} input${inputCount > 1 ? 's' : ''}. Please provide them:`
+      }] : [])
+    ]);
+
+    if (inputCount === 0) {
+      await runWithInputs('');
+    }
+  }, [code]);
 
   // Add these new utilities
   const clearTerminal = useCallback(() => {
     setTerminalHistory([]);
-    terminalHandler.current.clearBuffer();
+    terminalHandler.current.clear();
   }, []);
 
   const stopExecution = useCallback(() => {
@@ -343,8 +352,13 @@ public class Main {
       <input
         ref={inputRef}
         type="text"
-        className="w-full bg-transparent text-gray-300 outline-none"
-        placeholder="Type your input here..."
+        className="w-full bg-transparent text-gray-300 outline-none border-b border-transparent 
+                 focus:border-gray-700 transition-colors duration-200"
+        placeholder={
+          state.status === 'waiting_input' 
+            ? `Enter input ${state.currentInputIndex + 1} of ${state.expectedInputs}...`
+            : "Program finished"
+        }
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();

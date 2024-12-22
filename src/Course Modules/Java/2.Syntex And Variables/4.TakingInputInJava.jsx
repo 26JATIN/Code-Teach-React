@@ -1,6 +1,7 @@
 import React from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
 import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import RunCode from '../../../Frontend/Components/Code Components/RunCode';  // Add this import
 
 const TakingInputInJava = () => {
   const examples = {
@@ -233,7 +234,22 @@ public class AboutYou {
             Let's write a program that asks for your favorite color and lucky number! 
             Try completing this code:
           </p>
-          <CodeEditor defaultCode={examples.practiceQuestion.code} />
+          <div className="space-y-4">
+            <CodeEditor defaultCode={examples.practiceQuestion.code} />
+            <RunCode 
+              testCases={[
+                {
+                  input: ["Blue", "7"],
+                  expected: "Your favorite color is Blue and your lucky number is 7!"
+                },
+                {
+                  input: ["Red", "13"],
+                  expected: "Your favorite color is Red and your lucky number is 13!"
+                }
+              ]}
+              defaultCode={examples.practiceQuestion.code}
+            />
+          </div>
         </div>
       </section>
 

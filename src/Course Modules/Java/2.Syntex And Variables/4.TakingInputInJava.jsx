@@ -5,83 +5,86 @@ import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor'
 const TakingInputInJava = () => {
   const examples = {
     basicInput: {
-      title: '📥 Basic Input Example',
-      code: `import java.util.Scanner;
+      title: '📥 Your First Input Program',
+      code: `// First, we need to import Scanner - it's like borrowing a special tool
+import java.util.Scanner;
 
-public class BasicInput {
+public class MyFirstInput {
     public static void main(String[] args) {
-        // Create a Scanner object
-        Scanner scanner = new Scanner(System.in);
+        // Step 1: Create our Scanner tool
+        Scanner scan = new Scanner(System.in);
         
-        // Get text input
-        System.out.print("Enter your name: ");
-        String name = scanner.nextLine();
+        // Step 2: Ask the user for their name
+        System.out.println("What is your name? ");
         
-        // Get number input
-        System.out.print("Enter your age: ");
-        int age = scanner.nextInt();
+        // Step 3: Wait for user to type their name and save it
+        String name = scan.nextLine();
         
-        // Print the input
-        System.out.println("Hello " + name + "! You are " + age + " years old.");
+        // Step 4: Say hello to the user
+        System.out.println("Hello " + name + "! Nice to meet you!");
         
-        // Close the scanner
-        scanner.close();
+        // Step 5: Always clean up - close the scanner
+        scan.close();
     }
 }`,
       showLineNumbers: true,
       showCopyButton: true
     },
 
-    differentInputTypes: {
-      title: '🎯 Different Types of Input',
+    simpleCalculator: {
+      title: '🔢 Getting Numbers from Users',
       code: `import java.util.Scanner;
 
-public class InputTypes {
+public class SimpleCalculator {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        // Create our Scanner
+        Scanner scan = new Scanner(System.in);
         
-        // String input
-        System.out.print("Enter text: ");
-        String text = scanner.nextLine();
+        // Ask for the first number
+        System.out.println("Enter first number: ");
+        int number1 = scan.nextInt();
         
-        // Integer input
-        System.out.print("Enter number: ");
-        int number = scanner.nextInt();
+        // Ask for the second number
+        System.out.println("Enter second number: ");
+        int number2 = scan.nextInt();
         
-        // Double input
-        System.out.print("Enter decimal: ");
-        double decimal = scanner.nextDouble();
+        // Add the numbers and show result
+        int sum = number1 + number2;
+        System.out.println("The sum is: " + sum);
         
-        // Boolean input
-        System.out.print("Enter true/false: ");
-        boolean flag = scanner.nextBoolean();
-        
-        scanner.close();
+        scan.close();
     }
 }`,
       showLineNumbers: true,
       showCopyButton: true
     },
 
-    inputValidation: {
-      title: '✅ Input Validation Example',
+    differentTypes: {
+      title: '📝 Getting Different Types of Input',
       code: `import java.util.Scanner;
 
-public class SafeInput {
+public class UserDetails {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        Scanner scan = new Scanner(System.in);
         
-        // Safe number input
-        int age = 0;
-        System.out.print("Enter your age: ");
-        while (!scanner.hasNextInt()) {
-            System.out.print("Please enter a valid number: ");
-            scanner.next(); // Clear invalid input
-        }
-        age = scanner.nextInt();
+        // Getting text (String) input
+        System.out.println("What is your name? ");
+        String name = scan.nextLine();
         
-        System.out.println("Your age is: " + age);
-        scanner.close();
+        // Getting whole number (int) input
+        System.out.println("How old are you? ");
+        int age = scan.nextInt();
+        
+        // Getting decimal (double) input
+        System.out.println("How tall are you (in meters)? ");
+        double height = scan.nextDouble();
+        
+        // Printing everything back
+        System.out.println("Name: " + name);
+        System.out.println("Age: " + age);
+        System.out.println("Height: " + height + " meters");
+        
+        scan.close();
     }
 }`,
       showLineNumbers: true,
@@ -89,18 +92,20 @@ public class SafeInput {
     },
 
     practiceQuestion: {
-      title: '🎯 Practice Example',
+      title: '🎯 Let\'s Practice!',
       code: `import java.util.Scanner;
 
-public class StudentDetails {
+public class AboutYou {
     public static void main(String[] args) {
-        // Create a Scanner and get:
-        // 1. Student's name
-        // 2. Student's age
-        // 3. Student's grade (as a decimal)
-        // 4. Is the student passing? (true/false)
+        // Create a Scanner
+        Scanner scan = new Scanner(System.in);
         
-        // Then print all the information!
+        // TODO: Ask the user for:
+        // 1. Their favorite color
+        // 2. Their lucky number
+        // Then print a message using both inputs!
+        
+        scan.close();
     }
 }`,
       showLineNumbers: true,
@@ -112,90 +117,121 @@ public class StudentDetails {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Title Section */}
       <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Taking Input in Java 🎮
+        Let's Learn About Taking Input! 🎮
       </h1>
 
-      {/* Introduction */}
+      {/* Friendly Introduction */}
       <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
         <p className="text-gray-300 text-lg leading-relaxed">
-          Want to make your programs interactive? Let's learn how to get input from users! 
-          Think of it like having a conversation with your computer. We'll use something called 
-          a Scanner - it's like a helper that reads what users type! 🎯
+          Hey there! 👋 Today we're going to learn something super cool - how to make our programs 
+          talk to us! Instead of just showing messages, we'll make programs that can ask questions 
+          and remember our answers. It's like having a conversation with your computer! 🗣️💻
         </p>
       </div>
 
-      {/* Scanner Introduction Section */}
+      {/* Scanner Explanation */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Meet the Scanner 📱</h2>
+        <h2 className="text-2xl font-semibold text-blue-400">First, Meet Your New Friend: Scanner! 🤝</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-6 bg-blue-500/10 rounded-xl border border-blue-500/20">
-            <h3 className="text-xl font-medium text-blue-400 mb-4">Getting Started 🚀</h3>
-            <ul className="space-y-4 text-gray-300">
-              <li className="flex items-start gap-3">
-                <span className="text-2xl">1️⃣</span>
-                <div>
-                  <p className="text-sm">First, import the Scanner:</p>
-                  <code className="text-blue-400">import java.util.Scanner;</code>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-2xl">2️⃣</span>
-                <div>
-                  <p className="text-sm">Create a Scanner:</p>
-                  <code className="text-blue-400">Scanner scanner = new Scanner(System.in);</code>
-                </div>
-              </li>
-            </ul>
-          </div>
+        <div className="p-6 bg-blue-500/10 rounded-xl border border-blue-500/20">
+          <h3 className="text-xl font-medium text-blue-400 mb-4">What's a Scanner? 🤔</h3>
+          <p className="text-gray-300 mb-4">
+            Think of Scanner like a friendly robot that helps your program read things! 
+            Just like you use your eyes to read, your program uses Scanner to read what 
+            you type. It's that simple! 🤖
+          </p>
 
-          <div className="p-6 bg-purple-500/10 rounded-xl border border-purple-500/20">
-            <h3 className="text-xl font-medium text-purple-400 mb-4">Common Methods 🛠️</h3>
-            <ul className="space-y-3 text-gray-300">
-              <li>• <code>nextLine()</code> - Read text</li>
-              <li>• <code>nextInt()</code> - Read whole numbers</li>
-              <li>• <code>nextDouble()</code> - Read decimal numbers</li>
-              <li>• <code>nextBoolean()</code> - Read true/false</li>
-            </ul>
+          <div className="mt-4 space-y-4">
+            <div className="bg-black/30 p-4 rounded-lg">
+              <h4 className="text-green-400 mb-2">How to Use Scanner:</h4>
+              <ol className="list-decimal list-inside space-y-2 text-gray-300">
+                <li>First, tell Java you want to use Scanner (import it)</li>
+                <li>Create a new Scanner</li>
+                <li>Use it to read input</li>
+                <li>When done, close it (clean up)</li>
+              </ol>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Basic Example Section */}
+      {/* First Example */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Let's Try It! 🎮</h2>
-        <p className="text-gray-300">Here's a simple example of getting input:</p>
+        <h2 className="text-2xl font-semibold text-blue-400">Your First Input Program! 🎉</h2>
+        <div className="p-6 bg-purple-500/10 rounded-xl border border-purple-500/20">
+          <p className="text-gray-300 mb-4">
+            Let's write a program that asks for your name and says hello! 
+            We'll go through it line by line: 👇
+          </p>
+        </div>
         <CodeSnippet {...examples.basicInput} />
-      </section>
-
-      {/* Different Types Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Different Types of Input 📝</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">Scanner can read different types of input:</p>
-          <ul className="list-disc list-inside space-y-2 text-gray-300">
-            <li><code className="text-blue-400">nextLine()</code> - For text like names</li>
-            <li><code className="text-blue-400">nextInt()</code> - For whole numbers</li>
-            <li><code className="text-blue-400">nextDouble()</code> - For decimal numbers</li>
-            <li><code className="text-blue-400">nextBoolean()</code> - For true/false values</li>
+        
+        <div className="p-6 bg-blue-500/10 rounded-xl border border-blue-500/20">
+          <h3 className="text-xl font-medium text-blue-400 mb-4">Let's Break It Down! 📝</h3>
+          <ul className="space-y-4 text-gray-300">
+            <li className="flex items-start gap-3">
+              <span className="text-2xl">1️⃣</span>
+              <div>
+                <code className="text-blue-400">import java.util.Scanner;</code>
+                <p className="mt-1">This line tells Java we want to use the Scanner tool</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="text-2xl">2️⃣</span>
+              <div>
+                <code className="text-blue-400">Scanner scan = new Scanner(System.in);</code>
+                <p className="mt-1">Creates our Scanner tool and names it 'scan'</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="text-2xl">3️⃣</span>
+              <div>
+                <code className="text-blue-400">String name = scan.nextLine();</code>
+                <p className="mt-1">Waits for user to type something and saves it in 'name'</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="text-2xl">4️⃣</span>
+              <div>
+                <code className="text-blue-400">scan.close();</code>
+                <p className="mt-1">Tells Java we're done using Scanner</p>
+              </div>
+            </li>
           </ul>
         </div>
-        <CodeSnippet {...examples.differentInputTypes} />
       </section>
 
-      {/* Input Validation Section */}
+      {/* Reading Different Types */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Making It Safe 🛡️</h2>
-        <p className="text-gray-300">Sometimes users type wrong things. Here's how to handle that:</p>
-        <CodeSnippet {...examples.inputValidation} />
+        <h2 className="text-2xl font-semibold text-blue-400">Reading Different Types of Input 📚</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-6 bg-blue-500/10 rounded-xl border border-blue-500/20">
+            <h3 className="text-xl font-medium text-blue-400 mb-4">Scanner's Special Powers 🦸‍♂️</h3>
+            <ul className="space-y-3 text-gray-300">
+              <li>• <code>nextLine()</code> - Reads text (like names)</li>
+              <li>• <code>nextInt()</code> - Reads whole numbers</li>
+              <li>• <code>nextDouble()</code> - Reads decimal numbers</li>
+            </ul>
+          </div>
+          
+          <div className="p-6 bg-purple-500/10 rounded-xl border border-purple-500/20">
+            <h3 className="text-xl font-medium text-purple-400 mb-4">Remember! 🧠</h3>
+            <ul className="space-y-3 text-gray-300">
+              <li>• Always show a message before asking for input</li>
+              <li>• Use the right method for the right type</li>
+              <li>• Don't forget to close your Scanner</li>
+            </ul>
+          </div>
+        </div>
       </section>
 
-      {/* Practice Section */}
+      {/* Practice Time */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Your Turn! 💪</h2>
+        <h2 className="text-2xl font-semibold text-green-400">Your Turn! 🎯</h2>
         <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
           <p className="text-gray-300 mb-4">
-            Create a program that asks for student details:
+            Let's write a program that asks for your favorite color and lucky number! 
+            Try completing this code:
           </p>
           <CodeEditor defaultCode={examples.practiceQuestion.code} />
         </div>
@@ -203,8 +239,9 @@ public class StudentDetails {
 
       {/* Tips Section */}
       <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-        <h3 className="text-lg font-medium text-yellow-400 mb-2">Important Tips! 💡</h3>
+        <h3 className="text-lg font-medium text-yellow-400 mb-2">Friendly Reminders! 💝</h3>
         <ul className="list-disc list-inside space-y-2 text-gray-300">
+          <li>Always import Scanner at the top</li>
           <li>Always close your Scanner when done</li>
           <li>Be careful mixing nextLine() with other methods</li>
           <li>Add clear prompts for users</li>

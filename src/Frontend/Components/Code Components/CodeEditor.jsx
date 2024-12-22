@@ -3,76 +3,31 @@ import Editor from '@monaco-editor/react';
 import { debounce } from 'lodash';
 import CopyButton from './CopyButton';
 
-// Add this Terminal class at the top, outside the component
+// Simplify the Terminal class
 class TerminalHandler {
   constructor() {
     this.buffer = '';
-    this.inputQueue = [];
-    this.history = [];
-    this.historyIndex = -1;
-    this.isWaitingForInput = false;
-    this.currentPrompt = '';
     this.inputHistory = [];
-    this.lastOutput = '';
-  }
-
-  appendOutput(text) {
-    this.buffer += text;
-    return this.buffer;
   }
 
   clearBuffer() {
     this.buffer = '';
+    this.inputHistory = [];
   }
 
-  queueInput(input) {
-    this.inputQueue.push(input);
-    this.history.push(input);
-  }
-
-  getNextInput() {
-    return this.inputQueue.shift();
-  }
-
-  hasQueuedInput() {
-    return this.inputQueue.length > 0;
-  }
-
-  setPrompt(text) {
-    this.currentPrompt = text;
-  }
-
-  getPrompt() {
-    return this.currentPrompt;
-  }
-
-  setLastOutput(output) {
-    this.lastOutput = output;
-    return this.isExpectingInput(output);
-  }
-
-  isExpectingInput(output) {
-    const patterns = [
-      /\?[\s]*$/,  // Ends with question mark
-      /input|enter|type/i,  // Common input prompts
-      /Scanner|nextLine|nextInt|read/i,  // Java input methods
-    ];
-    return patterns.some(pattern => pattern.test(output));
+  addInput(input) {
+    this.inputHistory.push(input);
+    this.buffer += input + '\n';
   }
 }
 
 const CodeEditor = ({ defaultCode }) => {
-  // Replace multiple state variables with a single execution context
-  const [executionContext, setExecutionContext] = useState({
-    status: 'idle',
-    error: null,
-    outputBuffer: '',
-    lastInput: '',
-    inputCount: 0,
-    compilation: null,
-    isCompiling: false
+  const [state, setState] = useState({
+    status: 'idle', // idle, running, waiting_input, error
+    output: '',
+    error: null
   });
-
+  
   const terminalHandler = useRef(new TerminalHandler());
   
   const [code, setCode] = useState(defaultCode || 
@@ -210,98 +165,59 @@ public class Main {
   }, [code]);
 
   const handleInput = useCallback(async (inputValue) => {
-    const terminal = terminalHandler.current;
     if (!inputValue?.trim()) return;
 
+    const terminal = terminalHandler.current;
+    terminal.addInput(inputValue);
+
+    setTerminalHistory(prev => [...prev, 
+      { type: 'input', content: `> ${inputValue}` }
+    ]);
+
     try {
-      const sanitizedInput = inputValue.trim();
-      terminal.queueInput(sanitizedInput);
-      
-      setTerminalHistory(prev => [...prev, { 
-        type: 'input', 
-        content: `> ${sanitizedInput}`,
-        timestamp: Date.now()
-      }]);
-
-      const fullInput = terminal.inputHistory.join('\n') + '\n' + sanitizedInput;
-
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           language: 'java',
           version: '15.0.2',
-          files: [{ content: code, name: 'Main.java' }],
-          stdin: fullInput,
-          run_timeout: 10000
+          files: [{ content: code }],
+          stdin: terminal.buffer,
         }),
       });
 
       const result = await response.json();
-
-      if (result.run?.stderr) {
-        throw new Error(result.run.stderr);
-      }
-
-      const output = result.run.output;
-      const lastInputIndex = output.lastIndexOf(sanitizedInput);
-      const newOutput = lastInputIndex !== -1 
-        ? output.substring(lastInputIndex + sanitizedInput.length)
-        : output;
-
+      const output = result.run?.output || '';
+      
+      // Show new output after the input
+      const newOutput = output.split('\n').slice(-2).join('\n');
+      
       if (newOutput.trim()) {
         setTerminalHistory(prev => [...prev, { 
           type: 'output', 
-          content: newOutput.trim(),
-          timestamp: Date.now()
+          content: newOutput.trim()
         }]);
       }
 
-      // Check if program is still expecting input
-      const isExpecting = terminal.setLastOutput(newOutput);
-      
-      setExecutionContext(prev => ({
-        ...prev,
-        status: isExpecting ? 'waiting_input' : 'finished',
-        outputBuffer: newOutput,
-        error: null,
-        inputCount: prev.inputCount + 1
-      }));
+      // Simple check if more input is needed
+      if (needsInput && (newOutput.includes('?') || newOutput.includes(':'))) {
+        setState({ status: 'waiting_input', output: newOutput, error: null });
+      } else {
+        setState({ status: 'idle', output: newOutput, error: null });
+      }
 
     } catch (err) {
-      setExecutionContext(prev => ({
-        ...prev,
-        status: 'error',
-        error: err.message
-      }));
-      
-      setTerminalHistory(prev => [...prev, { 
-        type: 'error', 
-        content: `Error: ${err.message}`,
-        timestamp: Date.now()
-      }]);
+      setState({ status: 'error', output: '', error: err.message });
+      setTerminalHistory(prev => [...prev, { type: 'error', content: err.message }]);
     }
-  }, [code]);
+  }, [code, needsInput]);
 
   const executeCode = useCallback(async () => {
     const terminal = terminalHandler.current;
     terminal.clearBuffer();
     
-    setExecutionContext({
-      status: 'compiling',
-      error: null,
-      outputBuffer: '',
-      lastInput: '',
-      inputCount: 0,
-      compilation: null,
-      isCompiling: true
-    });
-
-    setTerminalHistory([{ 
-      type: 'system', 
-      content: '⚡ Compiling program...',
-      timestamp: Date.now()
-    }]);
+    setState({ status: 'running', output: '', error: null });
+    setTerminalHistory([{ type: 'system', content: '⚡ Running program...' }]);
 
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
@@ -310,57 +226,29 @@ public class Main {
         body: JSON.stringify({
           language: 'java',
           version: '15.0.2',
-          files: [{ content: code, name: 'Main.java' }],
+          files: [{ content: code }],
           stdin: '',
-          compile_timeout: 5000,
-          run_timeout: 10000
         }),
       });
 
       const result = await response.json();
 
-      if (result.run?.stderr) {
-        throw new Error(result.run.stderr);
-      }
-
-      setTerminalHistory(prev => [...prev,
-        { type: 'system', content: '✅ Program compiled successfully!', timestamp: Date.now() },
-        { type: 'system', content: '▶ Running program...', timestamp: Date.now() }
-      ]);
-
       if (result.run?.output) {
-        const output = result.run.output.trim();
         setTerminalHistory(prev => [...prev, { 
           type: 'output', 
-          content: output,
-          timestamp: Date.now()
+          content: result.run.output.trim()
         }]);
 
-        // Update terminal state and check for input expectation
-        const isExpecting = terminal.setLastOutput(output);
-        
-        setExecutionContext(prev => ({
-          ...prev,
-          status: isExpecting ? 'waiting_input' : 'finished',
-          outputBuffer: output,
-          isCompiling: false,
-          compilation: result
-        }));
+        // Simple check for input needed
+        if (needsInput && result.run.output.includes('?') || result.run.output.includes(':')) {
+          setState({ status: 'waiting_input', output: result.run.output, error: null });
+        } else {
+          setState({ status: 'idle', output: result.run.output, error: null });
+        }
       }
-
     } catch (err) {
-      setExecutionContext(prev => ({
-        ...prev,
-        status: 'error',
-        error: err.message,
-        isCompiling: false
-      }));
-
-      setTerminalHistory(prev => [...prev, { 
-        type: 'error', 
-        content: err.message,
-        timestamp: Date.now()
-      }]);
+      setState({ status: 'error', output: '', error: err.message });
+      setTerminalHistory(prev => [...prev, { type: 'error', content: err.message }]);
     }
   }, [code, needsInput]);
 
@@ -380,7 +268,7 @@ public class Main {
   }, [clearTerminal]);
 
   const handleTerminalKeyDown = useCallback((e) => {
-    if (executionContext.status !== 'waiting_input') return;
+    if (state.status !== 'waiting_input') return;
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -391,11 +279,11 @@ public class Main {
       }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      const { inputHistory, historyIndex } = executionContext;
+      const { inputHistory, historyIndex } = state;
       if (inputHistory.length > 0 && historyIndex < inputHistory.length - 1) {
         const newIndex = historyIndex + 1;
         const historicalInput = inputHistory[inputHistory.length - 1 - newIndex];
-        setExecutionContext(prev => ({
+        setState(prev => ({
           ...prev,
           historyIndex: newIndex
         }));
@@ -403,30 +291,30 @@ public class Main {
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const { inputHistory, historyIndex } = executionContext;
+      const { inputHistory, historyIndex } = state;
       if (historyIndex > 0) {
         const newIndex = historyIndex - 1;
         const historicalInput = inputHistory[inputHistory.length - 1 - newIndex];
-        setExecutionContext(prev => ({
+        setState(prev => ({
           ...prev,
           historyIndex: newIndex
         }));
         e.target.value = historicalInput;
       } else if (historyIndex === 0) {
-        setExecutionContext(prev => ({
+        setState(prev => ({
           ...prev,
           historyIndex: -1
         }));
         e.target.value = '';
       }
     }
-  }, [executionContext, handleInput]);
+  }, [state, handleInput]);
 
   useEffect(() => {
-    if (executionContext.status === 'waiting_input' && inputRef.current) {
+    if (state.status === 'waiting_input' && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [executionContext.status]);
+  }, [state.status]);
 
   const handleExecuteClick = useCallback(() => {
     setTerminalHistory([]);
@@ -457,38 +345,26 @@ public class Main {
   }, [terminalHistory]);
 
   const renderTerminalInput = () => (
-    <div className="flex items-center gap-2 mt-2 relative group">
-      <div className="flex items-center gap-1">
-        <span className={`text-green-400 ${
-          executionContext.status === 'waiting_input' ? 'animate-pulse' : ''
-        }`}>
-          {executionContext.status === 'waiting_input' ? '>' : '■'}
-        </span>
-      </div>
+    <div className="flex items-center gap-2 mt-2">
+      <span className="text-green-400">{state.status === 'waiting_input' ? '>' : ''}</span>
       <input
         ref={inputRef}
         type="text"
-        className="w-full bg-transparent text-gray-300 outline-none border-b border-transparent 
-                 focus:border-gray-700 transition-colors duration-200 pl-2"
-        placeholder={
-          executionContext.status === 'waiting_input' 
-            ? "Type your input here..." 
-            : executionContext.status === 'error'
-            ? "An error occurred. Click Run to try again."
-            : "Program finished"
-        }
-        onKeyDown={handleTerminalKeyDown}
-        disabled={executionContext.status !== 'waiting_input'}
+        className="w-full bg-transparent text-gray-300 outline-none"
+        placeholder="Type your input here..."
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const input = e.target.value.trim();
+            if (input) {
+              handleInput(input);
+              e.target.value = '';
+            }
+          }
+        }}
+        disabled={state.status !== 'waiting_input'}
         autoFocus
       />
-      {executionContext.status === 'waiting_input' && (
-        <div className="absolute right-0 top-[-20px] text-xs text-gray-500 flex items-center gap-2">
-          <kbd className="px-2 py-1 bg-gray-800 rounded text-gray-400">↑↓</kbd>
-          <span>for history</span>
-          <kbd className="px-2 py-1 bg-gray-800 rounded text-gray-400">Enter</kbd>
-          <span>to submit</span>
-        </div>
-      )}
     </div>
   );
 
@@ -587,7 +463,7 @@ public class Main {
               </div>
             ))}
             
-            {executionContext.status !== 'idle' && renderTerminalInput()}
+            {state.status !== 'idle' && renderTerminalInput()}
           </div>
         </div>
       </div>

@@ -383,6 +383,7 @@ public class Main {
                 className={`whitespace-pre-wrap ${
                   entry.type === 'error' ? 'text-red-400' :
                   entry.type === 'input' ? 'text-blue-400' :
+                  entry.type === 'system' && entry.content.includes('compiled successfully') ? 'text-green-400' :
                   entry.type === 'system' ? 'text-yellow-400' :
                   'text-gray-300'
                 }`}

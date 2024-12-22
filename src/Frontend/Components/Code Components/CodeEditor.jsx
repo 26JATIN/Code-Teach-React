@@ -26,6 +26,9 @@ const CodeEditor = ({ defaultCode }) => {
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
   const [currentInputBuffer, setCurrentInputBuffer] = useState('');
   const terminalRef = useRef(null);
+  const [isCompiling, setIsCompiling] = useState(false);
+  const [isProgramRunning, setIsProgramRunning] = useState(false);
+  const inputRef = useRef(null);
 
   // Update needsInput logic to be more sensitive
   const needsInput = useMemo(() => {
@@ -143,10 +146,10 @@ const CodeEditor = ({ defaultCode }) => {
     return scannerPatterns.some(pattern => code.includes(pattern));
   }, [code]);
 
-  // Updated execute function to handle input properly
-  const executeWithInput = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  // Simplified program execution
+  const executeCode = useCallback(async () => {
+    setIsCompiling(true);
+    setTerminalHistory([{ type: 'system', content: '⚡ Compiling program...' }]);
     
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
@@ -155,87 +158,107 @@ const CodeEditor = ({ defaultCode }) => {
         body: JSON.stringify({
           language: 'java',
           version: '15.0.2',
-          files: [{ 
-            content: code,
-            name: 'Main.java'
-          }],
-          stdin: currentInputBuffer
+          files: [{ content: code, name: 'Main.java' }],
+          stdin: ''
         }),
       });
 
       const data = await response.json();
-      console.log('API Response:', data);
+      
+      if (data.run.stderr && data.run.stderr.includes('error')) {
+        // Compilation error
+        setTerminalHistory(prev => [...prev, 
+          { type: 'error', content: data.run.stderr }
+        ]);
+        setIsCompiling(false);
+        return;
+      }
 
-      // Process output
-      if (data.run.stderr && !data.run.stderr.includes('waiting for input')) {
-        setTerminalHistory(prev => [...prev, { type: 'error', content: data.run.stderr }]);
-        setIsWaitingForInput(false);
-        setIsLoading(false);
-      } else {
-        const output = data.run.output || '';
-        const lines = output.split('\n');
-        
-        let foundInputPrompt = false;
-        for (const line of lines) {
-          if (line.trim()) {
-            setTerminalHistory(prev => [...prev, { type: 'output', content: line }]);
-            if (!foundInputPrompt && (
-              line.includes('?') || 
-              line.toLowerCase().includes('enter') || 
-              line.toLowerCase().includes('input')
-            )) {
-              foundInputPrompt = true;
-              setIsWaitingForInput(true);
-            }
-          }
-        }
+      // Start program execution
+      setTerminalHistory(prev => [...prev, 
+        { type: 'system', content: '✅ Program compiled successfully!' },
+        { type: 'system', content: '▶ Running program...' }
+      ]);
+      setIsCompiling(false);
+      setIsProgramRunning(true);
+      setIsWaitingForInput(true);
 
-        if (!foundInputPrompt) {
-          setIsWaitingForInput(false);
-          setIsLoading(false);
+    } catch (err) {
+      setTerminalHistory(prev => [...prev, 
+        { type: 'error', content: 'Compilation failed: ' + err.message }
+      ]);
+      setIsCompiling(false);
+    }
+  }, [code]);
+
+  // Handle user input
+  const handleInput = useCallback(async (inputValue) => {
+    if (!inputValue.trim() || !isProgramRunning) return;
+
+    setTerminalHistory(prev => [...prev, { type: 'input', content: `> ${inputValue}` }]);
+    
+    try {
+      const response = await fetch('https://emkc.org/api/v2/piston/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: 'java',
+          version: '15.0.2',
+          files: [{ content: code, name: 'Main.java' }],
+          stdin: currentInputBuffer + inputValue + '\n'
+        }),
+      });
+
+      const data = await response.json();
+      const newOutput = data.run.output || '';
+      const lines = newOutput.split('\n');
+
+      // Update terminal with new output
+      for (const line of lines) {
+        if (line.trim()) {
+          setTerminalHistory(prev => [...prev, { type: 'output', content: line }]);
         }
       }
-    } catch (err) {
-      console.error('Execution error:', err);
-      setTerminalHistory(prev => [...prev, { type: 'error', content: 'Failed to execute code.' }]);
-      setIsWaitingForInput(false);
-      setIsLoading(false);
-    }
-  }, [code, currentInputBuffer]);
 
-  // Updated terminal input handler
+      // Check if program is still waiting for input
+      const expectingMoreInput = newOutput.endsWith('?') || 
+                                newOutput.toLowerCase().includes('enter') ||
+                                code.includes('Scanner') && !data.run.stderr;
+
+      setIsWaitingForInput(expectingMoreInput);
+      setIsProgramRunning(expectingMoreInput);
+      setCurrentInputBuffer(prev => prev + inputValue + '\n');
+
+    } catch (err) {
+      setTerminalHistory(prev => [...prev, 
+        { type: 'error', content: 'Execution error: ' + err.message }
+      ]);
+      setIsProgramRunning(false);
+      setIsWaitingForInput(false);
+    }
+  }, [code, currentInputBuffer, isProgramRunning]);
+
+  // Handle terminal input submission
   const handleTerminalSubmit = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const input = e.target.value.trim();
-      
+      e.target.value = '';
       if (input) {
-        // Add input to terminal history
-        setTerminalHistory(prev => [...prev, { type: 'input', content: `> ${input}` }]);
-        
-        // Append input to buffer and execute
-        const newBuffer = currentInputBuffer + input + '\n';
-        setCurrentInputBuffer(newBuffer);
-        
-        // Clear input field
-        e.target.value = '';
-        
-        // Execute with updated buffer
-        setTimeout(() => {
-          executeWithInput();
-        }, 0);
+        handleInput(input);
       }
     }
-  }, [executeWithInput, currentInputBuffer]);
+  }, [handleInput]);
 
-  // Reset function for run button
+  // Reset and start execution
   const handleExecuteClick = useCallback(() => {
     setTerminalHistory([]);
     setCurrentInputBuffer('');
     setIsWaitingForInput(false);
-    setIsLoading(false);
-    executeWithInput();
-  }, [executeWithInput]);
+    setIsProgramRunning(false);
+    setIsCompiling(false);
+    executeCode();
+  }, [executeCode]);
 
   const handleEditorChange = useCallback((value) => {
     setCode(value);
@@ -362,7 +385,7 @@ const CodeEditor = ({ defaultCode }) => {
                 className={`whitespace-pre-wrap ${
                   entry.type === 'error' ? 'text-red-400' :
                   entry.type === 'input' ? 'text-blue-400' :
-                  entry.type === 'system' ? 'text-gray-500' :
+                  entry.type === 'system' ? 'text-yellow-400' :
                   'text-gray-300'
                 }`}
               >
@@ -371,15 +394,16 @@ const CodeEditor = ({ defaultCode }) => {
             ))}
             
             {/* Input Line */}
-            {!isLoading && (
+            {(isWaitingForInput && !isCompiling) && (
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-green-400">{'>'}</span>
                 <input
+                  ref={inputRef}
                   type="text"
                   className="w-full bg-transparent text-gray-300 outline-none"
-                  placeholder={isWaitingForInput ? "Enter your input..." : "Press Run to execute code..."}
-                  disabled={!isWaitingForInput && !isLoading}
+                  placeholder="Enter your input..."
                   onKeyDown={handleTerminalSubmit}
+                  disabled={!isWaitingForInput || isCompiling}
                   autoFocus
                 />
               </div>

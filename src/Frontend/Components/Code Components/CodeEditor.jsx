@@ -146,45 +146,70 @@ const CodeEditor = ({ defaultCode }) => {
     return scannerPatterns.some(pattern => code.includes(pattern));
   }, [code]);
 
-  // Update executeCode to handle first run
+  // Update executeCode to handle initial execution better
   const executeCode = useCallback(async () => {
     setIsCompiling(true);
     setTerminalHistory([{ type: 'system', content: '⚡ Compiling program...' }]);
     
     try {
-      // Initial compilation and run to get prompt
-      const initialRun = await fetch('https://emkc.org/api/v2/piston/execute', {
+      // First, just compile the code
+      const compileResponse = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           language: 'java',
           version: '15.0.2',
           files: [{ content: code, name: 'Main.java' }],
-          stdin: ''
+          stdin: '',
+          compile_timeout: 10000,
+          run_timeout: 1
         }),
       });
 
-      const initialData = await initialRun.json();
+      const compileData = await compileResponse.json();
       
-      if (initialData.run.stderr && initialData.run.stderr.includes('error')) {
-        setTerminalHistory(prev => [...prev, { type: 'error', content: initialData.run.stderr }]);
+      if (compileData.run.stderr && compileData.run.stderr.includes('error')) {
+        setTerminalHistory(prev => [...prev, { type: 'error', content: compileData.run.stderr }]);
         setIsCompiling(false);
         return;
       }
 
-      // Show compilation success
       setTerminalHistory(prev => [...prev, 
         { type: 'system', content: '✅ Program compiled successfully!' },
         { type: 'system', content: '▶ Running program...' }
       ]);
 
-      // Show initial prompt
-      const prompt = initialData.run.output || '';
-      if (prompt.trim()) {
-        setTerminalHistory(prev => [...prev, { type: 'output', content: prompt.trim() }]);
+      // Now run the program to get just the first prompt
+      const runResponse = await fetch('https://emkc.org/api/v2/piston/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: 'java',
+          version: '15.0.2',
+          files: [{ content: code, name: 'Main.java' }],
+          stdin: '',
+          run_timeout: 1000
+        }),
+      });
+
+      const runData = await runResponse.json();
+      const initialOutput = runData.run.output || '';
+      
+      // Only show the first prompt
+      const lines = initialOutput.split('\n');
+      const firstPrompt = lines.find(line => 
+        line.trim() && (
+          line.includes('?') || 
+          line.toLowerCase().includes('enter') || 
+          line.toLowerCase().includes('what')
+        )
+      );
+
+      if (firstPrompt) {
+        setTerminalHistory(prev => [...prev, { type: 'output', content: firstPrompt }]);
+        setIsWaitingForInput(true);
       }
 
-      setIsWaitingForInput(true);
       setIsProgramRunning(true);
       setIsCompiling(false);
 
@@ -194,12 +219,13 @@ const CodeEditor = ({ defaultCode }) => {
     }
   }, [code]);
 
-  // Update handleInput for better input/output handling
+  // Update handleInput to accumulate inputs and show correct output
   const handleInput = useCallback(async (inputValue) => {
     if (!inputValue.trim()) return;
 
-    // Show user input in terminal
     setTerminalHistory(prev => [...prev, { type: 'input', content: inputValue }]);
+    const newBuffer = currentInputBuffer + inputValue + '\n';
+    setCurrentInputBuffer(newBuffer);
     
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
@@ -209,44 +235,46 @@ const CodeEditor = ({ defaultCode }) => {
           language: 'java',
           version: '15.0.2',
           files: [{ content: code, name: 'Main.java' }],
-          stdin: inputValue + '\n'
+          stdin: newBuffer,
         }),
       });
 
       const data = await response.json();
+      const output = data.run.output || '';
       
-      if (data.run.stderr) {
-        setTerminalHistory(prev => [...prev, { type: 'error', content: data.run.stderr }]);
+      // Find the relevant output after this input
+      const lines = output.split('\n');
+      const currentIndex = lines.findIndex(line => line.includes(inputValue));
+      const nextPrompt = lines.slice(currentIndex + 1).find(line => 
+        line.includes('?') || 
+        line.toLowerCase().includes('enter') || 
+        line.toLowerCase().includes('what')
+      );
+
+      // Show the response (if any) and determine if we need more input
+      const responseLines = lines.slice(currentIndex + 1);
+      const relevantOutput = responseLines
+        .filter(line => line.trim() && line !== nextPrompt)
+        .join('\n');
+
+      if (relevantOutput.trim()) {
+        setTerminalHistory(prev => [...prev, { type: 'output', content: relevantOutput }]);
+      }
+
+      if (nextPrompt) {
+        setTerminalHistory(prev => [...prev, { type: 'output', content: nextPrompt }]);
+        setIsWaitingForInput(true);
+      } else {
         setIsWaitingForInput(false);
         setIsProgramRunning(false);
-        return;
       }
-
-      // Process output
-      const output = data.run.output || '';
-      const outputLines = output.split('\n').filter(line => line.trim());
-      
-      // Find the response after input
-      const inputPromptIndex = outputLines.findIndex(line => 
-        line.includes(inputValue) || line.includes('?') || 
-        line.toLowerCase().includes('enter') || line.toLowerCase().includes('what')
-      );
-      
-      const relevantOutput = outputLines.slice(inputPromptIndex + 1).join('\n');
-      
-      if (relevantOutput.trim()) {
-        setTerminalHistory(prev => [...prev, { type: 'output', content: relevantOutput.trim() }]);
-      }
-
-      setIsWaitingForInput(false);
-      setIsProgramRunning(false);
 
     } catch (err) {
       setTerminalHistory(prev => [...prev, { type: 'error', content: 'Error: ' + err.message }]);
       setIsWaitingForInput(false);
       setIsProgramRunning(false);
     }
-  }, [code]);
+  }, [code, currentInputBuffer]);
 
   // Handle terminal input submission
   const handleTerminalSubmit = useCallback((e) => {

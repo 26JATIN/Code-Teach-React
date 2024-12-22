@@ -143,7 +143,7 @@ const CodeEditor = ({ defaultCode }) => {
     return scannerPatterns.some(pattern => code.includes(pattern));
   }, [code]);
 
-  // Updated execute function for interactive input/output
+  // Updated execute function with improved input handling
   const executeWithInput = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -156,7 +156,10 @@ const CodeEditor = ({ defaultCode }) => {
         body: JSON.stringify({
           language: 'java',
           version: '15.0.2',
-          files: [{ content: code, name: 'Main.java' }],
+          files: [{ 
+            content: code,
+            name: 'Main.java'
+          }],
           stdin: currentInputBuffer
         }),
       });
@@ -164,64 +167,61 @@ const CodeEditor = ({ defaultCode }) => {
       const data = await response.json();
       console.log('API Response:', data);
 
-      if (data.run.stderr) {
+      if (data.run.stderr && !data.run.stderr.includes('waiting for input')) {
+        // Real error occurred
         setTerminalHistory(prev => [...prev, { type: 'error', content: data.run.stderr }]);
+        setIsWaitingForInput(false);
       } else {
-        // Split output by newlines to simulate line-by-line execution
-        const outputLines = (data.run.output || '').split('\n');
+        const output = data.run.output || '';
+        const lines = output.split('\n');
         
-        for (const line of outputLines) {
+        for (const line of lines) {
           if (line.trim()) {
-            if (line.includes('?') || line.toLowerCase().includes('enter')) {
-              // This looks like an input prompt
-              setTerminalHistory(prev => [...prev, { type: 'output', content: line }]);
+            setTerminalHistory(prev => [...prev, { type: 'output', content: line }]);
+            // If line looks like an input prompt, wait for input
+            if (line.includes('?') || 
+                line.toLowerCase().includes('enter') || 
+                line.toLowerCase().includes('input')) {
               setIsWaitingForInput(true);
-              return;
-            } else {
-              setTerminalHistory(prev => [...prev, { type: 'output', content: line }]);
+              return; // Stop processing and wait for input
             }
           }
         }
+        setIsWaitingForInput(false);
       }
     } catch (err) {
+      console.error('Execution error:', err);
       setTerminalHistory(prev => [...prev, { type: 'error', content: 'Failed to execute code.' }]);
+      setIsWaitingForInput(false);
     } finally {
-      setIsLoading(false);
+      if (!isWaitingForInput) {
+        setIsLoading(false);
+      }
     }
-  }, [code, currentInputBuffer]);
+  }, [code, currentInputBuffer, isWaitingForInput]);
 
-  // Handle terminal input submission
+  // Updated terminal input handler
   const handleTerminalSubmit = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const input = e.target.value.trim();
       
       if (input) {
-        // Add input to terminal history
         setTerminalHistory(prev => [...prev, { type: 'input', content: `> ${input}` }]);
         setCurrentInputBuffer(prev => prev + input + '\n');
-        
-        if (isWaitingForInput) {
-          setIsWaitingForInput(false);
-          executeWithInput();
-        }
+        e.target.value = '';
+        executeWithInput();
       }
-      
-      e.target.value = '';
     }
-  }, [isWaitingForInput, executeWithInput]);
+  }, [executeWithInput]);
 
-  // Simplified execute click handler
+  // Update execute click handler to be simpler and always start fresh
   const handleExecuteClick = useCallback(() => {
-    console.log('Execute clicked, hasScanner:', hasScanner); // Debug log
-    if (hasScanner) {
-      setInput('');
-      setShowInputModal(true);
-      console.log('Showing input modal'); // Debug log
-    } else {
-      executeWithInput();
-    }
-  }, [hasScanner, executeWithInput]);
+    setTerminalHistory([]);
+    setCurrentInputBuffer('');
+    setIsWaitingForInput(false);
+    executeWithInput();
+  }, [executeWithInput]);
 
   const handleEditorChange = useCallback((value) => {
     setCode(value);

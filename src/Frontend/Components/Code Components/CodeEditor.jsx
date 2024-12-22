@@ -7,12 +7,12 @@ import CopyButton from './CopyButton';
 class TerminalHandler {
   constructor() {
     this.inputs = [];
-    this.expectedInputs = 0;
+    this.lastOutput = '';
   }
 
   clear() {
     this.inputs = [];
-    this.expectedInputs = 0;
+    this.lastOutput = '';
   }
 
   addInput(input) {
@@ -23,20 +23,29 @@ class TerminalHandler {
     return this.inputs.join('\n');
   }
 
-  setExpectedInputs(count) {
-    this.expectedInputs = count;
-  }
+  // Check if program is waiting for input based on output patterns
+  isWaitingForInput(output) {
+    // Common patterns that indicate input is expected
+    const inputPatterns = [
+      /\?[\s]*$/,          // Ends with question mark
+      /:\s*$/,             // Ends with colon
+      /input/i,            // Contains word "input"
+      /enter/i,            // Contains word "enter"
+      /Scanner/,           // Java Scanner is waiting
+      /nextLine|next\w+/   // Java Scanner methods
+    ];
 
-  isComplete() {
-    return this.inputs.length >= this.expectedInputs;
+    // Store last output for comparison
+    const newOutput = output.substring(this.lastOutput.length);
+    this.lastOutput = output;
+
+    return inputPatterns.some(pattern => pattern.test(newOutput));
   }
 }
 
 const CodeEditor = ({ defaultCode }) => {
   const [state, setState] = useState({
     status: 'idle',
-    currentInputIndex: 0,
-    expectedInputs: 0,
     error: null
   });
   
@@ -159,10 +168,8 @@ public class Main {
 
   const runWithInputs = async (inputs) => {
     try {
-      setTerminalHistory(prev => [...prev, 
-        { type: 'system', content: '⚡ Executing program with inputs...' }
-      ]);
-
+      const terminal = terminalHandler.current;
+      
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -177,15 +184,21 @@ public class Main {
       const result = await response.json();
 
       if (result.run?.output) {
+        const output = result.run.output.trim();
         setTerminalHistory(prev => [...prev, 
-          { type: 'output', content: result.run.output.trim() }
+          { type: 'output', content: output }
         ]);
+
+        // Check if program is still waiting for more input
+        if (terminal.isWaitingForInput(output)) {
+          setState({ status: 'waiting_input', error: null });
+        } else {
+          setState({ status: 'idle', error: null });
+        }
       }
 
-      setState({ status: 'idle', currentInputIndex: 0, expectedInputs: 0, error: null });
-
     } catch (err) {
-      setState(prev => ({ ...prev, status: 'error', error: err.message }));
+      setState({ status: 'error', error: err.message });
       setTerminalHistory(prev => [...prev, { type: 'error', content: err.message }]);
     }
   };
@@ -197,50 +210,21 @@ public class Main {
     terminal.addInput(inputValue.trim());
 
     setTerminalHistory(prev => [...prev, 
-      { type: 'input', content: `Input ${state.currentInputIndex + 1}: ${inputValue}` }
+      { type: 'input', content: `> ${inputValue}` }
     ]);
 
-    // Immediately update state to running when we have all inputs
-    if (state.currentInputIndex + 1 >= state.expectedInputs) {
-      setState(prev => ({
-        ...prev,
-        status: 'running', // Change to running immediately
-        currentInputIndex: prev.currentInputIndex + 1
-      }));
-      runWithInputs(terminal.getAllInputs());
-    } else {
-      setState(prev => ({
-        ...prev,
-        currentInputIndex: prev.currentInputIndex + 1
-      }));
-    }
-  }, [state.status, state.currentInputIndex, state.expectedInputs]);
+    // Run with all collected inputs so far
+    runWithInputs(terminal.getAllInputs());
+  }, [state.status]);
 
   const executeCode = useCallback(async () => {
     const terminal = terminalHandler.current;
     terminal.clear();
     
-    const inputCount = countExpectedInputs(code);
-    terminal.setExpectedInputs(inputCount);
-    
-    setState({
-      status: inputCount > 0 ? 'waiting_input' : 'running',
-      currentInputIndex: 0,
-      expectedInputs: inputCount,
-      error: null
-    });
+    setState({ status: 'running', error: null });
+    setTerminalHistory([{ type: 'system', content: '⚡ Running program...' }]);
 
-    setTerminalHistory([
-      { type: 'system', content: '⚡ Program started...' },
-      ...(inputCount > 0 ? [{
-        type: 'system',
-        content: `Program expects ${inputCount} input${inputCount > 1 ? 's' : ''}. Please provide them:`
-      }] : [])
-    ]);
-
-    if (inputCount === 0) {
-      await runWithInputs('');
-    }
+    await runWithInputs('');
   }, [code]);
 
   // Add these new utilities

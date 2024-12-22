@@ -346,16 +346,21 @@ public class Main {
     }
   }, [terminalHistory]);
 
+  // Add a condition to check if we still need inputs
+  const shouldShowInput = useCallback(() => {
+    return state.status === 'waiting_input' && state.currentInputIndex < state.expectedInputs;
+  }, [state.status, state.currentInputIndex, state.expectedInputs]);
+
   const renderTerminalInput = () => (
     <div className="flex items-center gap-2 mt-2">
-      <span className="text-green-400">{state.status === 'waiting_input' ? '>' : ''}</span>
+      <span className="text-green-400">{shouldShowInput() ? '>' : ''}</span>
       <input
         ref={inputRef}
         type="text"
         className="w-full bg-transparent text-gray-300 outline-none border-b border-transparent 
                  focus:border-gray-700 transition-colors duration-200"
         placeholder={
-          state.status === 'waiting_input' 
+          shouldShowInput()
             ? `Enter input ${state.currentInputIndex + 1} of ${state.expectedInputs}...`
             : "Program finished"
         }
@@ -369,7 +374,7 @@ public class Main {
             }
           }
         }}
-        disabled={state.status !== 'waiting_input'}
+        disabled={!shouldShowInput()}
         autoFocus
       />
     </div>
@@ -470,7 +475,7 @@ public class Main {
               </div>
             ))}
             
-            {state.status !== 'idle' && renderTerminalInput()}
+            {shouldShowInput() && renderTerminalInput()}
           </div>
         </div>
       </div>

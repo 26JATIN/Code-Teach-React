@@ -22,7 +22,7 @@ const CodeEditor = ({ defaultCode }) => {
   const [input, setInput] = useState(''); // Add this new state
   const [showInputModal, setShowInputModal] = useState(false);
 
-  // Update the needsInput patterns to be more comprehensive
+  // Update needsInput logic to be more sensitive
   const needsInput = useMemo(() => {
     const inputPatterns = [
       'Scanner',
@@ -37,9 +37,14 @@ const CodeEditor = ({ defaultCode }) => {
       'nextFloat',
       'nextBoolean',
       'readLine',
-      'read'
+      'read',
+      'next'
     ];
-    return inputPatterns.some(pattern => code.includes(pattern));
+    const code_lower = code.toLowerCase();
+    return inputPatterns.some(pattern => 
+      code_lower.includes(pattern.toLowerCase()) || 
+      code.includes(pattern)
+    );
   }, [code]);
 
   // Memoize expensive calculations
@@ -126,6 +131,7 @@ const CodeEditor = ({ defaultCode }) => {
     setLineCount(code.split('\n').length);
   }, [code]);
 
+  // Update executeWithInput to handle input properly
   const executeWithInput = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -139,27 +145,39 @@ const CodeEditor = ({ defaultCode }) => {
           language: 'java',
           version: '15.0.2',
           files: [{ content: code }],
-          stdin: needsInput ? input : '', // Only send input if needed
+          stdin: input || '', // Use empty string if no input
         }),
       });
 
       const data = await response.json();
-      setOutput(data.run.output || data.run.stderr);
+      
+      if (data.run.stderr && !data.run.stdout) {
+        setError(data.run.stderr);
+        setOutput('');
+      } else {
+        setOutput(data.run.stdout || data.run.output || '');
+        setError(null);
+      }
     } catch (err) {
       setError('Failed to execute code. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [code, input, needsInput]);
+  }, [code, input]);
 
-  // Move handleExecuteClick after executeWithInput and include it in dependencies
+  // Update handleExecuteClick to always show input modal when Scanner is present
   const handleExecuteClick = useCallback(() => {
-    if (needsInput) {
+    const hasScanner = code.includes('Scanner') || 
+                      code.includes('System.in') || 
+                      code.includes('BufferedReader');
+                      
+    if (hasScanner) {
+      setInput(''); // Reset input when showing modal
       setShowInputModal(true);
     } else {
-      executeWithInput(); // Execute directly if no input needed
+      executeWithInput();
     }
-  }, [needsInput, executeWithInput]); // Add executeWithInput to dependencies
+  }, [code, executeWithInput]);
 
   const handleEditorChange = useCallback((value) => {
     setCode(value);

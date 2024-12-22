@@ -5,39 +5,41 @@ import CopyButton from './CopyButton';
 
 const CodeEditor = ({ defaultCode }) => {
   const [code, setCode] = useState(defaultCode || 
-`public class Main {
+`import java.util.Scanner;
+
+public class Main {
     public static void main(String[] args) {
-        // Write your code here
+        // Step 1: Create our Scanner tool
+        Scanner scan = new Scanner(System.in);
+        
+        // Step 2: Ask the user for their name
+        System.out.println("What is your name? ");
+        
+        // Step 3: Wait for user to type their name and save it
+        String name = scan.nextLine();
+        
+        // Step 4: Say hello to the user
+        System.out.println("Hello " + name + "! Nice to meet you!");
+        
+        // Step 5: Always clean up - close the scanner
+        scan.close();
     }
 }`);
   const [output, setOutput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fontSize, setFontSize] = useState(14);
-  // eslint-disable-next-line no-unused-vars
   const [lineCount, setLineCount] = useState(0);
   const editorRef = useRef(null);
   const containerRef = useRef(null);
-  const LINE_HEIGHT_FACTOR = 1.5; // line height multiplier for better spacing
-  const [input, setInput] = useState(''); // Add this new state
-  const [showInputModal, setShowInputModal] = useState(false);
-  const [terminalInput, setTerminalInput] = useState('');
+  const LINE_HEIGHT_FACTOR = 1.5;
   const [terminalHistory, setTerminalHistory] = useState([]);
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
-  const [currentInputBuffer, setCurrentInputBuffer] = useState('');
-  const terminalRef = useRef(null);
   const [isCompiling, setIsCompiling] = useState(false);
   const [isProgramRunning, setIsProgramRunning] = useState(false);
   const inputRef = useRef(null);
+  const terminalRef = useRef(null);
 
-  // Create a ref for tracking program state
-  const programState = useRef({
-    inputBuffer: '',
-    lastOutput: '',
-    isFirstRun: true
-  });
-
-  // Add new state for program execution
   const [executionState, setExecutionState] = useState({
     running: false,
     inputBuffer: '',
@@ -45,7 +47,6 @@ const CodeEditor = ({ defaultCode }) => {
     pid: null
   });
 
-  // Update needsInput logic to be more sensitive
   const needsInput = useMemo(() => {
     const inputPatterns = [
       'Scanner',
@@ -70,7 +71,6 @@ const CodeEditor = ({ defaultCode }) => {
     );
   }, [code]);
 
-  // Memoize expensive calculations
   const calculateEditorHeight = useMemo(() => {
     return (code, fontSize, LINE_HEIGHT_FACTOR) => {
       const baseLineHeight = fontSize * LINE_HEIGHT_FACTOR;
@@ -81,7 +81,6 @@ const CodeEditor = ({ defaultCode }) => {
     };
   }, []);
 
-  // Memoize editor options
   const editorOptions = useMemo(() => ({
     minimap: { enabled: false },
     fontSize: Math.max(12, fontSize - (window.innerWidth < 640 ? 2 : 0)),
@@ -92,9 +91,9 @@ const CodeEditor = ({ defaultCode }) => {
     renderLineHighlight: 'all',
     lineHeight: Math.round(fontSize * LINE_HEIGHT_FACTOR),
     padding: { top: 8, bottom: 8 },
-    lineNumbersMinChars: 3,     // Add this line
-    glyphMargin: false,         // Add this line
-    folding: false,             // Add this line
+    lineNumbersMinChars: 3,
+    glyphMargin: false,
+    folding: false,
     scrollbar: {
       vertical: 'auto',
       horizontal: 'visible',
@@ -107,29 +106,14 @@ const CodeEditor = ({ defaultCode }) => {
     automaticLayout: true,
   }), [fontSize, LINE_HEIGHT_FACTOR]);
 
-  // Modify debouncedResize to use proper dependency handling
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedResize = useCallback(
     debounce((editor) => {
       if (editor) {
         editor.layout();
       }
     }, 100),
-    [] // Empty dependency array is intentional as we want to create this function only once
-  );
-
-  // Alternative solution without eslint-disable:
-  /*
-  const debouncedResize = useMemo(
-    () =>
-      debounce((editor) => {
-        if (editor) {
-          editor.layout();
-        }
-      }, 100),
     []
   );
-  */
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
@@ -148,20 +132,11 @@ const CodeEditor = ({ defaultCode }) => {
     };
   }, [debouncedResize]);
 
-  // Memoize handlers
   const handleEditorDidMount = useCallback((editor) => {
     editorRef.current = editor;
     setLineCount(code.split('\n').length);
   }, [code]);
 
-  // Simplified scanner detection
-  const hasScanner = useMemo(() => {
-    const scannerPatterns = ['Scanner', 'System.in', 'next', 'nextLine', 'nextInt'];
-    console.log('Checking for scanner patterns...'); // Debug log
-    return scannerPatterns.some(pattern => code.includes(pattern));
-  }, [code]);
-
-  // Update executeCode to handle initial run
   const executeCode = useCallback(async () => {
     setIsCompiling(true);
     setTerminalHistory([{ type: 'system', content: '⚡ Compiling program...' }]);
@@ -173,8 +148,7 @@ const CodeEditor = ({ defaultCode }) => {
     });
     
     try {
-      // First, just compile the program
-      const compileResponse = await fetch('https://emkc.org/api/v2/piston/execute', {
+      const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -187,11 +161,11 @@ const CodeEditor = ({ defaultCode }) => {
         }),
       });
 
-      const compileResult = await compileResponse.json();
-    
-      if (compileResult.run?.stderr) {
+      const result = await response.json();
+      
+      if (result.run?.stderr) {
         setTerminalHistory(prev => [...prev, 
-          { type: 'error', content: compileResult.run.stderr }
+          { type: 'error', content: result.run.stderr }
         ]);
         setIsCompiling(false);
         return;
@@ -202,33 +176,17 @@ const CodeEditor = ({ defaultCode }) => {
         { type: 'system', content: '▶ Running program...' }
       ]);
 
-      // If program uses Scanner, immediately set waiting for input
-      if (needsInput) {
+      if (needsInput && result.run?.output) {
+        setTerminalHistory(prev => [...prev, 
+          { type: 'output', content: result.run.output }
+        ]);
+        setExecutionState(prev => ({
+          ...prev,
+          running: true,
+          outputBuffer: result.run.output
+        }));
         setIsWaitingForInput(true);
         setIsProgramRunning(true);
-      }
-
-      // Only execute if no Scanner is detected
-      if (!needsInput) {
-        const runResponse = await fetch('https://emkc.org/api/v2/piston/execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            language: 'java',
-            version: '15.0.2',
-            files: [{ content: code, name: 'Main.java' }],
-            stdin: '',
-            run_timeout: 10000
-          }),
-        });
-
-        const runResult = await runResponse.json();
-      
-        if (runResult.run?.output) {
-          setTerminalHistory(prev => [...prev, 
-            { type: 'output', content: runResult.run.output }
-          ]);
-        }
       }
 
       setIsCompiling(false);
@@ -241,15 +199,11 @@ const CodeEditor = ({ defaultCode }) => {
     }
   }, [code, needsInput]);
 
-  // Update handleInput to properly handle stdin
   const handleInput = useCallback(async (inputValue) => {
     if (!inputValue.trim()) return;
 
-    // Add input to terminal history
     setTerminalHistory(prev => [...prev, { type: 'input', content: inputValue }]);
     
-    const newBuffer = executionState.inputBuffer + inputValue + '\n';
-
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
@@ -258,13 +212,13 @@ const CodeEditor = ({ defaultCode }) => {
           language: 'java',
           version: '15.0.2',
           files: [{ content: code, name: 'Main.java' }],
-          stdin: newBuffer,
+          stdin: inputValue + '\n',
           run_timeout: 10000
         }),
       });
 
       const result = await response.json();
-    
+      
       if (result.run?.stderr) {
         setTerminalHistory(prev => [...prev, 
           { type: 'error', content: result.run.stderr }
@@ -274,32 +228,23 @@ const CodeEditor = ({ defaultCode }) => {
         return;
       }
 
-      // Get only the new output by comparing with previous buffer
-      const previousOutput = executionState.outputBuffer;
-      const currentOutput = result.run.output || '';
+      const output = result.run.output;
+      const finalOutput = output.substring(output.indexOf('\n') + 1);
       
-      // Find the new output by removing the previous output
-      let newOutput = currentOutput;
-      if (previousOutput && currentOutput.startsWith(previousOutput)) {
-        newOutput = currentOutput.substring(previousOutput.length);
-      }
-      
-      if (newOutput.trim()) {
+      if (finalOutput.trim()) {
         setTerminalHistory(prev => [...prev, 
-          { type: 'output', content: newOutput.trim() }
+          { type: 'output', content: finalOutput.trim() }
         ]);
       }
 
-      // Update execution state
-      setExecutionState(prev => ({
-        ...prev,
-        inputBuffer: newBuffer,
-        outputBuffer: currentOutput
-      }));
-
-      // Keep waiting for input if program still needs it
-      setIsWaitingForInput(needsInput);
-      setIsProgramRunning(needsInput);
+      setIsWaitingForInput(false);
+      setIsProgramRunning(false);
+      setExecutionState({
+        running: false,
+        inputBuffer: '',
+        outputBuffer: '',
+        pid: null
+      });
 
     } catch (err) {
       setTerminalHistory(prev => [...prev, 
@@ -308,9 +253,8 @@ const CodeEditor = ({ defaultCode }) => {
       setIsWaitingForInput(false);
       setIsProgramRunning(false);
     }
-  }, [code, executionState, needsInput]);
+  }, [code]);
 
-  // Handle terminal input submission
   const handleTerminalSubmit = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -322,10 +266,8 @@ const CodeEditor = ({ defaultCode }) => {
     }
   }, [handleInput]);
 
-  // Reset and start execution
   const handleExecuteClick = useCallback(() => {
     setTerminalHistory([]);
-    setCurrentInputBuffer('');
     setIsWaitingForInput(false);
     setIsProgramRunning(false);
     setIsCompiling(false);
@@ -337,7 +279,6 @@ const CodeEditor = ({ defaultCode }) => {
     setLineCount((value || '').split('\n').length);
   }, []);
 
-  // Memoize the Editor component
   const MonacoEditor = useMemo(() => (
     <Editor
       height="100%"
@@ -350,17 +291,6 @@ const CodeEditor = ({ defaultCode }) => {
     />
   ), [code, handleEditorChange, handleEditorDidMount, editorOptions]);
 
-  // Update the modal component to be mounted at the document root level
-  useEffect(() => {
-    if (showInputModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    console.log('Modal visibility:', showInputModal); // Debug log
-  }, [showInputModal]);
-
-  // Scroll terminal to bottom whenever history updates
   useEffect(() => {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
@@ -368,9 +298,8 @@ const CodeEditor = ({ defaultCode }) => {
   }, [terminalHistory]);
 
   return (
-    <div className="overflow-x-auto relative"> {/* Add relative here */}
+    <div className="overflow-x-auto relative">
       <div className="min-w-[320px] w-full space-y-2 md:space-y-4 bg-gray-900/50 p-2 sm:p-3 md:p-6 rounded-xl border border-gray-700/50">
-        {/* Editor Section */}
         <div className="relative">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2 min-w-full">
             <div className="flex items-center gap-2">
@@ -415,7 +344,6 @@ const CodeEditor = ({ defaultCode }) => {
             </div>
           </div>
 
-          {/* Font Size Slider */}
           <div className="mb-2 flex flex-wrap items-center gap-2 min-w-full overflow-x-auto">
             <span className="text-xs sm:text-sm text-gray-400">Font Size:</span>
             <input
@@ -438,7 +366,6 @@ const CodeEditor = ({ defaultCode }) => {
           </div>
         </div>
 
-        {/* Interactive Terminal */}
         <div className="bg-gray-950/90 rounded-lg border border-gray-800/50 mt-4">
           <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800/50">
             <div className="flex items-center gap-2">
@@ -450,7 +377,6 @@ const CodeEditor = ({ defaultCode }) => {
           </div>
           
           <div ref={terminalRef} className="p-4 font-mono text-sm h-[300px] overflow-auto">
-            {/* Terminal History */}
             {terminalHistory.map((entry, index) => (
               <div 
                 key={index} 
@@ -465,7 +391,6 @@ const CodeEditor = ({ defaultCode }) => {
               </div>
             ))}
             
-            {/* Input Line */}
             {(isWaitingForInput && !isCompiling) && (
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-green-400">{'>'}</span>
@@ -487,6 +412,5 @@ const CodeEditor = ({ defaultCode }) => {
   );
 };
 
-// Memoize the entire component
 export default React.memo(CodeEditor);
 

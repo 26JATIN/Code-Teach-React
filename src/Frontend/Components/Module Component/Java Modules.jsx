@@ -16,6 +16,7 @@ import WhatTypeOfLanguageIsJava from '../../../Course Modules/Java/1.Howaprogram
 import Syntexofjava from '../../../Course Modules/Java/2.Syntex And Variables/1.Syntexofjava';
 import VariablesinJava from '../../../Course Modules/Java/2.Syntex And Variables/2.VariablesinJava';
 import DatatypesinJava from '../../../Course Modules/Java/2.Syntex And Variables/3.DatatypesinJava';
+import TakingInputInJava from '../../../Course Modules/Java/2.Syntex And Variables/4.TakingInputInJava';
 import Set1Datatypes from '../../../Course Modules/Java/2.Syntex And Variables/PracticeSet1Datatypes';
 
 export const modules = [
@@ -48,7 +49,9 @@ export const modules = [
       { id: '2.1', title: 'Java Syntax', component: Syntexofjava },
       { id: '2.2', title: 'Variables in Java', component: VariablesinJava },
       { id: '2.3', title: 'Data Types in Java', component: DatatypesinJava },
-      { id: '2.4', title: 'Practice Set 1', component: Set1Datatypes }
+      { id: '2.4', title: 'Practice Set 1', component: Set1Datatypes },
+      { id: '2.5', title: 'Taking Input in Java', component: TakingInputInJava }
+      
     ]
   }
 ];

@@ -143,11 +143,10 @@ const CodeEditor = ({ defaultCode }) => {
     return scannerPatterns.some(pattern => code.includes(pattern));
   }, [code]);
 
-  // Updated execute function with improved input handling
+  // Updated execute function to handle input properly
   const executeWithInput = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    setTerminalHistory(prev => [...prev, { type: 'system', content: '▶ Running program...' }]);
     
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
@@ -167,38 +166,42 @@ const CodeEditor = ({ defaultCode }) => {
       const data = await response.json();
       console.log('API Response:', data);
 
+      // Process output
       if (data.run.stderr && !data.run.stderr.includes('waiting for input')) {
-        // Real error occurred
         setTerminalHistory(prev => [...prev, { type: 'error', content: data.run.stderr }]);
         setIsWaitingForInput(false);
+        setIsLoading(false);
       } else {
         const output = data.run.output || '';
         const lines = output.split('\n');
         
+        let foundInputPrompt = false;
         for (const line of lines) {
           if (line.trim()) {
             setTerminalHistory(prev => [...prev, { type: 'output', content: line }]);
-            // If line looks like an input prompt, wait for input
-            if (line.includes('?') || 
-                line.toLowerCase().includes('enter') || 
-                line.toLowerCase().includes('input')) {
+            if (!foundInputPrompt && (
+              line.includes('?') || 
+              line.toLowerCase().includes('enter') || 
+              line.toLowerCase().includes('input')
+            )) {
+              foundInputPrompt = true;
               setIsWaitingForInput(true);
-              return; // Stop processing and wait for input
             }
           }
         }
-        setIsWaitingForInput(false);
+
+        if (!foundInputPrompt) {
+          setIsWaitingForInput(false);
+          setIsLoading(false);
+        }
       }
     } catch (err) {
       console.error('Execution error:', err);
       setTerminalHistory(prev => [...prev, { type: 'error', content: 'Failed to execute code.' }]);
       setIsWaitingForInput(false);
-    } finally {
-      if (!isWaitingForInput) {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
-  }, [code, currentInputBuffer, isWaitingForInput]);
+  }, [code, currentInputBuffer]);
 
   // Updated terminal input handler
   const handleTerminalSubmit = useCallback((e) => {
@@ -207,19 +210,30 @@ const CodeEditor = ({ defaultCode }) => {
       const input = e.target.value.trim();
       
       if (input) {
+        // Add input to terminal history
         setTerminalHistory(prev => [...prev, { type: 'input', content: `> ${input}` }]);
-        setCurrentInputBuffer(prev => prev + input + '\n');
+        
+        // Append input to buffer and execute
+        const newBuffer = currentInputBuffer + input + '\n';
+        setCurrentInputBuffer(newBuffer);
+        
+        // Clear input field
         e.target.value = '';
-        executeWithInput();
+        
+        // Execute with updated buffer
+        setTimeout(() => {
+          executeWithInput();
+        }, 0);
       }
     }
-  }, [executeWithInput]);
+  }, [executeWithInput, currentInputBuffer]);
 
-  // Update execute click handler to be simpler and always start fresh
+  // Reset function for run button
   const handleExecuteClick = useCallback(() => {
     setTerminalHistory([]);
     setCurrentInputBuffer('');
     setIsWaitingForInput(false);
+    setIsLoading(false);
     executeWithInput();
   }, [executeWithInput]);
 

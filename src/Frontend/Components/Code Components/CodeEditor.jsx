@@ -30,6 +30,13 @@ const CodeEditor = ({ defaultCode }) => {
   const [isProgramRunning, setIsProgramRunning] = useState(false);
   const inputRef = useRef(null);
 
+  // Create a ref for tracking program state
+  const programState = useRef({
+    inputBuffer: '',
+    lastOutput: '',
+    isFirstRun: true
+  });
+
   // Update needsInput logic to be more sensitive
   const needsInput = useMemo(() => {
     const inputPatterns = [
@@ -146,42 +153,65 @@ const CodeEditor = ({ defaultCode }) => {
     return scannerPatterns.some(pattern => code.includes(pattern));
   }, [code]);
 
-  // Update executeCode to only show the initial prompt
+  // Update executeCode to handle initial run
   const executeCode = useCallback(async () => {
     setIsCompiling(true);
-    setIsWaitingForInput(false);
     setTerminalHistory([{ type: 'system', content: '⚡ Compiling program...' }]);
+    programState.current = { inputBuffer: '', lastOutput: '', isFirstRun: true };
     
     try {
-      const initialRun = await fetch('https://emkc.org/api/v2/piston/execute', {
+      // Only compile and check for errors first
+      const compileCheck = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           language: 'java',
           version: '15.0.2',
           files: [{ content: code, name: 'Main.java' }],
-          stdin: ''
+          stdin: '',
+          compile_timeout: 5000,
+          run_timeout: 1000
         }),
       });
 
-      const initialData = await initialRun.json();
-
-      if (initialData.run.stderr && initialData.run.stderr.includes('error')) {
-        setTerminalHistory(prev => [...prev, { type: 'error', content: initialData.run.stderr }]);
+      const compileResult = await compileCheck.json();
+      
+      if (compileResult.run.stderr && !compileResult.run.stderr.includes('waiting for input')) {
+        setTerminalHistory(prev => [...prev, { type: 'error', content: compileResult.run.stderr }]);
         setIsCompiling(false);
         return;
       }
 
-      // Show compilation success and initial prompt
       setTerminalHistory(prev => [
         ...prev,
         { type: 'system', content: '✅ Program compiled successfully!' },
-        { type: 'system', content: '▶ Running program...' },
-        { type: 'output', content: initialData.run.output?.trim() || '' }
+        { type: 'system', content: '▶ Running program...' }
       ]);
 
-      setIsWaitingForInput(true);
+      // Now start actual program execution
+      const firstRun = await fetch('https://emkc.org/api/v2/piston/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: 'java',
+          version: '15.0.2',
+          files: [{ content: code, name: 'Main.java' }],
+          stdin: '',
+          run_timeout: 2000
+        }),
+      });
+
+      const firstResult = await firstRun.json();
+      const initialOutput = firstResult.run.output || '';
+      
+      if (initialOutput.trim()) {
+        setTerminalHistory(prev => [...prev, { type: 'output', content: initialOutput.trim() }]);
+        programState.current.lastOutput = initialOutput;
+        setIsWaitingForInput(true);
+      }
+
       setIsCompiling(false);
+      setIsProgramRunning(true);
 
     } catch (err) {
       setTerminalHistory(prev => [...prev, { type: 'error', content: 'Execution failed: ' + err.message }]);
@@ -189,15 +219,14 @@ const CodeEditor = ({ defaultCode }) => {
     }
   }, [code]);
 
-  // Update handleInput to handle the accumulated input
+  // Update handleInput to properly handle stdin
   const handleInput = useCallback(async (inputValue) => {
     if (!inputValue.trim()) return;
 
-    // Add the input to history first
     setTerminalHistory(prev => [...prev, { type: 'input', content: inputValue }]);
     
-    const newBuffer = currentInputBuffer + inputValue + '\n';
-    setCurrentInputBuffer(newBuffer);
+    const newBuffer = programState.current.inputBuffer + inputValue + '\n';
+    programState.current.inputBuffer = newBuffer;
 
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
@@ -207,49 +236,42 @@ const CodeEditor = ({ defaultCode }) => {
           language: 'java',
           version: '15.0.2',
           files: [{ content: code, name: 'Main.java' }],
-          stdin: newBuffer
+          stdin: newBuffer,
+          run_timeout: 2000
         }),
       });
 
       const data = await response.json();
       
-      if (data.run.stderr) {
+      if (data.run.stderr && !data.run.stderr.includes('waiting for input')) {
         setTerminalHistory(prev => [...prev, { type: 'error', content: data.run.stderr }]);
         setIsWaitingForInput(false);
+        setIsProgramRunning(false);
         return;
       }
 
-      // Process the complete output to find the new content
       const fullOutput = data.run.output || '';
-      const outputLines = fullOutput.split('\n');
+      const newOutput = fullOutput.substring(programState.current.lastOutput.length);
       
-      // Find where our input appears and get everything after it
-      const inputIndex = outputLines.findIndex(line => line.includes(inputValue));
-      if (inputIndex !== -1) {
-        const newOutput = outputLines.slice(inputIndex + 1)
-          .filter(line => line.trim())
-          .join('\n');
-          
-        if (newOutput) {
-          setTerminalHistory(prev => [...prev, { type: 'output', content: newOutput }]);
-        }
+      if (newOutput.trim()) {
+        setTerminalHistory(prev => [...prev, { type: 'output', content: newOutput.trim() }]);
+        programState.current.lastOutput = fullOutput;
       }
 
-      // Check if program is done or needs more input
-      const lastLine = outputLines[outputLines.length - 1];
-      const needsMoreInput = lastLine && (
-        lastLine.includes('?') || 
-        lastLine.toLowerCase().includes('enter') ||
-        lastLine.toLowerCase().includes('input')
-      );
+      const shouldWaitForInput = 
+        newOutput.trim().endsWith('?') || 
+        newOutput.toLowerCase().includes('enter') ||
+        code.includes('Scanner') && !data.run.stderr;
 
-      setIsWaitingForInput(needsMoreInput);
+      setIsWaitingForInput(shouldWaitForInput);
+      setIsProgramRunning(shouldWaitForInput);
 
     } catch (err) {
       setTerminalHistory(prev => [...prev, { type: 'error', content: 'Error: ' + err.message }]);
       setIsWaitingForInput(false);
+      setIsProgramRunning(false);
     }
-  }, [code, currentInputBuffer]);
+  }, [code]);
 
   // Handle terminal input submission
   const handleTerminalSubmit = useCallback((e) => {

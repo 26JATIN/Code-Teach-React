@@ -4,6 +4,14 @@ import { debounce } from 'lodash';
 import CopyButton from './CopyButton';
 
 const CodeEditor = ({ defaultCode }) => {
+  const [programState, setProgramState] = useState({
+    status: 'idle', // idle, compiling, running, waiting_input, finished, error
+    compilationError: null,
+    inputBuffer: '',
+    outputBuffer: '',
+    inputHistory: [],
+    historyIndex: -1
+  });
   const [code, setCode] = useState(defaultCode || 
 `import java.util.Scanner;
 
@@ -34,9 +42,6 @@ public class Main {
   const containerRef = useRef(null);
   const LINE_HEIGHT_FACTOR = 1.5;
   const [terminalHistory, setTerminalHistory] = useState([]);
-  const [isWaitingForInput, setIsWaitingForInput] = useState(false);
-  const [isCompiling, setIsCompiling] = useState(false);
-  const [isProgramRunning, setIsProgramRunning] = useState(false);
   const inputRef = useRef(null);
   const terminalRef = useRef(null);
 
@@ -142,14 +147,15 @@ public class Main {
   }, [code]);
 
   const executeCode = useCallback(async () => {
-    setIsCompiling(true);
-    setTerminalHistory([{ type: 'system', content: '⚡ Compiling program...' }]);
-    setExecutionState({
-      running: false,
+    setProgramState({
+      status: 'compiling',
+      compilationError: null,
       inputBuffer: '',
       outputBuffer: '',
-      pid: null
+      inputHistory: [],
+      historyIndex: -1
     });
+    setTerminalHistory([{ type: 'system', content: '⚡ Compiling program...' }]);
     
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
@@ -171,7 +177,11 @@ public class Main {
         setTerminalHistory(prev => [...prev, 
           { type: 'error', content: result.run.stderr }
         ]);
-        setIsCompiling(false);
+        setProgramState(prev => ({
+          ...prev,
+          status: 'error',
+          compilationError: result.run.stderr
+        }));
         return;
       }
 
@@ -184,30 +194,45 @@ public class Main {
         setTerminalHistory(prev => [...prev, 
           { type: 'output', content: result.run.output }
         ]);
-        setExecutionState(prev => ({
+        setProgramState(prev => ({
           ...prev,
-          running: true,
+          status: 'waiting_input',
           outputBuffer: result.run.output
         }));
-        setIsWaitingForInput(true);
-        setIsProgramRunning(true);
+      } else {
+        setProgramState(prev => ({
+          ...prev,
+          status: 'finished'
+        }));
       }
-
-      setIsCompiling(false);
 
     } catch (err) {
       setTerminalHistory(prev => [...prev, 
         { type: 'error', content: 'Execution failed: ' + err.message }
       ]);
-      setIsCompiling(false);
+      setProgramState(prev => ({
+        ...prev,
+        status: 'error',
+        compilationError: err.message
+      }));
     }
   }, [code, needsInput]);
 
   const handleInput = useCallback(async (inputValue) => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || programState.status !== 'waiting_input') return;
 
-    setTerminalHistory(prev => [...prev, { type: 'input', content: inputValue }]);
-    
+    setProgramState(prev => ({
+      ...prev,
+      status: 'running',
+      inputBuffer: inputValue,
+      inputHistory: [...prev.inputHistory, inputValue],
+      historyIndex: -1
+    }));
+
+    setTerminalHistory(prev => [...prev, 
+      { type: 'input', content: `> ${inputValue}` }
+    ]);
+
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
@@ -216,96 +241,111 @@ public class Main {
           language: 'java',
           version: '15.0.2',
           files: [{ content: code, name: 'Main.java' }],
-          stdin: inputValue + '\n',
+          stdin: `${programState.inputBuffer}${inputValue}\n`,
           run_timeout: 10000
         }),
       });
 
       const result = await response.json();
-      
+
       if (result.run?.stderr) {
+        setProgramState(prev => ({
+          ...prev,
+          status: 'error',
+          compilationError: result.run.stderr
+        }));
         setTerminalHistory(prev => [...prev, 
           { type: 'error', content: result.run.stderr }
         ]);
-        setIsWaitingForInput(false);
-        setIsProgramRunning(false);
         return;
       }
 
       const output = result.run.output;
-      const finalOutput = output.substring(output.indexOf('\n') + 1);
-      
-      if (finalOutput.trim()) {
+      const newOutput = output.substring(output.lastIndexOf(inputValue) + inputValue.length);
+
+      if (newOutput.trim()) {
         setTerminalHistory(prev => [...prev, 
-          { type: 'output', content: finalOutput.trim() }
+          { type: 'output', content: newOutput.trim() }
         ]);
       }
 
-      setIsWaitingForInput(false);
-      setIsProgramRunning(false);
-      setExecutionState({
-        running: false,
-        inputBuffer: '',
-        outputBuffer: '',
-        pid: null
-      });
+      // Check if program is expecting more input
+      if (needsInput && newOutput.trim().endsWith('?') || newOutput.includes('Enter') || newOutput.includes('Input')) {
+        setProgramState(prev => ({
+          ...prev,
+          status: 'waiting_input',
+          outputBuffer: newOutput
+        }));
+      } else {
+        setProgramState(prev => ({
+          ...prev,
+          status: 'finished'
+        }));
+      }
 
     } catch (err) {
+      setProgramState(prev => ({
+        ...prev,
+        status: 'error',
+        compilationError: err.message
+      }));
       setTerminalHistory(prev => [...prev, 
         { type: 'error', content: 'Error: ' + err.message }
       ]);
-      setIsWaitingForInput(false);
-      setIsProgramRunning(false);
     }
-  }, [code]);
+  }, [code, needsInput, programState.inputBuffer]);
 
-  const handleTerminalSubmit = useCallback((e) => {
+  const handleTerminalKeyDown = useCallback((e) => {
+    if (programState.status !== 'waiting_input') return;
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const input = e.target.value.trim();
       if (input) {
-        setInputHistory(prev => [...prev, input]);
-        setInputHistoryIndex(-1);
-        setCurrentInput('');
         handleInput(input);
+        e.target.value = '';
       }
-      e.target.value = '';
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (inputHistory.length > 0) {
-        const newIndex = inputHistoryIndex + 1;
-        if (newIndex < inputHistory.length) {
-          setInputHistoryIndex(newIndex);
-          setCurrentInput(inputHistory[inputHistory.length - 1 - newIndex]);
-          e.target.value = inputHistory[inputHistory.length - 1 - newIndex];
-        }
+      const { inputHistory, historyIndex } = programState;
+      if (inputHistory.length > 0 && historyIndex < inputHistory.length - 1) {
+        const newIndex = historyIndex + 1;
+        const historicalInput = inputHistory[inputHistory.length - 1 - newIndex];
+        setProgramState(prev => ({
+          ...prev,
+          historyIndex: newIndex
+        }));
+        e.target.value = historicalInput;
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (inputHistoryIndex > 0) {
-        const newIndex = inputHistoryIndex - 1;
-        setInputHistoryIndex(newIndex);
-        setCurrentInput(inputHistory[inputHistory.length - 1 - newIndex]);
-        e.target.value = inputHistory[inputHistory.length - 1 - newIndex];
-      } else if (inputHistoryIndex === 0) {
-        setInputHistoryIndex(-1);
-        setCurrentInput('');
+      const { inputHistory, historyIndex } = programState;
+      if (historyIndex > 0) {
+        const newIndex = historyIndex - 1;
+        const historicalInput = inputHistory[inputHistory.length - 1 - newIndex];
+        setProgramState(prev => ({
+          ...prev,
+          historyIndex: newIndex
+        }));
+        e.target.value = historicalInput;
+      } else if (historyIndex === 0) {
+        setProgramState(prev => ({
+          ...prev,
+          historyIndex: -1
+        }));
         e.target.value = '';
       }
     }
-  }, [handleInput, inputHistory, inputHistoryIndex]);
+  }, [programState, handleInput]);
 
   useEffect(() => {
-    if (isWaitingForInput && inputRef.current) {
+    if (programState.status === 'waiting_input' && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [isWaitingForInput]);
+  }, [programState.status]);
 
   const handleExecuteClick = useCallback(() => {
     setTerminalHistory([]);
-    setIsWaitingForInput(false);
-    setIsProgramRunning(false);
-    setIsCompiling(false);
     executeCode();
   }, [executeCode]);
 
@@ -333,23 +373,27 @@ public class Main {
   }, [terminalHistory]);
 
   const renderTerminalInput = () => (
-    <div className="flex items-center gap-2 mt-2 group">
-      <div className="flex items-center gap-1 text-green-400">
-        <span className="animate-pulse">{'>'}</span>
-        {isWaitingForInput && <span className="text-xs text-gray-500">[Press Enter to submit, Up/Down for history]</span>}
+    <div className="flex items-center gap-2 mt-2 relative group">
+      <div className="flex items-center gap-1">
+        <span className={`text-green-400 ${programState.status === 'waiting_input' ? 'animate-pulse' : ''}`}>
+          {programState.status === 'waiting_input' ? '>' : '■'}
+        </span>
       </div>
       <input
         ref={inputRef}
         type="text"
-        value={currentInput}
-        onChange={(e) => setCurrentInput(e.target.value)}
         className="w-full bg-transparent text-gray-300 outline-none border-b border-transparent 
-                   focus:border-gray-700 transition-colors duration-200"
-        placeholder={isWaitingForInput ? "Type your input here..." : ""}
-        onKeyDown={handleTerminalSubmit}
-        disabled={!isWaitingForInput || isCompiling}
+                 focus:border-gray-700 transition-colors duration-200 pl-2"
+        placeholder={programState.status === 'waiting_input' ? "Type your input here..." : "Program finished"}
+        onKeyDown={handleTerminalKeyDown}
+        disabled={programState.status !== 'waiting_input'}
         autoFocus
       />
+      {programState.status === 'waiting_input' && (
+        <div className="absolute right-0 top-[-20px] text-xs text-gray-500">
+          Press Enter to submit, ↑↓ for history
+        </div>
+      )}
     </div>
   );
 
@@ -448,7 +492,7 @@ public class Main {
               </div>
             ))}
             
-            {(isWaitingForInput && !isCompiling) && renderTerminalInput()}
+            {programState.status !== 'idle' && renderTerminalInput()}
           </div>
         </div>
       </div>

@@ -12,6 +12,8 @@ class TerminalHandler {
     this.historyIndex = -1;
     this.isWaitingForInput = false;
     this.currentPrompt = '';
+    this.inputHistory = [];
+    this.lastOutput = '';
   }
 
   appendOutput(text) {
@@ -42,6 +44,20 @@ class TerminalHandler {
 
   getPrompt() {
     return this.currentPrompt;
+  }
+
+  setLastOutput(output) {
+    this.lastOutput = output;
+    return this.isExpectingInput(output);
+  }
+
+  isExpectingInput(output) {
+    const patterns = [
+      /\?[\s]*$/,  // Ends with question mark
+      /input|enter|type/i,  // Common input prompts
+      /Scanner|nextLine|nextInt|read/i,  // Java input methods
+    ];
+    return patterns.some(pattern => pattern.test(output));
   }
 }
 
@@ -195,28 +211,19 @@ public class Main {
 
   const handleInput = useCallback(async (inputValue) => {
     const terminal = terminalHandler.current;
-    if (!inputValue?.trim() || executionContext.status !== 'waiting_input') return;
+    if (!inputValue?.trim()) return;
 
     try {
-      // Sanitize input
-      const sanitizedInput = inputValue.trim().replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-      
+      const sanitizedInput = inputValue.trim();
       terminal.queueInput(sanitizedInput);
+      
       setTerminalHistory(prev => [...prev, { 
         type: 'input', 
         content: `> ${sanitizedInput}`,
         timestamp: Date.now()
       }]);
 
-      setExecutionContext(prev => ({
-        ...prev,
-        status: 'processing',
-        lastInput: sanitizedInput,
-        inputCount: prev.inputCount + 1
-      }));
-
-      // Prepare the complete input string with previous context
-      const fullInput = `${terminal.buffer}${sanitizedInput}\n`;
+      const fullInput = terminal.inputHistory.join('\n') + '\n' + sanitizedInput;
 
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
@@ -236,13 +243,12 @@ public class Main {
         throw new Error(result.run.stderr);
       }
 
-      // Process output
       const output = result.run.output;
-      const newOutput = output.substring(output.lastIndexOf(sanitizedInput) + sanitizedInput.length);
-      
-      // Update terminal state
-      terminal.appendOutput(sanitizedInput + '\n');
-      
+      const lastInputIndex = output.lastIndexOf(sanitizedInput);
+      const newOutput = lastInputIndex !== -1 
+        ? output.substring(lastInputIndex + sanitizedInput.length)
+        : output;
+
       if (newOutput.trim()) {
         setTerminalHistory(prev => [...prev, { 
           type: 'output', 
@@ -251,19 +257,15 @@ public class Main {
         }]);
       }
 
-      // Detect if program is still waiting for input
-      const expectingMoreInput = needsInput && (
-        newOutput.trim().endsWith('?') || 
-        newOutput.includes('Enter') || 
-        newOutput.includes('Input') ||
-        /\b(read|enter|input|type)\b/i.test(newOutput)
-      );
-
+      // Check if program is still expecting input
+      const isExpecting = terminal.setLastOutput(newOutput);
+      
       setExecutionContext(prev => ({
         ...prev,
-        status: expectingMoreInput ? 'waiting_input' : 'finished',
+        status: isExpecting ? 'waiting_input' : 'finished',
         outputBuffer: newOutput,
-        error: null
+        error: null,
+        inputCount: prev.inputCount + 1
       }));
 
     } catch (err) {
@@ -279,7 +281,7 @@ public class Main {
         timestamp: Date.now()
       }]);
     }
-  }, [code, needsInput]);
+  }, [code]);
 
   const executeCode = useCallback(async () => {
     const terminal = terminalHandler.current;
@@ -317,8 +319,8 @@ public class Main {
 
       const result = await response.json();
 
-      if (result.compile?.stderr) {
-        throw new Error(result.compile.stderr);
+      if (result.run?.stderr) {
+        throw new Error(result.run.stderr);
       }
 
       setTerminalHistory(prev => [...prev,
@@ -327,23 +329,20 @@ public class Main {
       ]);
 
       if (result.run?.output) {
+        const output = result.run.output.trim();
         setTerminalHistory(prev => [...prev, { 
           type: 'output', 
-          content: result.run.output.trim(),
+          content: output,
           timestamp: Date.now()
         }]);
 
-        const expectingInput = needsInput && (
-          result.run.output.trim().endsWith('?') || 
-          result.run.output.includes('Enter') || 
-          result.run.output.includes('Input') ||
-          /\b(read|enter|input|type)\b/i.test(result.run.output)
-        );
-
+        // Update terminal state and check for input expectation
+        const isExpecting = terminal.setLastOutput(output);
+        
         setExecutionContext(prev => ({
           ...prev,
-          status: expectingInput ? 'waiting_input' : 'finished',
-          outputBuffer: result.run.output,
+          status: isExpecting ? 'waiting_input' : 'finished',
+          outputBuffer: output,
           isCompiling: false,
           compilation: result
         }));

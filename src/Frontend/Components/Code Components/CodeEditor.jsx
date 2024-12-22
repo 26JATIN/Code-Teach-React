@@ -22,7 +22,7 @@ const CodeEditor = ({ defaultCode }) => {
   const [input, setInput] = useState(''); // Add this new state
   const [showInputModal, setShowInputModal] = useState(false);
 
-  // Add this function to check if code requires input
+  // Update the needsInput patterns to be more comprehensive
   const needsInput = useMemo(() => {
     const inputPatterns = [
       'Scanner',
@@ -30,7 +30,14 @@ const CodeEditor = ({ defaultCode }) => {
       'BufferedReader',
       'InputStreamReader',
       'Console.readLine',
-      'console.readLine'
+      'console.readLine',
+      'nextInt',
+      'nextLine',
+      'nextDouble',
+      'nextFloat',
+      'nextBoolean',
+      'readLine',
+      'read'
     ];
     return inputPatterns.some(pattern => code.includes(pattern));
   }, [code]);
@@ -245,39 +252,58 @@ const CodeEditor = ({ defaultCode }) => {
 
         {/* Replace the input section with this modal */}
         {showInputModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-gray-900 rounded-lg border border-gray-700 p-4 max-w-lg w-full mx-4">
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-900 rounded-lg border border-gray-700 p-6 max-w-lg w-full mx-4 shadow-xl">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white text-lg font-medium">Input Required</h3>
+                <h3 className="text-white text-xl font-medium">Program Input Required</h3>
                 <button
                   onClick={() => setShowInputModal(false)}
-                  className="text-gray-400 hover:text-white"
+                  className="text-gray-400 hover:text-white transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
-              <p className="text-gray-400 text-sm mb-4">
-                Your code contains input operations. Please provide the required input:
-              </p>
+              <div className="mb-4">
+                <p className="text-gray-300 text-sm mb-2">
+                  This program uses Scanner or other input methods. Please provide all inputs below, one per line:
+                </p>
+                <ul className="text-gray-400 text-xs mb-4 list-disc list-inside">
+                  <li>For multiple inputs, put each value on a new line</li>
+                  <li>Press Enter after each input value</li>
+                  <li>Include all expected inputs in order</li>
+                </ul>
+              </div>
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Enter your program input here..."
-                className="w-full h-32 bg-gray-800 text-white rounded-md border border-gray-700 p-2 text-sm font-mono resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 mb-4"
+                placeholder="Enter your program inputs here...
+Example:
+John
+25
+5.8"
+                className="w-full h-40 bg-gray-800 text-white rounded-lg border border-gray-700 p-3 text-sm font-mono 
+                          resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 mb-4"
               />
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setShowInputModal(false)}
-                  className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
+                  className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={executeWithInput}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors 
+                           flex items-center gap-2"
                 >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                   Run with Input
                 </button>
               </div>

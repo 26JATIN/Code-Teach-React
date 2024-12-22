@@ -14,6 +14,7 @@ const LoadingSpinner = memo(() => (
 const Home = lazy(() => import('./Frontend/pages/home/homepage'));
 const Courses = lazy(() => import('./Frontend/pages/Courses/Courses'));
 const LearnJava = lazy(() => import('./Course Modules/Java/LearnJava'));
+const LearnCpp = lazy(() => import('./Course Modules/Cpp/LearnCpp'));
 const LearningDashboard = lazy(() => import('./Frontend/pages/EnrolledCourse/learningdashboard'));
 const Auth = lazy(() => import('./Frontend/pages/Authentication/signup&&login'));
 
@@ -57,6 +58,11 @@ const App = () => {
             <Route path="/modules/java/*" element={
               <ProtectedRoute>
                 <LearnJava />
+              </ProtectedRoute>
+            } />
+            <Route path="/modules/Cpp/*" element={
+              <ProtectedRoute>
+                <LearnCpp />
               </ProtectedRoute>
             } />
             <Route path="/learning-dashboard" element={

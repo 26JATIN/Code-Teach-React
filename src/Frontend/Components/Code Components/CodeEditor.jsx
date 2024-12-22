@@ -213,17 +213,21 @@ public class Main {
       { type: 'input', content: `Input ${state.currentInputIndex + 1}: ${inputValue}` }
     ]);
 
-    if (terminal.isComplete()) {
-      // All inputs collected, run the program
+    // Immediately update state to running when we have all inputs
+    if (state.currentInputIndex + 1 >= state.expectedInputs) {
+      setState(prev => ({
+        ...prev,
+        status: 'running', // Change to running immediately
+        currentInputIndex: prev.currentInputIndex + 1
+      }));
       runWithInputs(terminal.getAllInputs());
     } else {
-      // Wait for next input
       setState(prev => ({
         ...prev,
         currentInputIndex: prev.currentInputIndex + 1
       }));
     }
-  }, [state.status, state.currentInputIndex]);
+  }, [state.status, state.currentInputIndex, state.expectedInputs]);
 
   const executeCode = useCallback(async () => {
     const terminal = terminalHandler.current;
@@ -348,7 +352,9 @@ public class Main {
 
   // Add a condition to check if we still need inputs
   const shouldShowInput = useCallback(() => {
-    return state.status === 'waiting_input' && state.currentInputIndex < state.expectedInputs;
+    return state.status === 'waiting_input' && 
+           state.currentInputIndex < state.expectedInputs &&
+           state.status !== 'running';
   }, [state.status, state.currentInputIndex, state.expectedInputs]);
 
   const renderTerminalInput = () => (

@@ -256,11 +256,8 @@ const CodeEditor = ({ defaultCode }) => {
         setTerminalHistory(prev => [...prev, { type: 'output', content: fullOutput.trim() }]);
       }
 
-      const shouldWaitForInput = 
-        code.includes('Scanner') && !data.run.stderr;
-
-      setIsWaitingForInput(shouldWaitForInput);
-      setIsProgramRunning(shouldWaitForInput);
+      setIsWaitingForInput(false);
+      setIsProgramRunning(false);
 
     } catch (err) {
       setTerminalHistory(prev => [...prev, { type: 'error', content: 'Error: ' + err.message }]);

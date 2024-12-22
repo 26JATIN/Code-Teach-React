@@ -146,71 +146,41 @@ const CodeEditor = ({ defaultCode }) => {
     return scannerPatterns.some(pattern => code.includes(pattern));
   }, [code]);
 
-  // Update executeCode to handle initial execution better
+  // Update executeCode to only show the initial prompt
   const executeCode = useCallback(async () => {
     setIsCompiling(true);
+    setIsWaitingForInput(false);
     setTerminalHistory([{ type: 'system', content: '⚡ Compiling program...' }]);
     
     try {
-      // First, just compile the code
-      const compileResponse = await fetch('https://emkc.org/api/v2/piston/execute', {
+      const initialRun = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           language: 'java',
           version: '15.0.2',
           files: [{ content: code, name: 'Main.java' }],
-          stdin: '',
-          compile_timeout: 10000,
-          run_timeout: 1
+          stdin: ''
         }),
       });
 
-      const compileData = await compileResponse.json();
-      
-      if (compileData.run.stderr && compileData.run.stderr.includes('error')) {
-        setTerminalHistory(prev => [...prev, { type: 'error', content: compileData.run.stderr }]);
+      const initialData = await initialRun.json();
+
+      if (initialData.run.stderr && initialData.run.stderr.includes('error')) {
+        setTerminalHistory(prev => [...prev, { type: 'error', content: initialData.run.stderr }]);
         setIsCompiling(false);
         return;
       }
 
-      setTerminalHistory(prev => [...prev, 
+      // Show compilation success and initial prompt
+      setTerminalHistory(prev => [
+        ...prev,
         { type: 'system', content: '✅ Program compiled successfully!' },
-        { type: 'system', content: '▶ Running program...' }
+        { type: 'system', content: '▶ Running program...' },
+        { type: 'output', content: initialData.run.output?.trim() || '' }
       ]);
 
-      // Now run the program to get just the first prompt
-      const runResponse = await fetch('https://emkc.org/api/v2/piston/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          language: 'java',
-          version: '15.0.2',
-          files: [{ content: code, name: 'Main.java' }],
-          stdin: '',
-          run_timeout: 1000
-        }),
-      });
-
-      const runData = await runResponse.json();
-      const initialOutput = runData.run.output || '';
-      
-      // Only show the first prompt
-      const lines = initialOutput.split('\n');
-      const firstPrompt = lines.find(line => 
-        line.trim() && (
-          line.includes('?') || 
-          line.toLowerCase().includes('enter') || 
-          line.toLowerCase().includes('what')
-        )
-      );
-
-      if (firstPrompt) {
-        setTerminalHistory(prev => [...prev, { type: 'output', content: firstPrompt }]);
-        setIsWaitingForInput(true);
-      }
-
-      setIsProgramRunning(true);
+      setIsWaitingForInput(true);
       setIsCompiling(false);
 
     } catch (err) {
@@ -219,14 +189,16 @@ const CodeEditor = ({ defaultCode }) => {
     }
   }, [code]);
 
-  // Update handleInput to accumulate inputs and show correct output
+  // Update handleInput to handle the accumulated input
   const handleInput = useCallback(async (inputValue) => {
     if (!inputValue.trim()) return;
 
+    // Add the input to history first
     setTerminalHistory(prev => [...prev, { type: 'input', content: inputValue }]);
+    
     const newBuffer = currentInputBuffer + inputValue + '\n';
     setCurrentInputBuffer(newBuffer);
-    
+
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
@@ -235,44 +207,47 @@ const CodeEditor = ({ defaultCode }) => {
           language: 'java',
           version: '15.0.2',
           files: [{ content: code, name: 'Main.java' }],
-          stdin: newBuffer,
+          stdin: newBuffer
         }),
       });
 
       const data = await response.json();
-      const output = data.run.output || '';
       
-      // Find the relevant output after this input
-      const lines = output.split('\n');
-      const currentIndex = lines.findIndex(line => line.includes(inputValue));
-      const nextPrompt = lines.slice(currentIndex + 1).find(line => 
-        line.includes('?') || 
-        line.toLowerCase().includes('enter') || 
-        line.toLowerCase().includes('what')
+      if (data.run.stderr) {
+        setTerminalHistory(prev => [...prev, { type: 'error', content: data.run.stderr }]);
+        setIsWaitingForInput(false);
+        return;
+      }
+
+      // Process the complete output to find the new content
+      const fullOutput = data.run.output || '';
+      const outputLines = fullOutput.split('\n');
+      
+      // Find where our input appears and get everything after it
+      const inputIndex = outputLines.findIndex(line => line.includes(inputValue));
+      if (inputIndex !== -1) {
+        const newOutput = outputLines.slice(inputIndex + 1)
+          .filter(line => line.trim())
+          .join('\n');
+          
+        if (newOutput) {
+          setTerminalHistory(prev => [...prev, { type: 'output', content: newOutput }]);
+        }
+      }
+
+      // Check if program is done or needs more input
+      const lastLine = outputLines[outputLines.length - 1];
+      const needsMoreInput = lastLine && (
+        lastLine.includes('?') || 
+        lastLine.toLowerCase().includes('enter') ||
+        lastLine.toLowerCase().includes('input')
       );
 
-      // Show the response (if any) and determine if we need more input
-      const responseLines = lines.slice(currentIndex + 1);
-      const relevantOutput = responseLines
-        .filter(line => line.trim() && line !== nextPrompt)
-        .join('\n');
-
-      if (relevantOutput.trim()) {
-        setTerminalHistory(prev => [...prev, { type: 'output', content: relevantOutput }]);
-      }
-
-      if (nextPrompt) {
-        setTerminalHistory(prev => [...prev, { type: 'output', content: nextPrompt }]);
-        setIsWaitingForInput(true);
-      } else {
-        setIsWaitingForInput(false);
-        setIsProgramRunning(false);
-      }
+      setIsWaitingForInput(needsMoreInput);
 
     } catch (err) {
       setTerminalHistory(prev => [...prev, { type: 'error', content: 'Error: ' + err.message }]);
       setIsWaitingForInput(false);
-      setIsProgramRunning(false);
     }
   }, [code, currentInputBuffer]);
 

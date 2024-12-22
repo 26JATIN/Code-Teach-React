@@ -208,12 +208,12 @@ const CodeEditor = ({ defaultCode }) => {
         outputBuffer: result.run.output || ''
       }));
 
-      // Check if program is waiting for input
-      if (result.run.output && !result.run.stderr) {
+      // Display initial output and check if program is waiting for input
+      if (result.run.output) {
         setTerminalHistory(prev => [...prev, 
           { type: 'output', content: result.run.output }
         ]);
-        setIsWaitingForInput(true);
+        setIsWaitingForInput(needsInput);
       }
 
       setIsCompiling(false);
@@ -225,7 +225,7 @@ const CodeEditor = ({ defaultCode }) => {
       ]);
       setIsCompiling(false);
     }
-  }, [code]);
+  }, [code, needsInput]);
 
   // Update handleInput to properly handle stdin
   const handleInput = useCallback(async (inputValue) => {
@@ -471,3 +471,4 @@ const CodeEditor = ({ defaultCode }) => {
 
 // Memoize the entire component
 export default React.memo(CodeEditor);
+

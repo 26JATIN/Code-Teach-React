@@ -21,6 +21,8 @@ const CodeEditor = ({ defaultCode }) => {
   const LINE_HEIGHT_FACTOR = 1.5; // line height multiplier for better spacing
   const [input, setInput] = useState(''); // Add this new state
   const [showInputModal, setShowInputModal] = useState(false);
+  const [terminalInput, setTerminalInput] = useState('');
+  const terminalRef = useRef(null);
 
   // Update needsInput logic to be more sensitive
   const needsInput = useMemo(() => {
@@ -144,9 +146,6 @@ const CodeEditor = ({ defaultCode }) => {
     setError(null);
     
     try {
-      const formattedInput = input.trim();
-      console.log('Executing with input:', formattedInput); // Debug log
-
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -157,12 +156,12 @@ const CodeEditor = ({ defaultCode }) => {
             content: code,
             name: 'Main.java'
           }],
-          stdin: formattedInput
+          stdin: terminalInput
         }),
       });
 
       const data = await response.json();
-      console.log('API Response:', data); // Debug log
+      console.log('API Response:', data);
 
       if (data.run.stderr) {
         setError(data.run.stderr);
@@ -175,9 +174,17 @@ const CodeEditor = ({ defaultCode }) => {
       setError('Failed to execute code. Please try again.');
     } finally {
       setIsLoading(false);
-      setShowInputModal(false);
+      setTerminalInput('');
     }
-  }, [code, input]);
+  }, [code, terminalInput]);
+
+  // Handle terminal input submission
+  const handleTerminalSubmit = useCallback((e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      executeWithInput();
+    }
+  }, [executeWithInput]);
 
   // Simplified execute click handler
   const handleExecuteClick = useCallback(() => {
@@ -290,99 +297,43 @@ const CodeEditor = ({ defaultCode }) => {
           </div>
         </div>
 
-        {/* Replace the input section with this modal */}
-        {showInputModal && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
-            <div 
-              className="bg-gray-900 rounded-lg border border-gray-700 p-6 max-w-lg w-full mx-4 shadow-xl"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white text-xl font-medium">Program Input Required</h3>
-                <button
-                  onClick={() => setShowInputModal(false)}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="mb-4">
-                <p className="text-gray-300 text-sm mb-2">
-                  This program uses Scanner or other input methods. Please provide all inputs below, one per line:
-                </p>
-                <ul className="text-gray-400 text-xs mb-4 list-disc list-inside">
-                  <li>For multiple inputs, put each value on a new line</li>
-                  <li>Press Enter after each input value</li>
-                  <li>Include all expected inputs in order</li>
-                </ul>
-              </div>
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Enter your program inputs here...
-Example:
-John
-25
-5.8"
-                className="w-full h-40 bg-gray-800 text-white rounded-lg border border-gray-700 p-3 text-sm font-mono 
-                          resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 mb-4"
-              />
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowInputModal(false)}
-                  className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={executeWithInput}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors 
-                           flex items-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Run with Input
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Terminal Output */}
-        <div className="bg-gray-950/90 rounded-lg border border-gray-800/50">
-          <div className="flex items-center justify-between px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 border-b border-gray-800/50 overflow-x-auto">
+        {/* Integrated Terminal */}
+        <div className="bg-gray-950/90 rounded-lg border border-gray-800/50 mt-4">
+          <div className="flex items-center justify-between px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 border-b border-gray-800/50">
             <div className="flex items-center gap-2">
               <svg className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span className="text-xs sm:text-sm text-gray-400">Output Terminal</span>
+              <span className="text-xs sm:text-sm text-gray-400">Terminal</span>
             </div>
           </div>
           
-          <div className="p-2 sm:p-3 md:p-4 font-mono text-xs sm:text-sm min-h-[80px] sm:min-h-[100px] max-h-[150px] sm:max-h-[200px] overflow-auto whitespace-pre">
-            {error ? (
-              <div className="text-red-400 flex items-start gap-2">
-                <svg className="w-4 h-4 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{error}</span>
-              </div>
-            ) : output ? (
-              <div className="text-green-400 whitespace-pre-wrap">{output}</div>
-            ) : (
-              <div className="text-gray-500 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>Run your code to see the output here...</span>
-              </div>
-            )}
+          <div className="p-2 sm:p-3 md:p-4 font-mono text-xs sm:text-sm min-h-[200px] max-h-[300px] overflow-auto">
+            {/* Output Area */}
+            <div className="text-gray-300 whitespace-pre-wrap mb-2">
+              {error ? (
+                <span className="text-red-400">{error}</span>
+              ) : output ? (
+                output
+              ) : (
+                <span className="text-gray-500">Program output will appear here...</span>
+              )}
+            </div>
+
+            {/* Input Area */}
+            <div className="flex items-center gap-2 mt-2 border-t border-gray-800/50 pt-2">
+              <span className="text-green-400">{'>'}</span>
+              <textarea
+                ref={terminalRef}
+                value={terminalInput}
+                onChange={(e) => setTerminalInput(e.target.value)}
+                onKeyDown={handleTerminalSubmit}
+                placeholder={isLoading ? "Running..." : "Type your input here and press Enter..."}
+                className="w-full bg-transparent text-gray-300 outline-none resize-none overflow-hidden"
+                rows={1}
+                disabled={isLoading}
+              />
+            </div>
           </div>
         </div>
       </div>

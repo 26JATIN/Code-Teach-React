@@ -131,53 +131,60 @@ const CodeEditor = ({ defaultCode }) => {
     setLineCount(code.split('\n').length);
   }, [code]);
 
-  // Update executeWithInput to handle input properly
+  // Simplified scanner detection
+  const hasScanner = useMemo(() => {
+    return code.includes('Scanner') || code.includes('System.in');
+  }, [code]);
+
+  // Updated execute function
   const executeWithInput = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    setShowInputModal(false);
     
     try {
+      const formattedInput = input.trim();
+      console.log('Executing with input:', formattedInput); // Debug log
+
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           language: 'java',
           version: '15.0.2',
-          files: [{ content: code }],
-          stdin: input || '', // Use empty string if no input
+          files: [{ 
+            content: code,
+            name: 'Main.java'
+          }],
+          stdin: formattedInput
         }),
       });
 
       const data = await response.json();
-      
-      if (data.run.stderr && !data.run.stdout) {
+      console.log('API Response:', data); // Debug log
+
+      if (data.run.stderr) {
         setError(data.run.stderr);
         setOutput('');
       } else {
-        setOutput(data.run.stdout || data.run.output || '');
-        setError(null);
+        setOutput(data.run.output || data.run.stdout || '');
       }
     } catch (err) {
+      console.error('Execution error:', err); // Debug log
       setError('Failed to execute code. Please try again.');
     } finally {
       setIsLoading(false);
+      setShowInputModal(false);
     }
   }, [code, input]);
 
-  // Update handleExecuteClick to always show input modal when Scanner is present
+  // Simplified execute click handler
   const handleExecuteClick = useCallback(() => {
-    const hasScanner = code.includes('Scanner') || 
-                      code.includes('System.in') || 
-                      code.includes('BufferedReader');
-                      
     if (hasScanner) {
-      setInput(''); // Reset input when showing modal
       setShowInputModal(true);
     } else {
       executeWithInput();
     }
-  }, [code, executeWithInput]);
+  }, [hasScanner, executeWithInput]);
 
   const handleEditorChange = useCallback((value) => {
     setCode(value);

@@ -146,13 +146,14 @@ const CodeEditor = ({ defaultCode }) => {
     return scannerPatterns.some(pattern => code.includes(pattern));
   }, [code]);
 
-  // Update executeCode to handle initial execution better
+  // Update executeCode to handle first run
   const executeCode = useCallback(async () => {
     setIsCompiling(true);
     setTerminalHistory([{ type: 'system', content: '⚡ Compiling program...' }]);
     
     try {
-      const compileResponse = await fetch('https://emkc.org/api/v2/piston/execute', {
+      // Initial compilation and run to get prompt
+      const initialRun = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -163,55 +164,43 @@ const CodeEditor = ({ defaultCode }) => {
         }),
       });
 
-      const compileData = await compileResponse.json();
+      const initialData = await initialRun.json();
       
-      if (compileData.run.stderr && compileData.run.stderr.includes('error')) {
-        setTerminalHistory(prev => [...prev, 
-          { type: 'error', content: compileData.run.stderr }
-        ]);
+      if (initialData.run.stderr && initialData.run.stderr.includes('error')) {
+        setTerminalHistory(prev => [...prev, { type: 'error', content: initialData.run.stderr }]);
         setIsCompiling(false);
         return;
       }
 
+      // Show compilation success
       setTerminalHistory(prev => [...prev, 
         { type: 'system', content: '✅ Program compiled successfully!' },
         { type: 'system', content: '▶ Running program...' }
       ]);
 
-      const initialOutput = compileData.run.output || '';
-      const lines = initialOutput.split('\n');
-      
-      let foundPrompt = false;
-      for (const line of lines) {
-        if (line.trim()) {
-          setTerminalHistory(prev => [...prev, { type: 'output', content: line }]);
-          if (line.includes('?') || line.toLowerCase().includes('enter') || 
-              line.toLowerCase().includes('what')) {
-            foundPrompt = true;
-          }
-        }
+      // Show initial prompt
+      const prompt = initialData.run.output || '';
+      if (prompt.trim()) {
+        setTerminalHistory(prev => [...prev, { type: 'output', content: prompt.trim() }]);
       }
 
-      setIsWaitingForInput(foundPrompt);
+      setIsWaitingForInput(true);
       setIsProgramRunning(true);
       setIsCompiling(false);
 
     } catch (err) {
-      setTerminalHistory(prev => [...prev, 
-        { type: 'error', content: 'Execution failed: ' + err.message }
-      ]);
+      setTerminalHistory(prev => [...prev, { type: 'error', content: 'Execution failed: ' + err.message }]);
       setIsCompiling(false);
     }
   }, [code]);
 
-  // Update handleInput to properly process input and show new output
+  // Update handleInput for better input/output handling
   const handleInput = useCallback(async (inputValue) => {
     if (!inputValue.trim()) return;
 
-    const newBuffer = currentInputBuffer + inputValue + '\n';
-    setCurrentInputBuffer(newBuffer);
+    // Show user input in terminal
     setTerminalHistory(prev => [...prev, { type: 'input', content: inputValue }]);
-
+    
     try {
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
@@ -220,41 +209,44 @@ const CodeEditor = ({ defaultCode }) => {
           language: 'java',
           version: '15.0.2',
           files: [{ content: code, name: 'Main.java' }],
-          stdin: newBuffer
+          stdin: inputValue + '\n'
         }),
       });
 
       const data = await response.json();
-      const output = data.run.output || '';
       
-      // Find only the new output after our input
-      const allLines = output.split('\n');
-      const inputLines = newBuffer.split('\n').length;
-      const newOutput = allLines.slice(inputLines - 1).join('\n');
-
-      // Add new output to terminal
-      if (newOutput.trim()) {
-        setTerminalHistory(prev => [...prev, { type: 'output', content: newOutput.trim() }]);
-      }
-
-      // Check if we need more input
-      const needsMoreInput = newOutput.includes('?') || 
-                           newOutput.toLowerCase().includes('enter') ||
-                           newOutput.toLowerCase().includes('what');
-
-      setIsWaitingForInput(needsMoreInput);
-      if (!needsMoreInput) {
+      if (data.run.stderr) {
+        setTerminalHistory(prev => [...prev, { type: 'error', content: data.run.stderr }]);
+        setIsWaitingForInput(false);
         setIsProgramRunning(false);
+        return;
       }
+
+      // Process output
+      const output = data.run.output || '';
+      const outputLines = output.split('\n').filter(line => line.trim());
+      
+      // Find the response after input
+      const inputPromptIndex = outputLines.findIndex(line => 
+        line.includes(inputValue) || line.includes('?') || 
+        line.toLowerCase().includes('enter') || line.toLowerCase().includes('what')
+      );
+      
+      const relevantOutput = outputLines.slice(inputPromptIndex + 1).join('\n');
+      
+      if (relevantOutput.trim()) {
+        setTerminalHistory(prev => [...prev, { type: 'output', content: relevantOutput.trim() }]);
+      }
+
+      setIsWaitingForInput(false);
+      setIsProgramRunning(false);
 
     } catch (err) {
-      setTerminalHistory(prev => [...prev, 
-        { type: 'error', content: 'Error: ' + err.message }
-      ]);
+      setTerminalHistory(prev => [...prev, { type: 'error', content: 'Error: ' + err.message }]);
       setIsWaitingForInput(false);
       setIsProgramRunning(false);
     }
-  }, [code, currentInputBuffer]);
+  }, [code]);
 
   // Handle terminal input submission
   const handleTerminalSubmit = useCallback((e) => {

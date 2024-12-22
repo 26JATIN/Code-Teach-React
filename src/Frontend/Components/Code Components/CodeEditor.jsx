@@ -220,51 +220,13 @@ const CodeEditor = ({ defaultCode }) => {
   }, [code]);
 
   // Update handleInput to properly handle stdin
-  const handleInput = useCallback(async (inputValue) => {
+  const handleInput = useCallback((inputValue) => {
     if (!inputValue.trim()) return;
 
     setTerminalHistory(prev => [...prev, { type: 'input', content: inputValue }]);
-    
-    const newBuffer = programState.current.inputBuffer + inputValue + '\n';
-    programState.current.inputBuffer = newBuffer;
-
-    try {
-      const response = await fetch('https://emkc.org/api/v2/piston/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          language: 'java',
-          version: '15.0.2',
-          files: [{ content: code, name: 'Main.java' }],
-          stdin: newBuffer,
-          run_timeout: 2000
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.run.stderr) {
-        setTerminalHistory(prev => [...prev, { type: 'error', content: data.run.stderr }]);
-        setIsWaitingForInput(false);
-        setIsProgramRunning(false);
-        return;
-      }
-
-      const fullOutput = data.run.output || '';
-      
-      if (fullOutput.trim()) {
-        setTerminalHistory(prev => [...prev, { type: 'output', content: fullOutput.trim() }]);
-      }
-
-      setIsWaitingForInput(false);
-      setIsProgramRunning(false);
-
-    } catch (err) {
-      setTerminalHistory(prev => [...prev, { type: 'error', content: 'Error: ' + err.message }]);
-      setIsWaitingForInput(false);
-      setIsProgramRunning(false);
-    }
-  }, [code]);
+    setIsWaitingForInput(false);
+    setIsProgramRunning(false);
+  }, []);
 
   // Handle terminal input submission
   const handleTerminalSubmit = useCallback((e) => {

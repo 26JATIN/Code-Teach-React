@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';  // Add this import
 import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
 

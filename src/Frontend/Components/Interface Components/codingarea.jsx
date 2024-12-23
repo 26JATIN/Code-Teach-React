@@ -122,7 +122,6 @@ const CodingArea = ({ onClose }) => {
           return;
         }
       }
-
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

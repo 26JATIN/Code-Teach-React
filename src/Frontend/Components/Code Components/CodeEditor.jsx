@@ -70,6 +70,9 @@ public class Main {
   const [terminalHistory, setTerminalHistory] = useState([]);
   const inputRef = useRef(null);
   const terminalRef = useRef(null);
+  const [inputs, setInputs] = useState([]);
+  const [showInputSection, setShowInputSection] = useState(false);
+  const [expectedInputCount, setExpectedInputCount] = useState(0);
 
   const needsInput = useMemo(() => {
     const inputPatterns = [
@@ -221,11 +224,18 @@ public class Main {
     const terminal = terminalHandler.current;
     terminal.clear();
     
+    const inputCount = countExpectedInputs(code);
+    if (inputCount > 0) {
+      setExpectedInputCount(inputCount);
+      setShowInputSection(true);
+      setTerminalHistory([{ type: 'system', content: '⚡ Waiting for inputs...' }]);
+      return;
+    }
+
     setState({ status: 'running', error: null });
     setTerminalHistory([{ type: 'system', content: '⚡ Running program...' }]);
-
     await runWithInputs('');
-  }, [code]);
+  }, [code, countExpectedInputs]);
 
   // Add these new utilities
   const clearTerminal = useCallback(() => {
@@ -357,6 +367,55 @@ public class Main {
     </div>
   );
 
+  // Add this new component inside CodeEditor
+  const InputSection = () => {
+    const [inputValues, setInputValues] = useState(Array(expectedInputCount).fill(''));
+    
+    const handleSubmitInputs = (e) => {
+      e.preventDefault();
+      const nonEmptyInputs = inputValues.filter(input => input.trim() !== '');
+      if (nonEmptyInputs.length === expectedInputCount) {
+        runWithInputs(inputValues.join('\n'));
+        setShowInputSection(false);
+      }
+    };
+
+    return (
+      <div className={`transform transition-all duration-300 ease-in-out overflow-hidden
+                      ${showInputSection ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="bg-gray-800/50 rounded-lg border border-gray-700/50 p-4 my-2">
+          <h3 className="text-sm text-gray-300 mb-3">Program requires {expectedInputCount} input(s)</h3>
+          <form onSubmit={handleSubmitInputs} className="space-y-3">
+            {Array(expectedInputCount).fill(0).map((_, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <span className="text-xs text-gray-400">Input {index + 1}:</span>
+                <input
+                  type="text"
+                  value={inputValues[index]}
+                  onChange={(e) => {
+                    const newValues = [...inputValues];
+                    newValues[index] = e.target.value;
+                    setInputValues(newValues);
+                  }}
+                  className="flex-1 bg-gray-900/90 border border-gray-700/50 rounded px-3 py-1.5
+                           text-sm text-gray-300 focus:outline-none focus:border-blue-500/50"
+                  placeholder={`Enter input ${index + 1}`}
+                />
+              </div>
+            ))}
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-blue-600/80 text-white rounded-md hover:bg-blue-700/80
+                       transition-all duration-200 text-sm font-medium"
+            >
+              Submit Inputs
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="overflow-x-auto relative">
       <div className="min-w-[320px] w-full space-y-2 md:space-y-4 bg-gray-900/50 p-2 sm:p-3 md:p-6 rounded-xl border border-gray-700/50">
@@ -425,6 +484,9 @@ public class Main {
             {MonacoEditor}
           </div>
         </div>
+
+        {/* Add InputSection here, between editor and terminal */}
+        <InputSection />
 
         <div className="bg-gray-950/90 rounded-lg border border-gray-800/50 mt-4">
           <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800/50">

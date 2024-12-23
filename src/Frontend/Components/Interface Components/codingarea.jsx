@@ -4,6 +4,7 @@ import Editor from '@monaco-editor/react';
 import { debounce } from 'lodash';
 import { useMediaQuery } from 'react-responsive';  // Add this import
 
+
 // Add download helper function
 const downloadCode = (content, filename) => {
   const blob = new Blob([content], { type: 'text/plain' });

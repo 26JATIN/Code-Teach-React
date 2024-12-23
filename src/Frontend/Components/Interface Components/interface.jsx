@@ -97,6 +97,7 @@ const WelcomePage = () => {
   );
 };
 
+// Ensure CourseLayout component renders modals outside the main layout
 const CourseLayout = ({ 
   courseName, 
   courseShortName, 
@@ -345,261 +346,268 @@ const CourseLayout = ({
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-950 overflow-hidden">
-      {/* Remove the left-side menu button */}
-      <div 
-        className={`fixed md:relative z-40 h-full sidebar-transition
-          ${isMenuOpen ? 'w-[280px] md:w-[320px] translate-x-0' : 'w-[60px] -translate-x-full md:translate-x-0'}
-          bg-gray-900/95 backdrop-blur-xl border-r border-gray-800/50 group flex flex-col`}
-        style={{ 
-          willChange: 'transform, width',
-          backfaceVisibility: 'hidden'
-        }}
-      >
-        {!isMobile && (
-          <button
+    <>
+      <div className="flex flex-col md:flex-row h-screen bg-gray-950 overflow-hidden">
+        {/* Remove the left-side menu button */}
+        <div 
+          className={`fixed md:relative z-40 h-full sidebar-transition
+            ${isMenuOpen ? 'w-[280px] md:w-[320px] translate-x-0' : 'w-[60px] -translate-x-full md:translate-x-0'}
+            bg-gray-900/95 backdrop-blur-xl border-r border-gray-800/50 group flex flex-col`}
+          style={{ 
+            willChange: 'transform, width',
+            backfaceVisibility: 'hidden'
+          }}
+        >
+          {!isMobile && (
+            <button
+              onClick={toggleSidebar}
+              className={`absolute top-1/2 -right-4 z-50 p-2 rounded-full 
+                bg-gray-800/90 border border-gray-700/50 text-gray-400 shadow-lg
+                hover:text-gray-200 transition-all duration-200 opacity-0 group-hover:opacity-100
+                transform -translate-y-1/2 hover:scale-110 focus:outline-none
+                hover:bg-gray-700/90 backdrop-blur-xl`}
+              title="Toggle Menu (Ctrl+M)"
+            >
+              <ChevronRight size={16} className={`transform transition-transform duration-200
+                ${isMenuOpen ? 'rotate-180' : 'rotate-0'}`} />
+            </button>
+          )}
+
+          <div className={`${isMenuOpen ? 'opacity-0' : 'opacity-100'} 
+            transition-opacity duration-200 h-full flex flex-col items-center py-6`}>
+            <div className="flex flex-col items-center gap-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 
+                flex items-center justify-center border border-gray-700/50">
+                <span className="text-lg font-semibold text-gray-300">{courseShortName}</span>
+              </div>
+              <div className="h-20 w-px bg-gradient-to-b from-blue-500/30 via-purple-500/20 to-transparent"/>
+            </div>
+            <span className="writing-mode-vertical text-xs font-medium text-gray-400
+              tracking-wider uppercase rotate-180 mt-4">{courseName}</span>
+          </div>
+
+          <div className={`${isMenuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'} 
+            transition-all duration-200 h-full overflow-hidden absolute inset-0 bg-gray-900/95 flex flex-col`}>
+            <div className="p-6 border-b border-gray-800/50 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 
+                  flex items-center justify-center border border-gray-700/50">
+                  <span className="text-sm font-semibold text-gray-300">{courseShortName}</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-200">{courseName}</h2>
+                  <p className="text-xs text-gray-400">Master Programming</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4 space-y-3">
+                {modules.map((module) => (
+                  <div key={module.id} className="group">
+                    <ModuleButton 
+                      module={module}
+                      isExpanded={expandedModules[module.id]}
+                      toggleModule={toggleModule}
+                    />
+
+                    {expandedModules[module.id] && (
+                      <div className="relative mt-2 ml-4 pl-4 py-2 animate-slideDown">
+                        <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-blue-500/30 via-slate-700/20 to-transparent"></div>
+                        {module.subModules.map((subModule) => (
+                          <button
+                            key={subModule.id}
+                            onClick={() => navigateToContent(module.id, subModule.id)}
+                            className={`group w-full px-4 py-3 rounded-xl transition-colors duration-200
+                              focus:outline-none focus:ring-2 focus:ring-sky-500/20
+                              ${activeModule === `${module.id}.${subModule.id}`
+                                ? 'bg-sky-500/10 text-sky-400 border-sky-500/20'
+                                : 'text-slate-400 hover:bg-white/[0.02] hover:text-slate-200 border-transparent'
+                              } border`}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></div>
+                              <span className="text-sm">{subModule.title}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {isMobile && isMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-gray-950/60 backdrop-blur-sm z-30 transition-opacity duration-300"
             onClick={toggleSidebar}
-            className={`absolute top-1/2 -right-4 z-50 p-2 rounded-full 
-              bg-gray-800/90 border border-gray-700/50 text-gray-400 shadow-lg
-              hover:text-gray-200 transition-all duration-200 opacity-0 group-hover:opacity-100
-              transform -translate-y-1/2 hover:scale-110 focus:outline-none
-              hover:bg-gray-700/90 backdrop-blur-xl`}
-            title="Toggle Menu (Ctrl+M)"
-          >
-            <ChevronRight size={16} className={`transform transition-transform duration-200
-              ${isMenuOpen ? 'rotate-180' : 'rotate-0'}`} />
-          </button>
+            style={{ willChange: 'opacity' }}
+            aria-hidden="true"
+          />
         )}
 
-        <div className={`${isMenuOpen ? 'opacity-0' : 'opacity-100'} 
-          transition-opacity duration-200 h-full flex flex-col items-center py-6`}>
-          <div className="flex flex-col items-center gap-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 
-              flex items-center justify-center border border-gray-700/50">
-              <span className="text-lg font-semibold text-gray-300">{courseShortName}</span>
-            </div>
-            <div className="h-20 w-px bg-gradient-to-b from-blue-500/30 via-purple-500/20 to-transparent"/>
-          </div>
-          <span className="writing-mode-vertical text-xs font-medium text-gray-400
-            tracking-wider uppercase rotate-180 mt-4">{courseName}</span>
-        </div>
-
-        <div className={`${isMenuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'} 
-          transition-all duration-200 h-full overflow-hidden absolute inset-0 bg-gray-900/95 flex flex-col`}>
-          <div className="p-6 border-b border-gray-800/50 flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 
-                flex items-center justify-center border border-gray-700/50">
-                <span className="text-sm font-semibold text-gray-300">{courseShortName}</span>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-200">{courseName}</h2>
-                <p className="text-xs text-gray-400">Master Programming</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 space-y-3">
-              {modules.map((module) => (
-                <div key={module.id} className="group">
-                  <ModuleButton 
-                    module={module}
-                    isExpanded={expandedModules[module.id]}
-                    toggleModule={toggleModule}
-                  />
-
-                  {expandedModules[module.id] && (
-                    <div className="relative mt-2 ml-4 pl-4 py-2 animate-slideDown">
-                      <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-blue-500/30 via-slate-700/20 to-transparent"></div>
-                      {module.subModules.map((subModule) => (
-                        <button
-                          key={subModule.id}
-                          onClick={() => navigateToContent(module.id, subModule.id)}
-                          className={`group w-full px-4 py-3 rounded-xl transition-colors duration-200
-                            focus:outline-none focus:ring-2 focus:ring-sky-500/20
-                            ${activeModule === `${module.id}.${subModule.id}`
-                              ? 'bg-sky-500/10 text-sky-400 border-sky-500/20'
-                              : 'text-slate-400 hover:bg-white/[0.02] hover:text-slate-200 border-transparent'
-                            } border`}
-                        >
-                          <div className="flex items-center space-x-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></div>
-                            <span className="text-sm">{subModule.title}</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+        <div 
+          className={`flex-1 relative transition-opacity duration-200
+            ${isMobile && isMenuOpen ? 'opacity-50' : 'opacity-100'}`}
+          style={{ willChange: 'opacity' }}
+        >
+          <div className="absolute inset-0 flex flex-col"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}>
+            <div className="sticky top-0 z-10 px-4 sm:px-6 py-3 border-b border-gray-800/50 bg-gray-900/80 backdrop-blur-xl flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-gray-300 font-medium text-sm">{courseShortName}</span>
+                  <svg className="w-3 h-3 text-slate-600 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  {modules.map(m => m.subModules.find(s => `${m.id}.${s.id}` === activeModule))
+                    .filter(Boolean)
+                    .map(subModule => (
+                      <span key={subModule.id} 
+                        className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800/50 text-gray-200 border border-gray-700/50">
+                        {subModule.title}
+                      </span>
+                    ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  {!isMobile && (
+                    <button
+                      onClick={toggleEditor}
+                      className="p-2 rounded-lg bg-gray-800/50 text-gray-300 hover:text-gray-100 
+                        hover:bg-gray-700/50 transition-colors duration-200 border border-gray-700/50"
+                      title="Open Code Editor"
+                    >
+                      <Code size={20} />
+                    </button>
+                  )}
+                  {isMobile && (
+                    <button
+                      onClick={toggleSidebar}
+                      className="p-2 rounded-lg bg-gray-800/50 text-gray-400 
+                        hover:text-gray-200 transition-colors duration-200 
+                        border border-gray-700/50"
+                      title="Toggle Menu"
+                    >
+                      <Menu size={18} />
+                    </button>
                   )}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {isMobile && isMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-gray-950/60 backdrop-blur-sm z-30 transition-opacity duration-300"
-          onClick={toggleSidebar}
-          style={{ willChange: 'opacity' }}
-          aria-hidden="true"
-        />
-      )}
-
-      <div 
-        className={`flex-1 relative transition-opacity duration-200
-          ${isMobile && isMenuOpen ? 'opacity-50' : 'opacity-100'}`}
-        style={{ willChange: 'opacity' }}
-      >
-        <div className="absolute inset-0 flex flex-col"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}>
-          <div className="sticky top-0 z-10 px-4 sm:px-6 py-3 border-b border-gray-800/50 bg-gray-900/80 backdrop-blur-xl flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                <span className="text-gray-300 font-medium text-sm">{courseShortName}</span>
-                <svg className="w-3 h-3 text-slate-600 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-                {modules.map(m => m.subModules.find(s => `${m.id}.${s.id}` === activeModule))
-                  .filter(Boolean)
-                  .map(subModule => (
-                    <span key={subModule.id} 
-                      className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800/50 text-gray-200 border border-gray-700/50">
-                      {subModule.title}
-                    </span>
-                  ))}
-              </div>
-              <div className="flex items-center gap-2">
-                {!isMobile && (
-                  <button
-                    onClick={toggleEditor}
-                    className="p-2 rounded-lg bg-gray-800/50 text-gray-300 hover:text-gray-100 
-                      hover:bg-gray-700/50 transition-colors duration-200 border border-gray-700/50"
-                    title="Open Code Editor"
-                  >
-                    <Code size={20} />
-                  </button>
-                )}
-                {isMobile && (
-                  <button
-                    onClick={toggleSidebar}
-                    className="p-2 rounded-lg bg-gray-800/50 text-gray-400 
-                      hover:text-gray-200 transition-colors duration-200 
-                      border border-gray-700/50"
-                    title="Toggle Menu"
-                  >
-                    <Menu size={18} />
-                  </button>
-                )}
               </div>
             </div>
-          </div>
 
-          {isEditorOpen ? (
-            <CodingArea onClose={toggleEditor} />
-          ) : (
-            <div className="flex-1 overflow-hidden">
-              <AnimatePresence 
-                mode="wait" 
-                initial={false} 
-                custom={swipeDirection}
-                onExitComplete={() => {
-                  // Reset scroll position after animation completes
-                  const contentArea = document.querySelector('.content-scroll-area');
-                  if (contentArea) {
-                    contentArea.scrollTop = 0;
-                  }
-                }}
-              >
-                <motion.div
-                  key={location.pathname}
+            {isEditorOpen ? (
+              <CodingArea onClose={toggleEditor} />
+            ) : (
+              <div className="flex-1 overflow-hidden">
+                <AnimatePresence 
+                  mode="wait" 
+                  initial={false} 
                   custom={swipeDirection}
-                  variants={pageTransitionVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  className="h-full overflow-y-auto content-scroll-area"
-                  style={{
-                    isolation: 'isolate', // Create new stacking context
-                    backfaceVisibility: 'hidden', // Prevent flickering
-                    WebkitBackfaceVisibility: 'hidden'
+                  onExitComplete={() => {
+                    // Reset scroll position after animation completes
+                    const contentArea = document.querySelector('.content-scroll-area');
+                    if (contentArea) {
+                      contentArea.scrollTop = 0;
+                    }
                   }}
                 >
-                  <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
-                    <div className="prose prose-invert max-w-none
-                      prose-headings:text-gray-100 
-                      prose-h1:text-xl sm:prose-h1:text-2xl md:prose-h1:text-3xl
-                      prose-h2:text-lg sm:prose-h2:text-xl md:prose-h2:text-2xl
-                      prose-p:text-gray-300 
-                      prose-p:text-sm sm:prose-p:text-base
-                      prose-strong:text-gray-200
-                      prose-code:text-gray-300 
-                      prose-code:bg-gray-800/50
-                      prose-code:px-1.5 
-                      prose-code:py-0.5 
-                      prose-code:text-sm
-                      prose-code:rounded-md
-                      prose-a:text-gray-300 
-                      prose-a:no-underline 
-                      prose-a:hover:text-gray-100
-                      prose-li:text-gray-300
-                      prose-li:text-sm sm:prose-li:text-base
-                      prose-pre:bg-gray-800/50
-                      prose-pre:border
-                      prose-pre:border-gray-700/50
-                      prose-pre:p-3 sm:prose-pre:p-4
-                      prose-pre:text-sm sm:prose-pre:text-base
-                      prose-img:rounded-lg">
-                      <Routes>
-                        <Route 
-                          index 
-                          element={<WelcomePage />} 
-                        />
-                        {modules.map((module) =>
-                          module.subModules.map((subModule) => (
-                            <Route
-                              key={`${module.id}-${subModule.id}`}
-                              path={`${module.id}/${subModule.id}`}
-                              element={
-                                <ErrorBoundary>
-                                  <React.Suspense fallback={<LoadingSpinner />}>
-                                    <>
-                                      <subModule.component />
-                                      <div className="mt-8 flex justify-end">
-                                        <NextButton 
-                                          nextModule={findNextModule(module.id, subModule.id)} 
-                                          onNext={navigateToContent}
-                                        />
-                                      </div>
-                                    </>
-                                  </React.Suspense>
-                                </ErrorBoundary>
-                              }
-                            />
-                          ))
-                        )}
-                        <Route 
-                          path="*" 
-                          element={
-                            <div className="text-center p-8">
-                              <h1>Topic Not Found</h1>
-                              <p>The requested topic could not be found.</p>
-                            </div>
-                          } 
-                        />
-                      </Routes>
+                  <motion.div
+                    key={location.pathname}
+                    custom={swipeDirection}
+                    variants={pageTransitionVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    className="h-full overflow-y-auto content-scroll-area"
+                    style={{
+                      isolation: 'isolate', // Create new stacking context
+                      backfaceVisibility: 'hidden', // Prevent flickering
+                      WebkitBackfaceVisibility: 'hidden'
+                    }}
+                  >
+                    <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
+                      <div className="prose prose-invert max-w-none
+                        prose-headings:text-gray-100 
+                        prose-h1:text-xl sm:prose-h1:text-2xl md:prose-h1:text-3xl
+                        prose-h2:text-lg sm:prose-h2:text-xl md:prose-h2:text-2xl
+                        prose-p:text-gray-300 
+                        prose-p:text-sm sm:prose-p:text-base
+                        prose-strong:text-gray-200
+                        prose-code:text-gray-300 
+                        prose-code:bg-gray-800/50
+                        prose-code:px-1.5 
+                        prose-code:py-0.5 
+                        prose-code:text-sm
+                        prose-code:rounded-md
+                        prose-a:text-gray-300 
+                        prose-a:no-underline 
+                        prose-a:hover:text-gray-100
+                        prose-li:text-gray-300
+                        prose-li:text-sm sm:prose-li:text-base
+                        prose-pre:bg-gray-800/50
+                        prose-pre:border
+                        prose-pre:border-gray-700/50
+                        prose-pre:p-3 sm:prose-pre:p-4
+                        prose-pre:text-sm sm:prose-pre:text-base
+                        prose-img:rounded-lg">
+                        <Routes>
+                          <Route 
+                            index 
+                            element={<WelcomePage />} 
+                          />
+                          {modules.map((module) =>
+                            module.subModules.map((subModule) => (
+                              <Route
+                                key={`${module.id}-${subModule.id}`}
+                                path={`${module.id}/${subModule.id}`}
+                                element={
+                                  <ErrorBoundary>
+                                    <React.Suspense fallback={<LoadingSpinner />}>
+                                      <>
+                                        <subModule.component />
+                                        <div className="mt-8 flex justify-end">
+                                          <NextButton 
+                                            nextModule={findNextModule(module.id, subModule.id)} 
+                                            onNext={navigateToContent}
+                                          />
+                                        </div>
+                                      </>
+                                    </React.Suspense>
+                                  </ErrorBoundary>
+                                }
+                              />
+                            ))
+                          )}
+                          <Route 
+                            path="*" 
+                            element={
+                              <div className="text-center p-8">
+                                <h1>Topic Not Found</h1>
+                                <p>The requested topic could not be found.</p>
+                              </div>
+                            } 
+                          />
+                        </Routes>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+      
+      {/* Portal container for modals */}
+      <div id="modal-root" className="relative z-[100]">
+        {/* Any modals from child components will be rendered here */}
+      </div>
+    </>
   );
 };
 

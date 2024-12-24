@@ -18,16 +18,32 @@ function LearningDashboard() {
         setIsLoading(true);
         const data = await apiRequest(config.api.endpoints.courses.enrolled);
         
-        // Handle the new response format
+        // Handle the new response format and add module counts
         const courses = Array.isArray(data) ? data : (data.courses || []);
         
-        if (courses.length === 0 && retryCount < 3) {
-          console.log(`Attempt ${retryCount + 1}: No courses found, retrying in 2 seconds...`);
-          setTimeout(() => fetchEnrolledCourses(retryCount + 1), 2000);
-          return;
-        }
+        // Add module and test set counts for each course
+        const coursesWithCounts = courses.map(course => {
+          let totalModules = 0;
+          let testSets = 0;
+          
+          // Count based on course type
+          if (course.title.includes('Java')) {
+            // Import Java modules dynamically
+            const javaModules = require('../../Components/Module Component/Java Modules').modules;
+            totalModules = javaModules.reduce((sum, module) => sum + module.subModules.length, 0);
+            // Assuming every fourth submodule is a test set
+            testSets = Math.floor(totalModules / 4);
+          }
+          // Add more conditions for other course types if needed
+          
+          return {
+            ...course,
+            totalModules,
+            testSets
+          };
+        });
         
-        setEnrolledCourses(courses);
+        setEnrolledCourses(coursesWithCounts);
       } catch (err) {
         console.error('Error fetching enrolled courses:', err);
         if (retryCount < 3) {

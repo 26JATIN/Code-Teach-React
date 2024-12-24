@@ -221,7 +221,6 @@ function LearningDashboard() {
             </div>
           </motion.div>
         )}
-
         <div className="container mx-auto px-4 py-8">
           <motion.h1 
             initial={{ y: -20, opacity: 0 }}

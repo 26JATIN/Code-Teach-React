@@ -242,6 +242,12 @@ function LearningDashboard() {
                         </div>
                       </div>
 
+                      {/* Add module and test set counts */}
+                      <div className="flex items-center justify-between text-sm text-gray-500">
+                        <span>Total Modules: {course.totalModules || 0}</span>
+                        <span>Test Sets: {course.testSets || 0}</span>
+                      </div>
+
                       <div className="mt-4">
                         <div className="flex justify-between text-sm mb-1">
                           <span className="text-gray-600 dark:text-gray-400">Progress</span>

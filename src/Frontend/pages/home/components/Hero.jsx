@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from './ui/button';
 import { Code, Users, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const fadeInVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -65,6 +66,8 @@ const FEATURES = [
 ];
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="py-12 md:py-20 lg:py-32 overflow-hidden bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -84,7 +87,11 @@ const Hero = () => {
               Unlock your potential with interactive coding courses and expert guidance. Join thousands of developers transforming their careers through our innovative learning platform.
             </p>
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button size="lg" className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+              <Button 
+                size="lg" 
+                className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                onClick={() => navigate('/auth')}
+              >
                 Get Started
               </Button>
               <Button size="lg" variant="outline" className="rounded-full border-purple-600 text-purple-600 hover:bg-purple-100 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-900/30">

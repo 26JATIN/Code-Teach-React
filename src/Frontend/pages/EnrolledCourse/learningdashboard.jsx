@@ -18,23 +18,31 @@ function LearningDashboard() {
         setIsLoading(true);
         const data = await apiRequest(config.api.endpoints.courses.enrolled);
         
-        // Handle the new response format and add module counts
+        // Handle the new response format
         const courses = Array.isArray(data) ? data : (data.courses || []);
         
         // Add module and test set counts for each course
         const coursesWithCounts = courses.map(course => {
           let totalModules = 0;
           let testSets = 0;
-          
-          // Count based on course type
-          if (course.title.includes('Java')) {
-            // Import Java modules dynamically
-            const javaModules = require('../../Components/Module Component/Java Modules').modules;
-            totalModules = javaModules.reduce((sum, module) => sum + module.subModules.length, 0);
-            // Assuming every fourth submodule is a test set
-            testSets = Math.floor(totalModules / 4);
+
+          try {
+            // Dynamically import the modules based on course title
+            const courseModules = require(`../../Components/Module Component/${course.title.split(' ')[0]} Modules`).modules;
+            
+            // Count total modules
+            totalModules = courseModules.reduce((sum, module) => sum + module.subModules.length, 0);
+            
+            // Count test sets (modules that have "Practice Set" or "Test" in their titles)
+            testSets = courseModules.reduce((sum, module) => {
+              return sum + module.subModules.filter(sub => 
+                sub.title.toLowerCase().includes('practice set') || 
+                sub.title.toLowerCase().includes('test')
+              ).length;
+            }, 0);
+          } catch (err) {
+            console.warn(`Could not load modules for course: ${course.title}`, err);
           }
-          // Add more conditions for other course types if needed
           
           return {
             ...course,
@@ -42,6 +50,12 @@ function LearningDashboard() {
             testSets
           };
         });
+        
+        if (coursesWithCounts.length === 0 && retryCount < 3) {
+          console.log(`Attempt ${retryCount + 1}: No courses found, retrying in 2 seconds...`);
+          setTimeout(() => fetchEnrolledCourses(retryCount + 1), 2000);
+          return;
+        }
         
         setEnrolledCourses(coursesWithCounts);
       } catch (err) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, ChevronRight, ChevronDown, ArrowRight, Code } from 'lucide-react';
+import { Menu, ChevronRight, ChevronDown, ArrowRight, Code, ArrowLeft } from 'lucide-react';
 import { useMediaQuery } from 'react-responsive';
 import CodingArea from './codingarea';  // Add this import
 import { motion, AnimatePresence } from 'framer-motion'; // Add this import
@@ -461,6 +461,15 @@ const CourseLayout = ({
             <div className="sticky top-0 z-10 px-4 sm:px-6 py-3 border-b border-gray-800/50 bg-gray-900/80 backdrop-blur-xl flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <button
+                    onClick={() => navigate('/learning-dashboard')}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-800/50 
+                      text-gray-300 hover:text-gray-100 hover:bg-gray-700/50 
+                      transition-colors duration-200 border border-gray-700/50 text-sm"
+                  >
+                    <ArrowLeft size={16} />
+                    <span className="hidden sm:inline">Dashboard</span>
+                  </button>
                   <span className="text-gray-300 font-medium text-sm">{courseShortName}</span>
                   <svg className="w-3 h-3 text-slate-600 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

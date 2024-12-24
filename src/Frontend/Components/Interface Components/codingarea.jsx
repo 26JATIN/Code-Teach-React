@@ -4,6 +4,42 @@ import Editor from '@monaco-editor/react';
 import { debounce } from 'lodash';
 import { useMediaQuery } from 'react-responsive';  // Add this import
 
+// Add TerminalHandler class at the top
+class TerminalHandler {
+  constructor() {
+    this.inputs = [];
+    this.lastOutput = '';
+  }
+
+  clear() {
+    this.inputs = [];
+    this.lastOutput = '';
+  }
+
+  addInput(input) {
+    this.inputs.push(input);
+  }
+
+  getAllInputs() {
+    return this.inputs.join('\n');
+  }
+
+  isWaitingForInput(output) {
+    const inputPatterns = [
+      /\?[\s]*$/,
+      /:\s*$/,
+      /input/i,
+      /enter/i,
+      /Scanner/,
+      /nextLine|next\w+/
+    ];
+
+    const newOutput = output.substring(this.lastOutput.length);
+    this.lastOutput = output;
+
+    return inputPatterns.some(pattern => pattern.test(newOutput));
+  }
+}
 
 // Add download helper function
 const downloadCode = (content, filename) => {
@@ -76,6 +112,20 @@ const CodingArea = ({ onClose }) => {
   const [isFileExplorerOpen, setIsFileExplorerOpen] = useState(!isMobile);
   const fileExplorerRef = useRef(null);
 
+  // Add new state variables
+  const terminalHandler = useRef(new TerminalHandler());
+  const [terminalHistory, setTerminalHistory] = useState([]);
+  const [showInputSection, setShowInputSection] = useState(false);
+  const [expectedInputCount, setExpectedInputCount] = useState(0);
+  const [state, setState] = useState({
+    status: 'idle',
+    error: null,
+    currentInputIndex: 0,
+    expectedInputs: 0,
+    inputHistory: [],
+    historyIndex: -1
+  });
+
   useEffect(() => {
     localStorage.setItem('codeFiles', JSON.stringify(files));
   }, [files]);
@@ -108,7 +158,14 @@ const CodingArea = ({ onClose }) => {
     return true;
   }, []);
 
-  const executeCode = useCallback(async (fileContent, language) => {
+  // Add new utility function
+  const countExpectedInputs = useCallback((code) => {
+    const matches = code.match(/\b(nextInt|nextLine|nextDouble|nextFloat|nextBoolean|next|readLine|read)\b/g);
+    return matches ? matches.length : 0;
+  }, []);
+
+  // Modify executeCode function
+  const executeCode = useCallback(async (fileContent, language, inputs = '') => {
     if (!fileContent) return;
     setIsLoading(true);
     setError(null);
@@ -123,6 +180,7 @@ const CodingArea = ({ onClose }) => {
           return;
         }
       }
+
       const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -133,7 +191,7 @@ const CodingArea = ({ onClose }) => {
             name: isJava ? 'Main.java' : 'index.js',
             content: contentToExecute
           }],
-          stdin: input
+          stdin: inputs
         }),
       });
 
@@ -144,14 +202,62 @@ const CodingArea = ({ onClose }) => {
         return;
       }
 
-      setOutput(data.run.output || data.run.stderr);
+      const output = data.run.output || data.run.stderr;
+      setOutput(output);
+      setTerminalHistory(prev => [...prev, { type: 'output', content: output }]);
+
+      // Check if program is waiting for more input
+      if (terminalHandler.current.isWaitingForInput(output)) {
+        setState(prev => ({ ...prev, status: 'waiting_input' }));
+      } else {
+        setState(prev => ({ ...prev, status: 'idle' }));
+      }
+
     } catch (err) {
       setError('Failed to execute code. Please try again.');
+      setTerminalHistory(prev => [...prev, { type: 'error', content: err.message }]);
     } finally {
       setIsLoading(false);
-      setShowInputModal(false);
     }
-  }, [input, activeFile, validateJavaClassName, currentContent]);
+  }, [activeFile, currentContent, validateJavaClassName]);
+
+  // Add handleInput function
+  const handleInput = useCallback((inputValue) => {
+    if (!inputValue?.trim() || state.status !== 'waiting_input') return;
+
+    const terminal = terminalHandler.current;
+    terminal.addInput(inputValue.trim());
+
+    setTerminalHistory(prev => [...prev, 
+      { type: 'input', content: `> ${inputValue}` }
+    ]);
+
+    // Run with all collected inputs so far
+    executeCode(
+      activeFile.content,
+      activeFile.name.endsWith('.java') ? 'java' : 'javascript',
+      terminal.getAllInputs()
+    );
+  }, [state.status, activeFile, executeCode]);
+
+  // Modify the Run button click handler
+  const handleRunCode = useCallback(() => {
+    const terminal = terminalHandler.current;
+    terminal.clear();
+    setTerminalHistory([]);
+    
+    const inputCount = countExpectedInputs(currentContent);
+    if (inputCount > 0) {
+      setExpectedInputCount(inputCount);
+      setShowInputSection(true);
+      setTerminalHistory([{ type: 'system', content: '⚡ Waiting for inputs...' }]);
+      return;
+    }
+
+    setState(prev => ({ ...prev, status: 'running' }));
+    setTerminalHistory([{ type: 'system', content: '⚡ Running program...' }]);
+    executeCode(currentContent, activeFile.name.endsWith('.java') ? 'java' : 'javascript');
+  }, [currentContent, activeFile, countExpectedInputs, executeCode]);
 
   // Update handleFileChange to use a debounced execute
   const debouncedExecute = useCallback(
@@ -323,6 +429,60 @@ const CodingArea = ({ onClose }) => {
     };
   }, [isMobile]);
 
+  // Add InputSection component
+  const InputSection = () => {
+    const [inputValues, setInputValues] = useState(Array(expectedInputCount).fill(''));
+    
+    const handleSubmitInputs = (e) => {
+      e.preventDefault();
+      const nonEmptyInputs = inputValues.filter(input => input.trim() !== '');
+      if (nonEmptyInputs.length === expectedInputCount) {
+        executeCode(
+          currentContent,
+          activeFile.name.endsWith('.java') ? 'java' : 'javascript',
+          inputValues.join('\n')
+        );
+        setShowInputSection(false);
+      }
+    };
+
+    // Add the InputSection JSX in the existing terminal section
+    return (
+      <div className={`transform transition-all duration-300 ease-in-out overflow-hidden
+                      ${showInputSection ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="bg-gray-800/50 rounded-lg border border-gray-700/50 p-4 my-2">
+          <h3 className="text-sm text-gray-300 mb-3">Program requires {expectedInputCount} input(s)</h3>
+          <form onSubmit={handleSubmitInputs} className="space-y-3">
+            {Array(expectedInputCount).fill(0).map((_, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <span className="text-xs text-gray-400">Input {index + 1}:</span>
+                <input
+                  type="text"
+                  value={inputValues[index]}
+                  onChange={(e) => {
+                    const newValues = [...inputValues];
+                    newValues[index] = e.target.value;
+                    setInputValues(newValues);
+                  }}
+                  className="flex-1 bg-gray-900/90 border border-gray-700/50 rounded px-3 py-1.5
+                           text-sm text-gray-300 focus:outline-none focus:border-blue-500/50"
+                  placeholder={`Enter input ${index + 1}`}
+                />
+              </div>
+            ))}
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-blue-600/80 text-white rounded-md hover:bg-blue-700/80
+                       transition-all duration-200 text-sm font-medium"
+            >
+              Submit Inputs
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex-1 flex flex-col md:flex-row h-full bg-gradient-to-b from-gray-900 to-gray-950">
       {/* Mobile Header */}
@@ -430,8 +590,7 @@ const CodingArea = ({ onClose }) => {
                     icon={Play} 
                     label={isMobile ? '' : (isLoading ? 'Running...' : 'Run')}
                     variant="primary"
-                    onClick={() => executeCode(currentContent, 
-                      activeFile.name.endsWith('.java') ? 'java' : 'javascript')}
+                    onClick={handleRunCode}
                   />
                 </div>
               )}
@@ -502,21 +661,25 @@ const CodingArea = ({ onClose }) => {
 
           {/* Output Terminal - Responsive */}
           {activeFile && (
-            <div className="h-32 md:h-48 border-t border-gray-800/50 bg-gray-950/90">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800/30">
-                <span className="text-xs font-medium text-gray-400">Output Terminal</span>
-                {output && <ActionButton icon={Copy} label="Copy" onClick={() => navigator.clipboard.writeText(output)} />}
+            <>
+              {/* Add InputSection here, before the output terminal */}
+              <InputSection />
+              <div className="h-32 md:h-48 border-t border-gray-800/50 bg-gray-950/90">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800/30">
+                  <span className="text-xs font-medium text-gray-400">Output Terminal</span>
+                  {output && <ActionButton icon={Copy} label="Copy" onClick={() => navigator.clipboard.writeText(output)} />}
+                </div>
+                <div className="p-4 font-mono text-sm h-36 overflow-auto">
+                  {error ? (
+                    <span className="text-red-400">{error}</span>
+                  ) : output ? (
+                    <span className="text-green-400 whitespace-pre-wrap">{output}</span>
+                  ) : (
+                    <span className="text-gray-500">Run your code to see the output here...</span>
+                  )}
+                </div>
               </div>
-              <div className="p-4 font-mono text-sm h-36 overflow-auto">
-                {error ? (
-                  <span className="text-red-400">{error}</span>
-                ) : output ? (
-                  <span className="text-green-400 whitespace-pre-wrap">{output}</span>
-                ) : (
-                  <span className="text-gray-500">Run your code to see the output here...</span>
-                )}
-              </div>
-            </div>
+            </>
           )}
         </div>
       </div>

@@ -5,6 +5,24 @@ import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
 import config, { apiRequest, getAuthToken } from '../../../config/config';
 
+const getModulesForCourse = (courseTitle) => {
+  // Map course titles to their respective module files
+  const moduleMap = {
+    'Java': require('../../Components/Module Component/Java Modules').modules,
+    'C++': require('../../Components/Module Component/Cpp Modules').modules,
+    // Add other courses here as they are created
+    // 'Python': require('../../Components/Module Component/Python Modules').modules,
+    // 'JavaScript': require('../../Components/Module Component/JavaScript Modules').modules,
+  };
+
+  // Get the course key (e.g., "Java" from "Java Programming")
+  const courseKey = Object.keys(moduleMap).find(key => 
+    courseTitle.toLowerCase().includes(key.toLowerCase())
+  );
+
+  return courseKey ? moduleMap[courseKey] : null;
+};
+
 function LearningDashboard() {
   const [showConfirmation, setShowConfirmation] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,19 +45,22 @@ function LearningDashboard() {
           let testSets = 0;
 
           try {
-            // Dynamically import the modules based on course title
-            const courseModules = require(`../../Components/Module Component/${course.title.split(' ')[0]} Modules`).modules;
+            const courseModules = getModulesForCourse(course.title);
             
-            // Count total modules
-            totalModules = courseModules.reduce((sum, module) => sum + module.subModules.length, 0);
-            
-            // Count test sets (modules that have "Practice Set" or "Test" in their titles)
-            testSets = courseModules.reduce((sum, module) => {
-              return sum + module.subModules.filter(sub => 
-                sub.title.toLowerCase().includes('practice set') || 
-                sub.title.toLowerCase().includes('test')
-              ).length;
-            }, 0);
+            if (courseModules) {
+              // Count total modules
+              totalModules = courseModules.reduce((sum, module) => 
+                sum + module.subModules.length, 0
+              );
+              
+              // Count test sets
+              testSets = courseModules.reduce((sum, module) => {
+                return sum + module.subModules.filter(sub => 
+                  sub.title.toLowerCase().includes('practice set') || 
+                  sub.title.toLowerCase().includes('test')
+                ).length;
+              }, 0);
+            }
           } catch (err) {
             console.warn(`Could not load modules for course: ${course.title}`, err);
           }

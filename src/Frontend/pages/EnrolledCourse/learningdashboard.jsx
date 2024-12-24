@@ -10,6 +10,8 @@ const getModulesForCourse = (courseTitle) => {
   const moduleMap = {
     'Java': require('../../Components/Module Component/Java Modules').modules,
     'C++': require('../../Components/Module Component/Cpp Modules').modules,
+    'DSA': require('../../Components/Module Component/DSA Modules').modules,
+    "web development": require('../../Components/Module Component/Web Development Modules').modules,
     // Add other courses here as they are created
     // 'Python': require('../../Components/Module Component/Python Modules').modules,
     // 'JavaScript': require('../../Components/Module Component/JavaScript Modules').modules,

@@ -96,7 +96,6 @@ const WelcomePage = () => {
     </div>
   );
 };
-
 // Ensure CourseLayout component renders modals outside the main layout
 const CourseLayout = ({ 
   courseName, 

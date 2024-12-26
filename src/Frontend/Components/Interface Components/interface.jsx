@@ -134,7 +134,6 @@ const CourseLayout = ({
       setExpandedModules(prev => ({ ...prev, [moduleId]: true }));
     }
   }, [location.pathname]);
-
   const toggleModule = (moduleId) => {
     setExpandedModules((prev) => ({
       ...prev,

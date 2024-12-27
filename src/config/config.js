@@ -13,7 +13,8 @@ const config = {
         verifyEmail: '/auth/verify-email',
         resendOtp: '/auth/resend-otp',
         forgotPassword: '/auth/forgot-password',
-        resetPassword: '/auth/reset-password'
+        resetPassword: '/auth/reset-password',
+        verifyResetOtp: '/auth/verify-reset-otp'
       },
       courses: {
         list: '/api/courses',

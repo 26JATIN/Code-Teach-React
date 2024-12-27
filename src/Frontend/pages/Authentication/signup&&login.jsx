@@ -13,6 +13,9 @@ const AuthPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
   const [otp, setOtp] = useState('');
+  const [resetStep, setResetStep] = useState('email'); // 'email', 'otp', 'newPassword'
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -189,24 +192,58 @@ const AuthPage = () => {
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.auth.forgotPassword}`, {
+      await apiRequest(config.api.endpoints.auth.forgotPassword, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email })
       });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to process request');
-      }
-
-      setIsVerifying(true);
-      alert('Password reset instructions sent to your email');
-      
+      setResetStep('otp');
+      alert('Password reset code sent to your email');
     } catch (error) {
       console.error('Forgot password error:', error);
       alert(error.message || 'Failed to process forgot password request');
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+
+    if (resetStep === 'otp') {
+      try {
+        await apiRequest(config.api.endpoints.auth.verifyResetOtp, {
+          method: 'POST',
+          body: JSON.stringify({ email, otp })
+        });
+        setResetStep('newPassword');
+      } catch (error) {
+        alert(error.message || 'Invalid reset code');
+      }
+      return;
+    }
+
+    if (resetStep === 'newPassword') {
+      if (newPassword !== confirmNewPassword) {
+        alert('Passwords do not match');
+        return;
+      }
+
+      try {
+        await apiRequest(config.api.endpoints.auth.resetPassword, {
+          method: 'POST',
+          body: JSON.stringify({ 
+            email, 
+            otp,
+            newPassword 
+          })
+        });
+
+        alert('Password reset successful! Please login with your new password.');
+        setIsForgotPassword(false);
+        setResetStep('email');
+        setIsLogin(true);
+      } catch (error) {
+        alert(error.message || 'Failed to reset password');
+      }
     }
   };
 
@@ -214,34 +251,127 @@ const AuthPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
         <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="mx-auto h-16 w-16 rounded-xl bg-blue-600 dark:bg-blue-500 flex items-center justify-center mb-6"
+          >
+            <Book className="h-8 w-8 text-white" />
+          </motion.div>
+
           <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-gray-100">
             Reset Password
           </h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
-            Enter your email address to receive password reset instructions
-          </p>
-          <form onSubmit={handleForgotPassword} className="space-y-6">
-            <input
-              type="email"
-              required
-              placeholder="Email address"
-              className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+
+          {resetStep === 'email' && (
+            <form onSubmit={handleForgotPassword} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold"
+              >
+                Send Reset Code
+              </button>
+            </form>
+          )}
+
+          {resetStep === 'otp' && (
+            <form onSubmit={handleResetPassword} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Verification Code
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter verification code"
+                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  maxLength={6}
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold"
+              >
+                Verify Code
+              </button>
+            </form>
+          )}
+
+          {resetStep === 'newPassword' && (
+            <form onSubmit={handleResetPassword} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter new password"
+                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={6}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Confirm new password"
+                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  minLength={6}
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold"
+              >
+                Reset Password
+              </button>
+            </form>
+          )}
+
+          <div className="mt-6 flex justify-between">
             <button
-              type="submit"
-              className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold"
+              onClick={() => {
+                if (resetStep === 'otp') {
+                  handleResendOTP();
+                }
+              }}
+              className="text-sm text-blue-600 hover:text-blue-700"
             >
-              Send Reset Link
+              {resetStep === 'otp' && "Resend code"}
             </button>
-          </form>
-          <button
-            onClick={() => setIsForgotPassword(false)}
-            className="mt-4 w-full text-blue-600 hover:text-blue-700 text-sm"
-          >
-            Back to login
-          </button>
+            <button
+              onClick={() => {
+                setIsForgotPassword(false);
+                setResetStep('email');
+              }}
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
+              Back to login
+            </button>
+          </div>
         </div>
       </div>
     );

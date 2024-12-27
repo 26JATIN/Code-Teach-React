@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, memo, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { ThemeProvider } from './Frontend/Components/ThemeProvider';
-import { isAuthenticated, apiRequest, config } from './config/config';  // Add apiRequest and config imports
+import { isAuthenticated, apiRequest, config } from './config/config';  // Use named imports
 
 // Custom loading component
 const LoadingSpinner = memo(() => (

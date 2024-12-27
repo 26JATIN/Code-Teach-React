@@ -343,12 +343,35 @@ const CourseLayout = ({
     })
   };
 
+  const extractCourseId = useCallback((pathname) => {
+    // Try different path patterns
+    const patterns = [
+      /\/course\/([^/]+)/,  // matches /course/:courseId/...
+      /\/modules\/([^/]+)/, // matches /modules/:courseName/...
+      /\/([^/]+)\/modules/  // matches /:courseId/modules/...
+    ];
+
+    for (const pattern of patterns) {
+      const match = pathname.match(pattern);
+      if (match) {
+        return match[1];
+      }
+    }
+
+    // If no patterns match, try to get it from basePath
+    const basePathMatch = basePath.match(/\/course\/([^/]+)/);
+    if (basePathMatch) {
+      return basePathMatch[1];
+    }
+
+    console.error('Could not extract course ID from paths:', { pathname, basePath });
+    return null;
+  }, [basePath]);
+
   // Add this function to mark a module as complete
   const markModuleAsComplete = useCallback(async (moduleId, subModuleId) => {
     try {
-      // Extract courseId from path using regex to avoid duplicate declaration
-      const match = location.pathname.match(/\/modules\/([^/]+)/);
-      const courseId = match ? match[1] : null;
+      const courseId = extractCourseId(location.pathname);
 
       if (!courseId) {
         console.error('Could not extract course ID from path:', location.pathname);
@@ -372,7 +395,7 @@ const CourseLayout = ({
     } catch (error) {
       console.error('Error updating progress:', error);
     }
-  }, [location.pathname, modules]);
+  }, [location.pathname, modules, extractCourseId]);
 
   // Add progress to NextButton component
   const NextButton = memo(({ nextModule, onNext }) => {

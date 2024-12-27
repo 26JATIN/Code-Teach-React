@@ -532,7 +532,6 @@ const CourseLayout = ({
       }
     };
   }, [location.pathname, markModuleAsComplete, hasMarkedComplete]);
-
   // Reset hasMarkedComplete when route changes
   useEffect(() => {
     setHasMarkedComplete(false);

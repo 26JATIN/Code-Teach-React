@@ -173,18 +173,18 @@ function LearningDashboard() {
       return;
     }
   
+    // Get course modules - Move this outside try block so it's available in catch
+    const courseModules = getModulesForCourse(course.title);
+    if (!courseModules) {
+      console.error('No modules found for course:', course.title);
+      return;
+    }
+
     try {
       // Update last accessed time
       await apiRequest(config.api.endpoints.courses.lastAccessed(course._id), {
         method: 'PUT'
       });
-
-      // Get course modules - Move this outside try block so it's available in catch
-      const courseModules = getModulesForCourse(course.title);
-      if (!courseModules) {
-        console.error('No modules found for course:', course.title);
-        return;
-      }
 
       // Fetch current progress from backend
       const progressResponse = await apiRequest(config.api.endpoints.courses.progress(course._id), {

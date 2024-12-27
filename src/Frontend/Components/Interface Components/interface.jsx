@@ -119,6 +119,7 @@ const CourseLayout = ({
   modules, 
   basePath = "" 
 }) => {
+  
   const isMobile = useMediaQuery({ maxWidth: 768 });
   const [isMenuOpen, setIsMenuOpen] = useState(!isMobile);
   const [expandedModules, setExpandedModules] = useState({});

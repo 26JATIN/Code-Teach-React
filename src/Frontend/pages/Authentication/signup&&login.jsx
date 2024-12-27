@@ -15,9 +15,42 @@ const AuthPage = () => {
   const [otp, setOtp] = useState('');
   const navigate = useNavigate();
 
+  const validateForm = () => {
+    // Password validation
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters long');
+      return false;
+    }
+
+    // Additional validation for signup
+    if (!isLogin) {
+      if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return false;
+      }
+
+      if (username.length < 3) {
+        alert('Username must be at least 3 characters long');
+        return false;
+      }
+
+      // Username format validation
+      if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+        alert('Username can only contain letters, numbers, underscores and hyphens');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!validateForm()) {
+      return;
+    }
+
     if (isLogin) {
       // Existing login logic
       if (password.length < 6) {
@@ -93,10 +126,19 @@ const AuthPage = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.auth.verifyEmail}`, {
+      // For both email verification and password reset
+      const endpoint = isForgotPassword 
+        ? config.api.endpoints.auth.resetPassword
+        : config.api.endpoints.auth.verifyEmail;
+
+      const body = isForgotPassword
+        ? { email, otp, newPassword: password }
+        : { email, otp };
+
+      const response = await fetch(`${config.api.baseUrl}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -105,9 +147,16 @@ const AuthPage = () => {
         throw new Error(data.message || 'Verification failed');
       }
 
-      setAuthToken(data.token);
-      setUser(data.user);
-      navigate('/learning-dashboard');
+      if (isForgotPassword) {
+        alert('Password reset successful! Please login with your new password.');
+        setIsForgotPassword(false);
+        setIsVerifying(false);
+        setIsLogin(true);
+      } else {
+        setAuthToken(data.token);
+        setUser(data.user);
+        navigate('/learning-dashboard');
+      }
       
     } catch (error) {
       console.error('Verification error:', error);
@@ -272,44 +321,67 @@ const AuthPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Username
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="Username"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300"
+                  placeholder="Choose a username"
+                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  minLength={3}
+                  pattern="[a-zA-Z0-9_-]+"
+                  title="Username can only contain letters, numbers, underscores and hyphens"
                 />
               </motion.div>
             )}
 
-            <input
-              type="email"
-              required
-              placeholder="Email address"
-              className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Email address
+              </label>
+              <input
+                type="email"
+                required
+                placeholder="Enter your email"
+                className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-            <input
-              type="password"
-              required
-              placeholder="Password"
-              className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-
-            {!isLogin && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Password
+              </label>
               <input
                 type="password"
                 required
-                placeholder="Confirm Password"
-                className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder={isLogin ? "Enter password" : "Choose password"}
+                className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
               />
+            </div>
+
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Confirm your password"
+                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={6}
+                />
+              </div>
             )}
           </div>
 

@@ -11,7 +11,9 @@ const config = {
         signin: '/auth/signin',
         signup: '/auth/signup',
         verifyEmail: '/auth/verify-email',
-        resendOtp: '/auth/resend-otp'
+        resendOtp: '/auth/resend-otp',
+        forgotPassword: '/auth/forgot-password',
+        resetPassword: '/auth/reset-password'
       },
       courses: {
         list: '/api/courses',

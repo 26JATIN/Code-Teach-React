@@ -7,8 +7,10 @@ import config, { apiRequest, setAuthToken, setUser } from '../../../config/confi
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
   const [otp, setOtp] = useState('');
   const navigate = useNavigate();
@@ -57,6 +59,12 @@ const AuthPage = () => {
         console.error('Auth error:', error);
         alert(error.message || 'An unexpected error occurred. Please try again.');
       }
+      return;
+    }
+
+    // Signup validation
+    if (password !== confirmPassword) {
+      alert('Passwords do not match');
       return;
     }
 
@@ -128,6 +136,67 @@ const AuthPage = () => {
       alert(error.message || 'Failed to resend verification code');
     }
   };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.auth.forgotPassword}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to process request');
+      }
+
+      setIsVerifying(true);
+      alert('Password reset instructions sent to your email');
+      
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      alert(error.message || 'Failed to process forgot password request');
+    }
+  };
+
+  if (isForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+          <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-gray-100">
+            Reset Password
+          </h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+            Enter your email address to receive password reset instructions
+          </p>
+          <form onSubmit={handleForgotPassword} className="space-y-6">
+            <input
+              type="email"
+              required
+              placeholder="Email address"
+              className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold"
+            >
+              Send Reset Link
+            </button>
+          </form>
+          <button
+            onClick={() => setIsForgotPassword(false)}
+            className="mt-4 w-full text-blue-600 hover:text-blue-700 text-sm"
+          >
+            Back to login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isVerifying) {
     return (
@@ -231,7 +300,30 @@ const AuthPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+
+            {!isLogin && (
+              <input
+                type="password"
+                required
+                placeholder="Confirm Password"
+                className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            )}
           </div>
+
+          {isLogin && (
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => setIsForgotPassword(true)}
+                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
 
           <motion.button
             whileHover={{ scale: 1.02 }}

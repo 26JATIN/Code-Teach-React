@@ -221,7 +221,6 @@ function LearningDashboard() {
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-200 dark:from-gray-900 dark:to-gray-800">
         <Header />
-        
         {/* Confirmation Modal */}
         {showConfirmation && (
           <motion.div 

@@ -34,6 +34,31 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
+const CourseSelector = ({ courseId }) => {
+  // Map course IDs to their respective components
+  const courseComponents = {
+    java: LearnJava,
+    cpp: LearnCpp,
+    // Add other course mappings here
+  };
+
+  // Find the course type from the courseId or URL
+  const getCourseComponent = () => {
+    // You can implement your logic here to determine which course component to render
+    if (courseId.toLowerCase().includes('java')) return LearnJava;
+    if (courseId.toLowerCase().includes('cpp')) return LearnCpp;
+    return null;
+  };
+
+  const CourseComponent = getCourseComponent();
+  
+  if (!CourseComponent) {
+    return <Navigate to="/courses" replace />;
+  }
+
+  return <CourseComponent />;
+};
+
 const App = () => {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="app-theme">
@@ -55,15 +80,10 @@ const App = () => {
                 <Courses />
               </ProtectedRoute>
             } />
-            {/* Update these course routes to use the new pattern */}
+            {/* Replace the two separate course routes with a single route */}
             <Route path="/course/:courseId/*" element={
               <ProtectedRoute>
-                <LearnJava />
-              </ProtectedRoute>
-            } />
-            <Route path="/course/:courseId/*" element={
-              <ProtectedRoute>
-                <LearnCpp />
+                <CourseSelector />
               </ProtectedRoute>
             } />
             <Route path="/learning-dashboard" element={

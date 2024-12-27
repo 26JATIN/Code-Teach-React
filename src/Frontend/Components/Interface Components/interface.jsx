@@ -4,7 +4,8 @@ import { Menu, ChevronRight, ChevronDown, ArrowRight, Code, ArrowLeft } from 'lu
 import { useMediaQuery } from 'react-responsive';
 import CodingArea from './codingarea';  // Add this import
 import { motion, AnimatePresence } from 'framer-motion'; // Add this import
-import { apiRequest, config } from '../../../config/config';  // Use named imports
+import config from '../../../config/config';  // Default import
+import { apiRequest } from '../../../config/config';  // Named import
 // Internal ModuleButton component
 const ModuleButton = ({ module, isExpanded, toggleModule }) => (
   <button

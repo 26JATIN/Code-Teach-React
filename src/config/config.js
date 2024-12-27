@@ -37,7 +37,7 @@ const config = {
 };
 
 // Helper functions
-export const getAuthToken = () => {
+const getAuthToken = () => {
   try {
     return localStorage.getItem(config.storage.keys.token);
   } catch (error) {
@@ -46,7 +46,7 @@ export const getAuthToken = () => {
   }
 };
 
-export const setAuthToken = (token) => {
+const setAuthToken = (token) => {
   try {
     if (token) {
       localStorage.setItem(config.storage.keys.token, token);
@@ -56,7 +56,7 @@ export const setAuthToken = (token) => {
   }
 };
 
-export const getUser = () => {
+const getUser = () => {
   try {
     const userStr = localStorage.getItem(config.storage.keys.user);
     return userStr ? JSON.parse(userStr) : null;
@@ -66,7 +66,7 @@ export const getUser = () => {
   }
 };
 
-export const setUser = (user) => {
+const setUser = (user) => {
   try {
     if (user) {
       localStorage.setItem(config.storage.keys.user, JSON.stringify(user));
@@ -76,7 +76,7 @@ export const setUser = (user) => {
   }
 };
 
-export const clearAuth = () => {
+const clearAuth = () => {
   try {
     localStorage.removeItem(config.storage.keys.token);
     localStorage.removeItem(config.storage.keys.user);
@@ -85,7 +85,7 @@ export const clearAuth = () => {
   }
 };
 
-export const isAuthenticated = () => {
+const isAuthenticated = () => {
   try {
     const token = getAuthToken();
     return Boolean(token);
@@ -95,7 +95,7 @@ export const isAuthenticated = () => {
   }
 };
 
-export const apiRequest = async (endpoint, options = {}) => {
+const apiRequest = async (endpoint, options = {}) => {
   const token = getAuthToken();
   
   const defaultOptions = {
@@ -163,14 +163,14 @@ try {
   // Continue using defaults
 }
 
-// Single export statement at the end - remove the duplicate export
+// Single consolidated export at the end
 export { 
-  apiRequest, 
   getAuthToken, 
   setAuthToken,
   getUser,
   setUser,
   clearAuth,
   isAuthenticated,
-  config as default // Export config as both named and default
+  apiRequest,
+  config 
 };

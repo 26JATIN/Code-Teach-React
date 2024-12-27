@@ -346,10 +346,9 @@ const CourseLayout = ({
   // Add this function to mark a module as complete
   const markModuleAsComplete = useCallback(async (moduleId, subModuleId) => {
     try {
-      // Extract courseId from path - updated path extraction
-      const pathParts = location.pathname.split('/');
-      const courseIdIndex = pathParts.indexOf('course') + 1;
-      const courseId = pathParts[courseIdIndex];
+      // Extract courseId from path using regex to avoid duplicate declaration
+      const match = location.pathname.match(/\/modules\/([^/]+)/);
+      const courseId = match ? match[1] : null;
 
       if (!courseId) {
         console.error('Could not extract course ID from path:', location.pathname);
@@ -368,14 +367,10 @@ const CourseLayout = ({
       });
 
       console.log('Progress update response:', response);
-
-      // Update local state to reflect completion
       setCompletedModules(prev => new Set([...prev, `${moduleId}.${subModuleId}`]));
 
     } catch (error) {
       console.error('Error updating progress:', error);
-      // Don't throw the error - just log it and continue
-      // This prevents the UI from breaking if progress update fails
     }
   }, [location.pathname, modules]);
 

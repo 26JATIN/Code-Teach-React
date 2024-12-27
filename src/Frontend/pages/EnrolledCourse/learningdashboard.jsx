@@ -4,6 +4,7 @@ import { BookOpen, Clock, Award, XCircle, Code, Book, FileText } from 'lucide-re
 import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
 import config, { apiRequest } from '../../../config/config';
+import { useNavigate } from 'react-router-dom';
 
 const getModulesForCourse = (courseTitle) => {
   // Map course titles to their respective module files
@@ -167,6 +168,14 @@ function LearningDashboard() {
       hour: '2-digit', 
       minute: '2-digit' 
     });
+  };
+
+  const navigate = useNavigate();
+
+  const handleContinueLearning = (course) => {
+    // Update the path to match the new course route structure
+    const coursePath = `/course/${course._id}/modules`;
+    navigate(coursePath);
   };
 
   if (isLoading) {
@@ -334,7 +343,7 @@ function LearningDashboard() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className="w-full mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center justify-center"
-                        onClick={() => window.location.href = course.path}
+                        onClick={() => handleContinueLearning(course)}
                       >
                         <BookOpen size={16} className="mr-2" />
                         Continue Learning

@@ -1,17 +1,19 @@
 import React from 'react';
+import { useParams } from 'react-router-dom';
 import CourseLayout from '../../Frontend/Components/Interface Components/interface';
 import { modules } from '../../Frontend/Components/Module Component/Java Modules';
 
 const LearnJava = () => {
+  const { courseId } = useParams();
+  
   return (
     <CourseLayout 
-      courseName="Learn Java"
-      courseShortName="J"
+      courseName="Java Programming" 
+      courseShortName="Java" 
       modules={modules}
-      basePath="/modules/java"
+      basePath={`/course/${courseId}/modules`}
     />
   );
 };
-
 
 export default LearnJava;

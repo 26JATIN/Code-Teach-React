@@ -6,55 +6,95 @@ import config, { apiRequest, setAuthToken, setUser } from '../../../config/confi
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [otp, setOtp] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation using config
-    if (!isLogin && username.length < 3) {
-      alert('Username must be at least 3 characters long');
-      return;
-    }
-    
-    if (password.length < 6) {
-      alert('Password must be at least 6 characters long');
+    if (isLogin) {
+      // Existing login logic
+      if (password.length < 6) {
+        alert('Password must be at least 6 characters long');
+        return;
+      }
+
+      const endpoint = config.api.endpoints.auth.signin;
+      
+      try {
+        const response = await fetch(`${config.api.baseUrl}${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          // Handle specific error cases
+          if (response.status === 401) {
+            throw new Error('Invalid email or password');
+          } else {
+            throw new Error(data.message || data.error || 'Authentication failed');
+          }
+        }
+
+        if (!data.token || !data.user) {
+          throw new Error('Invalid response from server');
+        }
+
+        setAuthToken(data.token);
+        setUser(data.user);
+        navigate('/learning-dashboard');
+        
+      } catch (error) {
+        console.error('Auth error:', error);
+        alert(error.message || 'An unexpected error occurred. Please try again.');
+      }
       return;
     }
 
-    const endpoint = isLogin ? config.api.endpoints.auth.signin : config.api.endpoints.auth.signup;
-    
     try {
-      const response = await fetch(`${config.api.baseUrl}${endpoint}`, {
+      const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.auth.signup}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(
-          isLogin 
-            ? { email, password }
-            : { email, password, username }
-        ),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, username }),
       });
 
       const data = await response.json();
       
       if (!response.ok) {
-        // Handle specific error cases
-        if (response.status === 401) {
-          throw new Error('Invalid email or password');
-        } else if (response.status === 409) {
-          throw new Error('Email already exists');
-        } else {
-          throw new Error(data.message || data.error || 'Authentication failed');
-        }
+        throw new Error(data.message || 'Signup failed');
       }
 
-      if (!data.token || !data.user) {
-        throw new Error('Invalid response from server');
+      setIsVerifying(true);
+      
+    } catch (error) {
+      console.error('Auth error:', error);
+      alert(error.message || 'An unexpected error occurred');
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.auth.verifyEmail}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Verification failed');
       }
 
       setAuthToken(data.token);
@@ -62,10 +102,70 @@ const AuthPage = () => {
       navigate('/learning-dashboard');
       
     } catch (error) {
-      console.error('Auth error:', error);
-      alert(error.message || 'An unexpected error occurred. Please try again.');
+      console.error('Verification error:', error);
+      alert(error.message || 'Verification failed');
     }
   };
+
+  const handleResendOTP = async () => {
+    try {
+      const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.auth.resendOtp}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to resend code');
+      }
+
+      alert('New verification code sent to your email');
+      
+    } catch (error) {
+      console.error('Resend error:', error);
+      alert(error.message || 'Failed to resend verification code');
+    }
+  };
+
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+          <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-gray-100">
+            Verify Your Email
+          </h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+            We've sent a verification code to {email}
+          </p>
+          <form onSubmit={handleVerifyOTP} className="space-y-6">
+            <input
+              type="text"
+              required
+              placeholder="Enter verification code"
+              className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              maxLength={6}
+            />
+            <button
+              type="submit"
+              className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold"
+            >
+              Verify Email
+            </button>
+          </form>
+          <button
+            onClick={handleResendOTP}
+            className="mt-4 w-full text-blue-600 hover:text-blue-700 text-sm"
+          >
+            Resend verification code
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-300 p-4">

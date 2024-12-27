@@ -5,11 +5,13 @@ const DEFAULT_APP_NAME = 'Code Teach';
 // Basic config object with defaults
 const config = {
   api: {
-    baseUrl: DEFAULT_API_URL,
+    baseUrl: process.env.REACT_APP_API_BASE_URL || DEFAULT_API_URL,
     endpoints: {
       auth: {
         signin: '/auth/signin',
-        signup: '/auth/signup'
+        signup: '/auth/signup',
+        verifyEmail: '/auth/verify-email',
+        resendOtp: '/auth/resend-otp'
       },
       courses: {
         list: '/api/courses',

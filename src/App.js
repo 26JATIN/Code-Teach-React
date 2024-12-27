@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, memo } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { ThemeProvider } from './Frontend/Components/ThemeProvider';
 import { isAuthenticated } from './config/config';
 
@@ -34,25 +34,22 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
-const CourseSelector = ({ courseId }) => {
-  // Map course IDs to their respective components
-  const courseComponents = {
-    java: LearnJava,
-    cpp: LearnCpp,
-    // Add other course mappings here
-  };
+const CourseSelector = () => {
+  const { courseId } = useParams();
 
-  // Find the course type from the courseId or URL
   const getCourseComponent = () => {
-    // You can implement your logic here to determine which course component to render
-    if (courseId.toLowerCase().includes('java')) return LearnJava;
-    if (courseId.toLowerCase().includes('cpp')) return LearnCpp;
+    if (!courseId) return null;
+    
+    const id = courseId.toLowerCase();
+    if (id.includes('java')) return LearnJava;
+    if (id.includes('cpp')) return LearnCpp;
     return null;
   };
 
   const CourseComponent = getCourseComponent();
   
   if (!CourseComponent) {
+    console.log('No matching course component for:', courseId);
     return <Navigate to="/courses" replace />;
   }
 
@@ -80,7 +77,6 @@ const App = () => {
                 <Courses />
               </ProtectedRoute>
             } />
-            {/* Replace the two separate course routes with a single route */}
             <Route path="/course/:courseId/*" element={
               <ProtectedRoute>
                 <CourseSelector />

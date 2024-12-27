@@ -163,4 +163,5 @@ try {
   // Continue using defaults
 }
 
-export default config;
+export { apiRequest, getAuthToken, config }; // Update this line to export config
+export default config; // Also export as default if needed

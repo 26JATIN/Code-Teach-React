@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { BookOpen, Clock, Award, XCircle, Code, Book, FileText } from 'lucide-react';
 import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
-import config, { apiRequest } from '../../../config/config';
+import config from '../../../config/config';  // Default import
+import { apiRequest } from '../../../config/config';  // Named import
 import { useNavigate } from 'react-router-dom';
 
 const getModulesForCourse = (courseTitle) => {

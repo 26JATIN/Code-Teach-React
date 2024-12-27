@@ -164,8 +164,6 @@ try {
 }
 
 // Export config as default and named
-const configExport = config;
-export default configExport;
 export { 
   getAuthToken, 
   setAuthToken,
@@ -173,5 +171,8 @@ export {
   setUser,
   clearAuth,
   isAuthenticated,
-  apiRequest 
+  apiRequest
 };
+
+// Export config object as default
+export default config;

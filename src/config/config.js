@@ -163,7 +163,9 @@ try {
   // Continue using defaults
 }
 
-// Single consolidated export at the end
+// Export config as default and named
+const configExport = config;
+export default configExport;
 export { 
   getAuthToken, 
   setAuthToken,
@@ -171,6 +173,5 @@ export {
   setUser,
   clearAuth,
   isAuthenticated,
-  apiRequest,
-  config 
+  apiRequest 
 };

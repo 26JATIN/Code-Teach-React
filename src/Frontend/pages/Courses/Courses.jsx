@@ -4,7 +4,7 @@ import { Eye, FileText, BookOpen, Code, Book } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
-import { apiRequest, config } from '../../../config/config';  // Remove default import, use named imports only
+import config, { apiRequest } from '../../../config/config';  // This is the correct way
 
 // Optimized Button Component with Memoization
 const Button = React.memo(({ children, onClick, variant = 'default', className = '' }) => {

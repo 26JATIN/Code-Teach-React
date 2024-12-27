@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Clock, Award, XCircle, Code, Book, FileText } from 'lucide-react';
 import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
-import { apiRequest, getAuthToken } from '../../../config/config';
+import config, { apiRequest } from '../../../config/config';
 
 const getModulesForCourse = (courseTitle) => {
   // Map course titles to their respective module files

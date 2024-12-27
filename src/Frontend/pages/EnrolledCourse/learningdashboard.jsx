@@ -173,20 +173,79 @@ function LearningDashboard() {
 
   const navigate = useNavigate();
 
-  const handleContinueLearning = (course) => {
-    // Ensure course ID exists
+  const handleContinueLearning = async (course) => {
     if (!course?._id) {
       console.error('Invalid course object:', course);
       return;
     }
-
-    // Log navigation attempt
-    console.log('Navigating to course:', {
-      courseId: course._id,
-      path: `/course/${course._id}/modules`
-    });
-
-    navigate(`/course/${course._id}/modules`);
+  
+    try {
+      // Get course modules
+      const courseModules = getModulesForCourse(course.title);
+      if (!courseModules) {
+        console.error('No modules found for course:', course.title);
+        return;
+      }
+  
+      // Fetch current progress from backend
+      const progressResponse = await apiRequest(config.api.endpoints.courses.progress(course._id), {
+        method: 'GET'
+      });
+  
+      // Log the response for debugging
+      console.log('Progress response:', progressResponse);
+  
+      if (progressResponse?.completedModules?.length > 0) {
+        // Find the last completed module
+        const lastCompletedId = progressResponse.completedModules[progressResponse.completedModules.length - 1];
+        const [lastModuleId, lastSubModuleId] = lastCompletedId.split('.');
+  
+        // Find the next module after the last completed one
+        let found = false;
+        let nextModule = null;
+        let nextSubModule = null;
+  
+        // Search through modules to find the next uncompleted one
+        for (const module of courseModules) {
+          for (const subModule of module.subModules) {
+            if (found && !progressResponse.completedModules.includes(`${module.id}.${subModule.id}`)) {
+              nextModule = module;
+              nextSubModule = subModule;
+              break;
+            }
+            if (module.id === lastModuleId && subModule.id === lastSubModuleId) {
+              found = true;
+            }
+          }
+          if (nextModule) break;
+        }
+  
+        if (nextModule && nextSubModule) {
+          // Navigate to next uncompleted module
+          navigate(`/course/${course._id}/modules/${nextModule.id}/${nextSubModule.id}`);
+          return;
+        }
+      }
+  
+      // If no completed modules or next module not found, check for last accessed
+      if (progressResponse?.lastVisited) {
+        const { moduleId, subModuleId } = progressResponse.lastVisited;
+        navigate(`/course/${course._id}/modules/${moduleId}/${subModuleId}`);
+        return;
+      }
+  
+      // If no progress at all, start from first module
+      const firstModule = courseModules[0];
+      const firstSubModule = firstModule.subModules[0];
+      navigate(`/course/${course._id}/modules/${firstModule.id}/${firstSubModule.id}`);
+  
+    } catch (error) {
+      console.error('Error handling course navigation:', error);
+      // Fallback to basic navigation
+      const firstModule = courseModules[0];
+      const firstSubModule = firstModule.subModules[0];
+      navigate(`/course/${course._id}/modules/${firstModule.id}/${firstSubModule.id}`);
+    }
   };
 
   if (isLoading) {

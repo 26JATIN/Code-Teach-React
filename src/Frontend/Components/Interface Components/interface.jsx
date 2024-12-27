@@ -460,6 +460,40 @@ const CourseLayout = ({
     return moduleExists;
   }, [location.pathname, modules]);
 
+  // Add this validation function
+  const validatePath = useCallback(() => {
+    const path = location.pathname;
+    console.log('Validating path:', {
+      path,
+      basePath,
+      availableModules: modules.map(m => ({
+        id: m.id,
+        subModules: m.subModules.map(s => s.id)
+      }))
+    });
+
+    // Extract module and submodule IDs from path
+    const match = path.match(new RegExp(`${basePath}/([^/]+)/([^/]+)`));
+    if (!match) return false;
+
+    const [, moduleId, subModuleId] = match;
+    
+    // Find matching module and submodule
+    const module = modules.find(m => m.id === moduleId);
+    if (!module) return false;
+
+    const subModule = module.subModules.find(s => s.id === subModuleId);
+    return !!subModule;
+  }, [location.pathname, basePath, modules]);
+
+  useEffect(() => {
+    const isValid = validatePath();
+    console.log('Path validation result:', { 
+      path: location.pathname, 
+      isValid 
+    });
+  }, [location.pathname, validatePath]);
+
   return (
     <>
       <div className="flex flex-col md:flex-row h-screen bg-gray-950 overflow-hidden">

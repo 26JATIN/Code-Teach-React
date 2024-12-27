@@ -496,43 +496,50 @@ const CourseLayout = ({
     });
   }, [location.pathname, validatePath]);
 
-  // Add this new useEffect for scroll tracking
+  // Remove all scroll-related useEffects and replace with timer-based completion
   useEffect(() => {
-    const handleScroll = () => {
-      if (hasMarkedComplete) return; // Skip if already marked complete
+    let completionTimer;
+    
+    const startCompletionTimer = () => {
+      // Clear any existing timer
+      if (completionTimer) {
+        clearTimeout(completionTimer);
+      }
 
-      const contentArea = document.querySelector('.content-scroll-area');
-      if (!contentArea) return;
+      // Don't start timer if already marked complete
+      if (hasMarkedComplete) return;
 
-      const scrollPosition = contentArea.scrollTop + contentArea.clientHeight;
-      const totalHeight = contentArea.scrollHeight;
-      const scrollPercentage = (scrollPosition / totalHeight) * 100;
+      const pathParts = location.pathname.split('/');
+      const currentModuleId = pathParts[pathParts.length - 2];
+      const currentSubModuleId = pathParts[pathParts.length - 1];
 
-      if (scrollPercentage >= 80) {
-        const pathParts = location.pathname.split('/');
-        const currentModuleId = pathParts[pathParts.length - 2];
-        const currentSubModuleId = pathParts[pathParts.length - 1];
+      // Only start timer if we're on a valid module page
+      if (currentModuleId && currentSubModuleId) {
+        console.log('Starting 5-second completion timer for:', {
+          moduleId: currentModuleId,
+          subModuleId: currentSubModuleId
+        });
 
-        // Only mark complete if we're on a valid module page
-        if (currentModuleId && currentSubModuleId) {
+        completionTimer = setTimeout(() => {
+          console.log('Module completion timer finished');
           markModuleAsComplete(currentModuleId, currentSubModuleId);
           setHasMarkedComplete(true);
-        }
+        }, 5000); // 5 seconds
       }
     };
 
-    const contentArea = document.querySelector('.content-scroll-area');
-    if (contentArea) {
-      contentArea.addEventListener('scroll', handleScroll);
-    }
+    // Start timer when route changes
+    startCompletionTimer();
 
+    // Cleanup function
     return () => {
-      if (contentArea) {
-        contentArea.removeEventListener('scroll', handleScroll);
+      if (completionTimer) {
+        clearTimeout(completionTimer);
       }
     };
   }, [location.pathname, markModuleAsComplete, hasMarkedComplete]);
-  // Reset hasMarkedComplete when route changes
+
+  // Reset completion state when route changes
   useEffect(() => {
     setHasMarkedComplete(false);
   }, [location.pathname]);

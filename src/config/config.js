@@ -17,7 +17,8 @@ const config = {
         list: '/api/courses',
         enroll: (courseId) => `/api/courses/enroll/${courseId}`,
         enrolled: '/api/courses/enrolled',
-        progress: (courseId) => `/api/courses/progress/${courseId}`
+        progress: (courseId) => `/api/courses/progress/${courseId}`,
+        lastAccessed: (courseId) => `/api/courses/lastAccessed/${courseId}`
       }
     }
   },

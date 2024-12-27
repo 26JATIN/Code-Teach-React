@@ -313,7 +313,6 @@ const CourseLayout = ({
     setTouchStart(e.touches[0].clientX);
     setTouchEnd(null);
   };
-
   const handleTouchMove = (e) => {
     setTouchEnd(e.touches[0].clientX);
   };

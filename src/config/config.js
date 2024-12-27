@@ -163,5 +163,17 @@ try {
   // Continue using defaults
 }
 
-export { apiRequest, getAuthToken, config }; // Update this line to export config
-export default config; // Also export as default if needed
+// Single export statement at the end
+export { 
+  apiRequest, 
+  getAuthToken, 
+  setAuthToken,
+  getUser,
+  setUser,
+  clearAuth,
+  isAuthenticated,
+  config 
+};
+
+// Remove the duplicate exports and just keep the default export
+export default config;

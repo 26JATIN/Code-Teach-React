@@ -862,5 +862,4 @@ const CourseLayout = ({
     </>
   );
 };
-
 export default memo(CourseLayout);

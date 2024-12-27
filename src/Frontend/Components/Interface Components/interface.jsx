@@ -4,7 +4,7 @@ import { Menu, ChevronRight, ChevronDown, ArrowRight, Code, ArrowLeft } from 'lu
 import { useMediaQuery } from 'react-responsive';
 import CodingArea from './codingarea';  // Add this import
 import { motion, AnimatePresence } from 'framer-motion'; // Add this import
-
+import { apiRequest } from '../../../config/config';  // Add this import
 // Internal ModuleButton component
 const ModuleButton = ({ module, isExpanded, toggleModule }) => (
   <button
@@ -110,6 +110,7 @@ const CourseLayout = ({
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [swipeDirection, setSwipeDirection] = useState(null);
+  const [completedModules, setCompletedModules] = useState(new Set());
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -341,6 +342,54 @@ const CourseLayout = ({
       }
     })
   };
+
+  // Add this function to mark a module as complete
+  const markModuleAsComplete = useCallback(async (moduleId, subModuleId) => {
+    try {
+      const pathParts = location.pathname.split('/');
+      const courseId = pathParts[2]; // Assuming path structure: /course/:courseId/...
+
+      await apiRequest(config.api.endpoints.courses.progress(courseId), {
+        method: 'PUT',
+        body: JSON.stringify({
+          moduleId,
+          subModuleId,
+          modules: modules // Send full modules data for initialization
+        })
+      });
+    } catch (error) {
+      console.error('Error updating progress:', error);
+    }
+  }, [location.pathname, modules]);
+
+  // Add progress to NextButton component
+  const NextButton = memo(({ nextModule, onNext }) => {
+    if (!nextModule) return null;
+
+    const handleNext = async () => {
+      const pathParts = location.pathname.split('/');
+      const currentModuleId = pathParts[pathParts.length - 2];
+      const currentSubModuleId = pathParts[pathParts.length - 1];
+
+      // Mark current module as complete before moving to next
+      await markModuleAsComplete(currentModuleId, currentSubModuleId);
+      
+      // Navigate to next module
+      onNext(nextModule.moduleId, nextModule.id);
+    };
+
+    return (
+      <button
+        onClick={handleNext}
+        className="group flex items-center gap-2 px-4 py-2 rounded-lg
+          bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20
+          text-blue-400 transition-all duration-200"
+      >
+        <span>Next: {nextModule.title}</span>
+        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+      </button>
+    );
+  });
 
   return (
     <>

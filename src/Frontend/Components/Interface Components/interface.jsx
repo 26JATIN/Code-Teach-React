@@ -441,7 +441,6 @@ const CourseLayout = ({
       </button>
     );
   });
-
   // Add this debug logging
   useEffect(() => {
     console.log('CourseLayout mounted:', {

@@ -179,14 +179,14 @@ function LearningDashboard() {
       return;
     }
   
+    // Get course modules - Move this outside try block so it's available in catch
+    const courseModules = getModulesForCourse(course.title);
+    if (!courseModules) {
+      console.error('No modules found for course:', course.title);
+      return;
+    }
+
     try {
-      // Get course modules
-      const courseModules = getModulesForCourse(course.title);
-      if (!courseModules) {
-        console.error('No modules found for course:', course.title);
-        return;
-      }
-  
       // Fetch current progress from backend
       const progressResponse = await apiRequest(config.api.endpoints.courses.progress(course._id), {
         method: 'GET'
@@ -241,10 +241,17 @@ function LearningDashboard() {
   
     } catch (error) {
       console.error('Error handling course navigation:', error);
-      // Fallback to basic navigation
-      const firstModule = courseModules[0];
-      const firstSubModule = firstModule.subModules[0];
-      navigate(`/course/${course._id}/modules/${firstModule.id}/${firstSubModule.id}`);
+      // Now courseModules is available in catch block
+      try {
+        // Navigate to first module as fallback
+        const firstModule = courseModules[0];
+        const firstSubModule = firstModule.subModules[0];
+        navigate(`/course/${course._id}/modules/${firstModule.id}/${firstSubModule.id}`);
+      } catch (fallbackError) {
+        console.error('Failed to navigate to first module:', fallbackError);
+        // Final fallback - just go to modules page
+        navigate(`/course/${course._id}/modules`);
+      }
     }
   };
 

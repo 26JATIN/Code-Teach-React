@@ -346,10 +346,19 @@ const CourseLayout = ({
   // Add this function to mark a module as complete
   const markModuleAsComplete = useCallback(async (moduleId, subModuleId) => {
     try {
+      // Extract courseId from path - updated path extraction
       const pathParts = location.pathname.split('/');
-      const courseId = pathParts[2]; // Assuming path structure: /course/:courseId/...
+      const courseIdIndex = pathParts.indexOf('course') + 1;
+      const courseId = pathParts[courseIdIndex];
 
-      await apiRequest(config.api.endpoints.courses.progress(courseId), {
+      if (!courseId) {
+        console.error('Could not extract course ID from path:', location.pathname);
+        return;
+      }
+
+      console.log('Updating progress for:', { courseId, moduleId, subModuleId });
+
+      const response = await apiRequest(config.api.endpoints.courses.progress(courseId), {
         method: 'PUT',
         body: JSON.stringify({
           moduleId,
@@ -357,8 +366,16 @@ const CourseLayout = ({
           modules: modules // Send full modules data for initialization
         })
       });
+
+      console.log('Progress update response:', response);
+
+      // Update local state to reflect completion
+      setCompletedModules(prev => new Set([...prev, `${moduleId}.${subModuleId}`]));
+
     } catch (error) {
       console.error('Error updating progress:', error);
+      // Don't throw the error - just log it and continue
+      // This prevents the UI from breaking if progress update fails
     }
   }, [location.pathname, modules]);
 

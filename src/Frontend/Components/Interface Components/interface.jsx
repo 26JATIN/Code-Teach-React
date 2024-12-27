@@ -618,6 +618,7 @@ const CourseLayout = ({
             backfaceVisibility: 'hidden'
           }}
         >
+          
           {!isMobile && (
             <button
               onClick={toggleSidebar}

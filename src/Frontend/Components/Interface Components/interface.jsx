@@ -322,7 +322,6 @@ const CourseLayout = ({
   const handleTouchMove = (e) => {
     setTouchEnd(e.touches[0].clientX);
   };
-
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
 

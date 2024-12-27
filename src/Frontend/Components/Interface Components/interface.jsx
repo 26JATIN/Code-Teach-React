@@ -7,27 +7,35 @@ import { motion, AnimatePresence } from 'framer-motion'; // Add this import
 import config from '../../../config/config';  // Default import
 import { apiRequest } from '../../../config/config';  // Named import
 // Internal ModuleButton component
-const ModuleButton = ({ module, isExpanded, toggleModule }) => (
-  <button
-    onClick={() => toggleModule(module.id)}
-    className={`w-full px-4 py-3 rounded-xl transition-colors duration-200 
-      border group/module flex items-center justify-between
-      ${isExpanded ? 'bg-gray-800/50 border-gray-700/50' : 'border-transparent hover:bg-white/[0.02]'}`}
-  >
-    <div className="flex items-center gap-3">
-      <div className={`w-2 h-2 rounded-full transition-colors duration-200
-        ${isExpanded ? 'bg-sky-400' : 'bg-gray-500 group-hover/module:bg-gray-400'}`} />
-      <span className={`text-sm font-medium transition-colors duration-200
-        ${isExpanded ? 'text-sky-400' : 'text-gray-400 group-hover/module:text-gray-300'}`}>
-        {module.title}
-      </span>
-    </div>
-    <ChevronDown size={16} 
-      className={`text-gray-500 transition-transform duration-200
-        ${isExpanded ? 'rotate-180 text-sky-400' : 'rotate-0 group-hover/module:text-gray-400'}`} 
-    />
-  </button>
-);
+const ModuleButton = ({ module, isExpanded, toggleModule, completedModules }) => {
+  const allSubModulesCompleted = module.subModules.every(
+    sub => completedModules.has(`${module.id}.${sub.id}`)
+  );
+
+  return (
+    <button
+      onClick={() => toggleModule(module.id)}
+      className={`w-full px-4 py-3 rounded-xl transition-colors duration-200 
+        border group/module flex items-center justify-between
+        ${isExpanded ? 'bg-gray-800/50 border-gray-700/50' : 'border-transparent hover:bg-white/[0.02]'}`}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`w-2 h-2 rounded-full transition-colors duration-200
+          ${allSubModulesCompleted ? 'bg-green-400' : 
+            isExpanded ? 'bg-sky-400' : 'bg-gray-500 group-hover/module:bg-gray-400'}`} />
+        <span className={`text-sm font-medium transition-colors duration-200
+          ${allSubModulesCompleted ? 'text-green-400' :
+            isExpanded ? 'text-sky-400' : 'text-gray-400 group-hover/module:text-gray-300'}`}>
+          {module.title}
+        </span>
+      </div>
+      <ChevronDown size={16} 
+        className={`text-gray-500 transition-transform duration-200
+          ${isExpanded ? 'rotate-180 text-sky-400' : 'rotate-0 group-hover/module:text-gray-400'}`} 
+      />
+    </button>
+  );
+};
 
 // Internal LoadingSpinner component
 const LoadingSpinner = () => (
@@ -130,6 +138,7 @@ const CourseLayout = ({
   const [swipeDirection, setSwipeDirection] = useState(null);
   const [completedModules, setCompletedModules] = useState(new Set());
   const [hasMarkedComplete, setHasMarkedComplete] = useState(false);
+  const [lastVisitedModule, setLastVisitedModule] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -529,6 +538,73 @@ const CourseLayout = ({
     setHasMarkedComplete(false);
   }, [location.pathname]);
 
+  // Add effect to load completion status and last visited module
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        const courseId = extractCourseId(location.pathname);
+        if (!courseId) return;
+
+        const response = await apiRequest(config.api.endpoints.courses.progress(courseId), {
+          method: 'GET'
+        });
+
+        // Update completed modules
+        if (response.completedModules) {
+          setCompletedModules(new Set(response.completedModules));
+        }
+
+        // Set last visited module
+        if (response.lastVisited) {
+          setLastVisitedModule(response.lastVisited);
+        }
+      } catch (error) {
+        console.error('Error fetching progress:', error);
+      }
+    };
+
+    fetchProgress();
+  }, [location.pathname, extractCourseId]);
+
+  // Modify the initial route logic to start from last visited module
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === basePath && lastVisitedModule) {
+      const { moduleId, subModuleId } = lastVisitedModule;
+      navigateToContent(moduleId, subModuleId);
+    }
+  }, [lastVisitedModule, location.pathname, basePath, navigateToContent]);
+
+  // Update the submodule button rendering in the sidebar
+  const renderSubModuleButton = (module, subModule) => (
+    <button
+      key={subModule.id}
+      onClick={() => navigateToContent(module.id, subModule.id)}
+      className={`group w-full px-4 py-3 rounded-xl transition-colors duration-200
+        focus:outline-none focus:ring-2 focus:ring-sky-500/20
+        ${activeModule === `${module.id}.${subModule.id}`
+          ? 'bg-sky-500/10 text-sky-400 border-sky-500/20'
+          : 'text-slate-400 hover:bg-white/[0.02] hover:text-slate-200 border-transparent'
+        } border`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className={`w-1.5 h-1.5 rounded-full ${
+            completedModules.has(`${module.id}.${subModule.id}`) 
+              ? 'bg-green-400' 
+              : 'bg-current opacity-60'
+          }`}></div>
+          <span className="text-sm">{subModule.title}</span>
+        </div>
+        {completedModules.has(`${module.id}.${subModule.id}`) && (
+          <svg className="w-4 h-4 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        )}
+      </div>
+    </button>
+  );
+
   return (
     <>
       <div className="flex flex-col md:flex-row h-screen bg-gray-950 overflow-hidden">
@@ -593,27 +669,14 @@ const CourseLayout = ({
                       module={module}
                       isExpanded={expandedModules[module.id]}
                       toggleModule={toggleModule}
+                      completedModules={completedModules}
                     />
 
                     {expandedModules[module.id] && (
                       <div className="relative mt-2 ml-4 pl-4 py-2 animate-slideDown">
                         <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-blue-500/30 via-slate-700/20 to-transparent"></div>
                         {module.subModules.map((subModule) => (
-                          <button
-                            key={subModule.id}
-                            onClick={() => navigateToContent(module.id, subModule.id)}
-                            className={`group w-full px-4 py-3 rounded-xl transition-colors duration-200
-                              focus:outline-none focus:ring-2 focus:ring-sky-500/20
-                              ${activeModule === `${module.id}.${subModule.id}`
-                                ? 'bg-sky-500/10 text-sky-400 border-sky-500/20'
-                                : 'text-slate-400 hover:bg-white/[0.02] hover:text-slate-200 border-transparent'
-                              } border`}
-                          >
-                            <div className="flex items-center space-x-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></div>
-                              <span className="text-sm">{subModule.title}</span>
-                            </div>
-                          </button>
+                          renderSubModuleButton(module, subModule)
                         ))}
                       </div>
                     )}

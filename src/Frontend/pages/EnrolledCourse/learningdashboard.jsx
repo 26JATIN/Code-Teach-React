@@ -371,5 +371,4 @@ function LearningDashboard() {
     </ThemeProvider>
   );
 }
-
 export default React.memo(LearningDashboard);

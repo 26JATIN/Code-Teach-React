@@ -344,26 +344,18 @@ const CourseLayout = ({
   };
 
   const extractCourseId = useCallback((pathname) => {
-    // Try different path patterns
-    const patterns = [
-      /\/course\/([^/]+)/,  // matches /course/:courseId/...
-      /\/modules\/([^/]+)/, // matches /modules/:courseName/...
-      /\/([^/]+)\/modules/  // matches /:courseId/modules/...
-    ];
-
-    for (const pattern of patterns) {
-      const match = pathname.match(pattern);
-      if (match) {
-        return match[1];
-      }
+    // Match course ID from path pattern /course/:courseId/modules/...
+    const match = pathname.match(/\/course\/([^/]+)\/modules/);
+    if (match) {
+      return match[1];
     }
-
-    // If no patterns match, try to get it from basePath
+  
+    // If no match found, try to extract from basePath
     const basePathMatch = basePath.match(/\/course\/([^/]+)/);
     if (basePathMatch) {
       return basePathMatch[1];
     }
-
+  
     console.error('Could not extract course ID from paths:', { pathname, basePath });
     return null;
   }, [basePath]);
@@ -372,14 +364,14 @@ const CourseLayout = ({
   const markModuleAsComplete = useCallback(async (moduleId, subModuleId) => {
     try {
       const courseId = extractCourseId(location.pathname);
-
+  
       if (!courseId) {
         console.error('Could not extract course ID from path:', location.pathname);
         return;
       }
-
+  
       console.log('Updating progress for:', { courseId, moduleId, subModuleId });
-
+  
       const response = await apiRequest(config.api.endpoints.courses.progress(courseId), {
         method: 'PUT',
         body: JSON.stringify({
@@ -388,10 +380,10 @@ const CourseLayout = ({
           modules: modules // Send full modules data for initialization
         })
       });
-
+  
       console.log('Progress update response:', response);
       setCompletedModules(prev => new Set([...prev, `${moduleId}.${subModuleId}`]));
-
+  
     } catch (error) {
       console.error('Error updating progress:', error);
     }

@@ -75,6 +75,9 @@ function CoursesPage() {
         }
       };
 
+      // Update the path to include courseId
+      const coursePath = `/course/${courseId}/modules`;
+
       return (
         <motion.div
           key={courseId || Math.random()}
@@ -101,7 +104,7 @@ function CoursesPage() {
           <div className="flex gap-2 mt-4">
             <Button 
               variant="outline" 
-              onClick={() => course && handleViewCourse(course)}
+              onClick={() => course && handleViewCourse({ ...course, path: coursePath })}
             >
               <Eye className="mr-2" size={16} />
               View Course

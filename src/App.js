@@ -55,12 +55,13 @@ const App = () => {
                 <Courses />
               </ProtectedRoute>
             } />
-            <Route path="/modules/java/*" element={
+            {/* Update these course routes to use the new pattern */}
+            <Route path="/course/:courseId/*" element={
               <ProtectedRoute>
                 <LearnJava />
               </ProtectedRoute>
             } />
-            <Route path="/modules/Cpp/*" element={
+            <Route path="/course/:courseId/*" element={
               <ProtectedRoute>
                 <LearnCpp />
               </ProtectedRoute>
@@ -79,4 +80,5 @@ const App = () => {
     </ThemeProvider>
   );
 };
+
 export default App;

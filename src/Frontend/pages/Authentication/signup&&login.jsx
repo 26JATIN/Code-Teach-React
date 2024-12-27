@@ -18,6 +18,9 @@ const AuthPage = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const navigate = useNavigate();
 
+  const inputClassName = "w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors";
+  const labelClassName = "block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1";
+
   const validateForm = () => {
     // Password validation
     if (password.length < 6) {
@@ -266,14 +269,12 @@ const AuthPage = () => {
           {resetStep === 'email' && (
             <form onSubmit={handleForgotPassword} className="space-y-6">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Email address
-                </label>
+                <label className={labelClassName}>Email address</label>
                 <input
                   type="email"
                   required
                   placeholder="Enter your email"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  className={inputClassName}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -290,14 +291,12 @@ const AuthPage = () => {
           {resetStep === 'otp' && (
             <form onSubmit={handleResetPassword} className="space-y-6">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Verification Code
-                </label>
+                <label className={labelClassName}>Verification Code</label>
                 <input
                   type="text"
                   required
                   placeholder="Enter verification code"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  className={inputClassName}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   maxLength={6}
@@ -315,28 +314,24 @@ const AuthPage = () => {
           {resetStep === 'newPassword' && (
             <form onSubmit={handleResetPassword} className="space-y-6">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                  New Password
-                </label>
+                <label className={labelClassName}>New Password</label>
                 <input
                   type="password"
                   required
                   placeholder="Enter new password"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  className={inputClassName}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   minLength={6}
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Confirm New Password
-                </label>
+                <label className={labelClassName}>Confirm New Password</label>
                 <input
                   type="password"
                   required
                   placeholder="Confirm new password"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  className={inputClassName}
                   value={confirmNewPassword}
                   onChange={(e) => setConfirmNewPassword(e.target.value)}
                   minLength={6}
@@ -381,10 +376,10 @@ const AuthPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
         <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
-          <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-gray-100">
+          <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">
             Verify Your Email
           </h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-center text-gray-600 dark:text-gray-300 mb-6">
             We've sent a verification code to {email}
           </p>
           <form onSubmit={handleVerifyOTP} className="space-y-6">
@@ -392,7 +387,7 @@ const AuthPage = () => {
               type="text"
               required
               placeholder="Enter verification code"
-              className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border"
+              className={inputClassName}
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               maxLength={6}
@@ -451,14 +446,12 @@ const AuthPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Username
-                </label>
+                <label className={labelClassName}>Username</label>
                 <input
                   type="text"
                   required
                   placeholder="Choose a username"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+                  className={inputClassName}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   minLength={3}
@@ -469,28 +462,24 @@ const AuthPage = () => {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Email address
-              </label>
+              <label className={labelClassName}>Email address</label>
               <input
                 type="email"
                 required
                 placeholder="Enter your email"
-                className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+                className={inputClassName}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Password
-              </label>
+              <label className={labelClassName}>Password</label>
               <input
                 type="password"
                 required
                 placeholder={isLogin ? "Enter password" : "Choose password"}
-                className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+                className={inputClassName}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 minLength={6}
@@ -499,14 +488,12 @@ const AuthPage = () => {
 
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Confirm Password
-                </label>
+                <label className={labelClassName}>Confirm Password</label>
                 <input
                   type="password"
                   required
                   placeholder="Confirm your password"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+                  className={inputClassName}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   minLength={6}

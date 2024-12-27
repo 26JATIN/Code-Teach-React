@@ -163,7 +163,7 @@ try {
   // Continue using defaults
 }
 
-// Single export statement at the end
+// Single export statement at the end - remove the duplicate export
 export { 
   apiRequest, 
   getAuthToken, 
@@ -172,8 +172,5 @@ export {
   setUser,
   clearAuth,
   isAuthenticated,
-  config 
+  config as default // Export config as both named and default
 };
-
-// Remove the duplicate exports and just keep the default export
-export default config;

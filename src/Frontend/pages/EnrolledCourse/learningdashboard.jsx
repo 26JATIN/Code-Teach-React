@@ -157,6 +157,18 @@ function LearningDashboard() {
     }
   };
 
+  // Add this helper function inside the component
+  const formatLastAccessed = (date) => {
+    if (!date) return 'Never';
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
   if (isLoading) {
     return (
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -300,16 +312,21 @@ function LearningDashboard() {
                         <span>Test Sets: {course.testSets || 0}</span>
                       </div>
 
-                      <div className="mt-4">
+                      <div className="mt-4 space-y-2">
                         <div className="flex justify-between text-sm mb-1">
                           <span className="text-gray-600 dark:text-gray-400">Progress</span>
                           <span className="text-purple-500">{course.progress || 0}%</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                          <div 
-                            className="bg-purple-500 h-2 rounded-full" 
-                            style={{ width: `${course.progress || 0}%` }}
-                          ></div>
+                          <motion.div 
+                            className="bg-purple-500 h-2 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${course.progress || 0}%` }}
+                            transition={{ duration: 0.5, ease: "easeOut" }}
+                          />
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          Last accessed: {formatLastAccessed(course.lastAccessed)}
                         </div>
                       </div>
 

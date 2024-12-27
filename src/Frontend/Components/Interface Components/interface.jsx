@@ -171,6 +171,12 @@ const CourseLayout = ({
   };
 
   const navigateToContent = useCallback((moduleId, subModuleId) => {
+    // Reset scroll position before navigation
+    const contentArea = document.querySelector('.content-scroll-area');
+    if (contentArea) {
+      contentArea.scrollTop = 0;
+    }
+    
     setActiveModule(`${moduleId}.${subModuleId}`);
     setExpandedModules(prev => ({ ...prev, [moduleId]: true }));
     if (isMobile) {
@@ -789,7 +795,15 @@ const CourseLayout = ({
                     style={{
                       isolation: 'isolate', // Create new stacking context
                       backfaceVisibility: 'hidden', // Prevent flickering
-                      WebkitBackfaceVisibility: 'hidden'
+                      WebkitBackfaceVisibility: 'hidden',
+                      scrollBehavior: 'instant' // Add this to prevent smooth scrolling
+                    }}
+                    onAnimationStart={() => {
+                      // Ensure scroll is at top when animation starts
+                      const contentArea = document.querySelector('.content-scroll-area');
+                      if (contentArea) {
+                        contentArea.scrollTop = 0;
+                      }
                     }}
                   >
                     <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">

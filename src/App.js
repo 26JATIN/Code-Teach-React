@@ -54,7 +54,6 @@ const CourseSelector = () => {
           } else if (title.includes('c++')) {
             setCourseType('cpp');
           }
-          console.log('Found course type:', { title, type: courseType });
         }
       } catch (error) {
         console.error('Error fetching course details:', error);
@@ -86,7 +85,6 @@ const CourseSelector = () => {
   const CourseComponent = getCourseComponent();
   
   if (!CourseComponent) {
-    console.log('No matching course component for:', courseId, 'type:', courseType);
     return <Navigate to="/courses" replace />;
   }
 

@@ -382,27 +382,33 @@ const CourseLayout = ({
     try {
       const courseId = extractCourseId(location.pathname);
   
-      if (!courseId) {
-        console.error('Could not extract course ID from path:', location.pathname);
-        return;
-      }
+      if (!courseId) return;
   
-      console.log('Updating progress for:', { courseId, moduleId, subModuleId });
+      console.log('Progress update:', {
+        courseId,
+        moduleId,
+        subModuleId,
+        timestamp: new Date().toISOString()
+      });
   
       const response = await apiRequest(config.api.endpoints.courses.progress(courseId), {
         method: 'PUT',
         body: JSON.stringify({
           moduleId,
           subModuleId,
-          modules: modules // Send full modules data for initialization
+          modules: modules
         })
       });
   
-      console.log('Progress update response:', response);
+      console.log('Progress updated successfully:', {
+        completedModules: response.completedModules,
+        progress: response.progress
+      });
+
       setCompletedModules(prev => new Set([...prev, `${moduleId}.${subModuleId}`]));
   
     } catch (error) {
-      console.error('Error updating progress:', error);
+      console.error('Progress update failed:', error.message);
     }
   }, [location.pathname, modules, extractCourseId]);
 
@@ -463,28 +469,13 @@ const CourseLayout = ({
   // Add this validation function
   const validatePath = useCallback(() => {
     const path = location.pathname;
-    console.log('Validating path:', {
-      path,
-      basePath,
-      availableModules: modules.map(m => ({
-        id: m.id,
-        subModules: m.subModules.map(s => s.id)
-      }))
-    });
-
-    // Remove basePath from the path to get just the module part
     const modulePath = path.replace(basePath, '').split('/').filter(Boolean);
-    console.log('Module path parts:', modulePath);
-
     if (modulePath.length !== 2) return false;
 
     const [moduleId, subModuleId] = modulePath;
-    
-    // Find matching module and submodule
     const module = modules.find(m => m.id === moduleId);
     const subModule = module?.subModules.find(s => s.id === subModuleId);
-
-    console.log('Found match:', { moduleId, subModuleId, exists: !!subModule });
+    
     return !!subModule;
   }, [location.pathname, basePath, modules]);
 

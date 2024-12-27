@@ -1,7 +1,7 @@
-import React, { Suspense, lazy, memo } from 'react';
+import React, { Suspense, lazy, memo, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { ThemeProvider } from './Frontend/Components/ThemeProvider';
-import { isAuthenticated } from './config/config';
+import { isAuthenticated, apiRequest, config } from './config/config';  // Add apiRequest and config imports
 
 // Custom loading component
 const LoadingSpinner = memo(() => (
@@ -36,20 +36,54 @@ const PublicRoute = ({ children }) => {
 
 const CourseSelector = () => {
   const { courseId } = useParams();
+  const [courseType, setCourseType] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourseDetails = async () => {
+      try {
+        setLoading(true);
+        const coursesData = await apiRequest(config.api.endpoints.courses.list);
+        const course = coursesData.find(c => c._id === courseId);
+        
+        if (course) {
+          if (course.title.toLowerCase().includes('java')) {
+            setCourseType('java');
+          } else if (course.title.toLowerCase().includes('c++')) {
+            setCourseType('cpp');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching course details:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (courseId) {
+      fetchCourseDetails();
+    }
+  }, [courseId]);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   const getCourseComponent = () => {
-    if (!courseId) return null;
-    
-    const id = courseId.toLowerCase();
-    if (id.includes('java')) return LearnJava;
-    if (id.includes('cpp')) return LearnCpp;
-    return null;
+    switch (courseType) {
+      case 'java':
+        return LearnJava;
+      case 'cpp':
+        return LearnCpp;
+      default:
+        return null;
+    }
   };
 
   const CourseComponent = getCourseComponent();
   
   if (!CourseComponent) {
-    console.log('No matching course component for:', courseId);
+    console.log('No matching course component for:', courseId, 'type:', courseType);
     return <Navigate to="/courses" replace />;
   }
 

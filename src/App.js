@@ -48,11 +48,13 @@ const CourseSelector = () => {
         const course = coursesData.find(c => c._id === courseId);
         
         if (course) {
-          if (course.title.toLowerCase().includes('java')) {
+          const title = course.title.toLowerCase();
+          if (title.includes('java')) {
             setCourseType('java');
-          } else if (course.title.toLowerCase().includes('c++')) {
+          } else if (title.includes('c++')) {
             setCourseType('cpp');
           }
+          console.log('Found course type:', { title, type: courseType });
         }
       } catch (error) {
         console.error('Error fetching course details:', error);
@@ -88,7 +90,12 @@ const CourseSelector = () => {
     return <Navigate to="/courses" replace />;
   }
 
-  return <CourseComponent />;
+  return (
+    <Routes>
+      <Route path="modules/*" element={<CourseComponent />} />
+      <Route path="*" element={<Navigate to={`/course/${courseId}/modules`} replace />} />
+    </Routes>
+  );
 };
 
 const App = () => {

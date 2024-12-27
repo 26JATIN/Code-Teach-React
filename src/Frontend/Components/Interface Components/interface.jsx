@@ -472,17 +472,19 @@ const CourseLayout = ({
       }))
     });
 
-    // Extract module and submodule IDs from path
-    const match = path.match(new RegExp(`${basePath}/([^/]+)/([^/]+)`));
-    if (!match) return false;
+    // Remove basePath from the path to get just the module part
+    const modulePath = path.replace(basePath, '').split('/').filter(Boolean);
+    console.log('Module path parts:', modulePath);
 
-    const [, moduleId, subModuleId] = match;
+    if (modulePath.length !== 2) return false;
+
+    const [moduleId, subModuleId] = modulePath;
     
     // Find matching module and submodule
     const module = modules.find(m => m.id === moduleId);
-    if (!module) return false;
+    const subModule = module?.subModules.find(s => s.id === subModuleId);
 
-    const subModule = module.subModules.find(s => s.id === subModuleId);
+    console.log('Found match:', { moduleId, subModuleId, exists: !!subModule });
     return !!subModule;
   }, [location.pathname, basePath, modules]);
 
@@ -722,7 +724,7 @@ const CourseLayout = ({
                             module.subModules.map((subModule) => (
                               <Route
                                 key={`${module.id}-${subModule.id}`}
-                                path={`${module.id}/${subModule.id}`}
+                                path={`/${module.id}/${subModule.id}`}
                                 element={
                                   <ErrorBoundary>
                                     <React.Suspense fallback={<LoadingSpinner />}>

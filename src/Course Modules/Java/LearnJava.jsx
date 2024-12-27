@@ -19,25 +19,18 @@ const LearnJava = () => {
   if (location.pathname === `/course/${courseId}/modules`) {
     const firstModule = modules[0];
     const firstSubModule = firstModule.subModules[0];
-    const redirectPath = `${firstModule.id}/${firstSubModule.id}`;
+    const redirectPath = `/course/${courseId}/modules/${firstModule.id}/${firstSubModule.id}`;
     console.log('Redirecting to first module:', redirectPath);
     return <Navigate to={redirectPath} replace />;
   }
 
   return (
-    <Routes>
-      <Route 
-        path="*" 
-        element={
-          <CourseLayout 
-            courseName="Java Programming" 
-            courseShortName="Java" 
-            modules={modules}
-            basePath={`/course/${courseId}/modules`}
-          />
-        } 
-      />
-    </Routes>
+    <CourseLayout 
+      courseName="Java Programming" 
+      courseShortName="Java" 
+      modules={modules}
+      basePath={`/course/${courseId}/modules`}
+    />
   );
 };
 

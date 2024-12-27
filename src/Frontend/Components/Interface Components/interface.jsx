@@ -96,6 +96,22 @@ const WelcomePage = () => {
     </div>
   );
 };
+
+const NotFoundPage = () => (
+  <div className="text-center py-16">
+    <h1 className="text-3xl font-bold text-gray-100 mb-4">Topic Not Found</h1>
+    <p className="text-gray-400 mb-8">The requested topic could not be found.</p>
+    <div className="flex justify-center gap-4">
+      <button
+        onClick={() => window.history.back()}
+        className="px-4 py-2 rounded-lg bg-gray-800 text-gray-200 hover:bg-gray-700 transition-colors"
+      >
+        Go Back
+      </button>
+    </div>
+  </div>
+);
+
 // Ensure CourseLayout component renders modals outside the main layout
 const CourseLayout = ({ 
   courseName, 
@@ -419,6 +435,31 @@ const CourseLayout = ({
     );
   });
 
+  // Add this debug logging
+  useEffect(() => {
+    console.log('CourseLayout mounted:', {
+      pathname: location.pathname,
+      basePath,
+      modules: modules.length
+    });
+  }, [location.pathname, basePath, modules]);
+
+  // Add path validation
+  const isValidPath = useCallback(() => {
+    const path = location.pathname;
+    const parts = path.split('/').filter(Boolean);
+    const lastTwo = parts.slice(-2);
+    
+    if (lastTwo.length !== 2) return false;
+    
+    const [moduleId, subModuleId] = lastTwo;
+    const moduleExists = modules.some(m => 
+      m.id === moduleId && m.subModules.some(s => s.id === subModuleId)
+    );
+    
+    return moduleExists;
+  }, [location.pathname, modules]);
+
   return (
     <>
       <div className="flex flex-col md:flex-row h-screen bg-gray-950 overflow-hidden">
@@ -668,12 +709,7 @@ const CourseLayout = ({
                           )}
                           <Route 
                             path="*" 
-                            element={
-                              <div className="text-center p-8">
-                                <h1>Topic Not Found</h1>
-                                <p>The requested topic could not be found.</p>
-                              </div>
-                            } 
+                            element={<NotFoundPage />} 
                           />
                         </Routes>
                       </div>

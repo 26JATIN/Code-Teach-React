@@ -174,9 +174,19 @@ function LearningDashboard() {
   const navigate = useNavigate();
 
   const handleContinueLearning = (course) => {
-    // Update the path to match the new course route structure
-    const coursePath = `/course/${course._id}/modules`;
-    navigate(coursePath);
+    // Ensure course ID exists
+    if (!course?._id) {
+      console.error('Invalid course object:', course);
+      return;
+    }
+
+    // Log navigation attempt
+    console.log('Navigating to course:', {
+      courseId: course._id,
+      path: `/course/${course._id}/modules`
+    });
+
+    navigate(`/course/${course._id}/modules`);
   };
 
   if (isLoading) {

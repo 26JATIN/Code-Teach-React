@@ -1,16 +1,25 @@
-import React from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useParams, Navigate, useLocation } from 'react-router-dom';
 import CourseLayout from '../../Frontend/Components/Interface Components/interface';
 import { modules } from '../../Frontend/Components/Module Component/Java Modules';
 
 const LearnJava = () => {
   const { courseId } = useParams();
+  const location = useLocation();
   
-  // Check if accessing the root path, redirect to first module if so
-  if (window.location.pathname === `/course/${courseId}/modules`) {
+  // More robust path checking
+  const isRootPath = location.pathname.endsWith(`/course/${courseId}/modules`);
+  
+  useEffect(() => {
+    console.log('LearnJava mounted:', { courseId, pathname: location.pathname });
+  }, [courseId, location.pathname]);
+  
+  if (isRootPath) {
     const firstModule = modules[0];
     const firstSubModule = firstModule.subModules[0];
-    return <Navigate to={`${firstModule.id}/${firstSubModule.id}`} replace />;
+    const redirectPath = `/course/${courseId}/modules/${firstModule.id}/${firstSubModule.id}`;
+    console.log('Redirecting to:', redirectPath);
+    return <Navigate to={redirectPath} replace />;
   }
   
   return (

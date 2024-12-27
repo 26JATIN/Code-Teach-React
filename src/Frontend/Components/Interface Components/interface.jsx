@@ -129,6 +129,7 @@ const CourseLayout = ({
   const [touchEnd, setTouchEnd] = useState(null);
   const [swipeDirection, setSwipeDirection] = useState(null);
   const [completedModules, setCompletedModules] = useState(new Set());
+  const [hasMarkedComplete, setHasMarkedComplete] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -207,7 +208,6 @@ const CourseLayout = ({
 
       .content-scroll-area {
         will-change: scroll-position;
-        -webkit-overflow-scrolling: touch;
       }
 
       .module-container {
@@ -487,6 +487,48 @@ const CourseLayout = ({
       isValid 
     });
   }, [location.pathname, validatePath]);
+
+  // Add this new useEffect for scroll tracking
+  useEffect(() => {
+    const handleScroll = () => {
+      if (hasMarkedComplete) return; // Skip if already marked complete
+
+      const contentArea = document.querySelector('.content-scroll-area');
+      if (!contentArea) return;
+
+      const scrollPosition = contentArea.scrollTop + contentArea.clientHeight;
+      const totalHeight = contentArea.scrollHeight;
+      const scrollPercentage = (scrollPosition / totalHeight) * 100;
+
+      if (scrollPercentage >= 80) {
+        const pathParts = location.pathname.split('/');
+        const currentModuleId = pathParts[pathParts.length - 2];
+        const currentSubModuleId = pathParts[pathParts.length - 1];
+
+        // Only mark complete if we're on a valid module page
+        if (currentModuleId && currentSubModuleId) {
+          markModuleAsComplete(currentModuleId, currentSubModuleId);
+          setHasMarkedComplete(true);
+        }
+      }
+    };
+
+    const contentArea = document.querySelector('.content-scroll-area');
+    if (contentArea) {
+      contentArea.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (contentArea) {
+        contentArea.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [location.pathname, markModuleAsComplete, hasMarkedComplete]);
+
+  // Reset hasMarkedComplete when route changes
+  useEffect(() => {
+    setHasMarkedComplete(false);
+  }, [location.pathname]);
 
   return (
     <>

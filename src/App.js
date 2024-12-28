@@ -26,7 +26,6 @@ const ProtectedRoute = ({ children }) => {
   }
   return children;
 };
-
 // Public Route Component
 const PublicRoute = ({ children }) => {
   if (isAuthenticated()) {

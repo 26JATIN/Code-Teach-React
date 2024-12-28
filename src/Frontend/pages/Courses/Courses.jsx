@@ -63,8 +63,10 @@ function CoursesPage() {
     courses.map((course) => {
       const courseId = course?._id?.toString();
       const isEnrolled = courseId && enrolledCourses.includes(courseId);
-      const isDisabled = course.title.toLowerCase().includes('web development') || 
-                        course.title.toLowerCase().includes('dsa');
+      const title = course.title.toLowerCase();
+      const isDisabled = title.includes('web development') || 
+                         title.includes('data structures')
+                      
 
       // Create icon based on course type/category
       const getIcon = () => {

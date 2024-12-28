@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import Header from '../../Components/Header';
 import Footer from '../../Components/Footer';
 import { Mail, MapPin, Phone, Send, Github, Linkedin } from 'lucide-react';
+import config from '../../../config/config';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -11,11 +12,36 @@ const Contact = () => {
     subject: '',
     message: ''
   });
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your form submission logic here
-    console.log('Form submitted:', formData);
+    setIsSubmitting(true);
+    setStatus({ type: '', message: '' });
+
+    try {
+      const response = await fetch(`${config.api.baseUrl}/api/contact/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setStatus({ type: 'success', message: 'Message sent successfully!' });
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        throw new Error(data.message || 'Failed to send message');
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -112,6 +138,15 @@ const Contact = () => {
                 Send us a Message
               </h2>
               <form onSubmit={handleSubmit} className="space-y-6">
+                {status.message && (
+                  <div className={`p-4 rounded-lg ${
+                    status.type === 'success' 
+                      ? 'bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-100' 
+                      : 'bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-100'
+                  }`}>
+                    {status.message}
+                  </div>
+                )}
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Your Name
@@ -170,12 +205,13 @@ const Contact = () => {
                 </div>
                 <motion.button
                   type="submit"
-                  className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  disabled={isSubmitting}
+                  className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50"
+                  whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                  whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
                 >
                   <Send className="w-5 h-5" />
-                  <span>Send Message</span>
+                  <span>{isSubmitting ? 'Sending...' : 'Send Message'}</span>
                 </motion.button>
               </form>
             </div>

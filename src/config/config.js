@@ -22,6 +22,9 @@ const config = {
         enrolled: '/api/courses/enrolled',
         progress: (courseId) => `/api/courses/progress/${courseId}`,
         lastAccessed: (courseId) => `/api/courses/lastAccessed/${courseId}`
+      },
+      contact: {
+        send: '/api/contact/send'
       }
     }
   },

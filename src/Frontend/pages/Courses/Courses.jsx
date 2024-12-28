@@ -33,11 +33,6 @@ function CoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Move hooks before any conditional returns
-  const handleViewCourse = useCallback((course) => {
-    navigate(course.path);
-  }, [navigate]);
-
   const handleEnrollCourse = useCallback(async (courseId) => {
     try {
       const data = await apiRequest(config.api.endpoints.courses.enroll(courseId), {
@@ -103,14 +98,6 @@ function CoursesPage() {
             </span>
           </div>
           <div className="flex gap-2 mt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => course && handleViewCourse({ ...course, path: coursePath })}
-            >
-              <Eye className="mr-2" size={16} />
-              View Course
-            </Button>
-            
             {isEnrolled ? (
               <Button 
                 onClick={handleOpenDashboard}
@@ -130,7 +117,7 @@ function CoursesPage() {
           </div>
         </motion.div>
       );
-    }), [courses, enrolledCourses, handleViewCourse, handleEnrollCourse, handleOpenDashboard]
+    }), [courses, enrolledCourses, handleEnrollCourse, handleOpenDashboard]
   );
 
   useEffect(() => {

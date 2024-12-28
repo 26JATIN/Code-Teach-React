@@ -6,7 +6,7 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 // Memoize menu items to prevent unnecessary re-renders
 const MENU_ITEMS = [
   { name: 'Home', href: '/' },
-  { name: 'Courses', href: '/Courses' },
+  { name: 'Courses', href: '/courses' },
   { name: 'About', href: '/about' },
   { name: 'Contact', href: '/contact' }
 ];

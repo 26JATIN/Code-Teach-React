@@ -429,27 +429,50 @@ const CodingArea = ({ onClose }) => {
     };
   }, [isMobile]);
 
-  // Add InputSection component
+  // Update InputSection component
   const InputSection = () => {
     const [inputValues, setInputValues] = useState(Array(expectedInputCount).fill(''));
-    
+    const [inputTypes, setInputTypes] = useState(Array(expectedInputCount).fill('text'));
+    const [showBulkInput, setShowBulkInput] = useState(false);
+    const [bulkInput, setBulkInput] = useState('');
+
+    const handleBulkInputChange = (value) => {
+      setBulkInput(value);
+      const values = value.split('\n').map(v => v.trim());
+      setInputValues(prev => {
+        const newValues = [...prev];
+        values.forEach((v, i) => {
+          if (i < expectedInputCount) newValues[i] = v;
+        });
+        return newValues;
+      });
+    };
+
     const handleSubmitInputs = (e) => {
       e.preventDefault();
-      const nonEmptyInputs = inputValues.filter(input => input.trim() !== '');
-      if (nonEmptyInputs.length === expectedInputCount) {
+      const finalInputs = showBulkInput ? 
+        bulkInput.split('\n').slice(0, expectedInputCount) : 
+        inputValues;
+
+      if (finalInputs.filter(input => input.trim() !== '').length === expectedInputCount) {
         executeCode(
           currentContent,
           activeFile.name.endsWith('.java') ? 'java' : 'javascript',
-          inputValues.join('\n')
+          finalInputs.join('\n')
         );
         setShowInputSection(false);
       }
     };
 
-    // Add the InputSection JSX in the existing terminal section
+    const inputTypeOptions = [
+      { value: 'text', label: 'Text' },
+      { value: 'number', label: 'Number' },
+      { value: 'boolean', label: 'Boolean' }
+    ];
+
     return (
       <div className={`transform transition-all duration-300 ease-in-out overflow-hidden
-                      ${showInputSection ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                      ${showInputSection ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="bg-gray-800/50 rounded-lg border border-gray-700/50 p-4 my-2">
           <h3 className="text-sm text-gray-300 mb-3">Program requires {expectedInputCount} input(s)</h3>
           <form onSubmit={handleSubmitInputs} className="space-y-3">
@@ -457,7 +480,7 @@ const CodingArea = ({ onClose }) => {
               <div key={index} className="flex gap-2 items-center">
                 <span className="text-xs text-gray-400">Input {index + 1}:</span>
                 <input
-                  type="text"
+                  type={inputTypes[index]}
                   value={inputValues[index]}
                   onChange={(e) => {
                     const newValues = [...inputValues];
@@ -468,8 +491,41 @@ const CodingArea = ({ onClose }) => {
                            text-sm text-gray-300 focus:outline-none focus:border-blue-500/50"
                   placeholder={`Enter input ${index + 1}`}
                 />
+                <select
+                  value={inputTypes[index]}
+                  onChange={(e) => {
+                    const newTypes = [...inputTypes];
+                    newTypes[index] = e.target.value;
+                    setInputTypes(newTypes);
+                  }}
+                  className="bg-gray-900/90 border border-gray-700/50 rounded px-2 py-1.5
+                           text-sm text-gray-300 focus:outline-none focus:border-blue-500/50"
+                >
+                  {inputTypeOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
               </div>
             ))}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={showBulkInput}
+                onChange={(e) => setShowBulkInput(e.target.checked)}
+                className="rounded border-gray-600"
+              />
+              <span className="text-xs text-gray-400">Bulk Input</span>
+            </div>
+            {showBulkInput && (
+              <textarea
+                value={bulkInput}
+                onChange={(e) => handleBulkInputChange(e.target.value)}
+                className="w-full bg-gray-900/90 border border-gray-700/50 rounded px-3 py-1.5
+                         text-sm text-gray-300 focus:outline-none focus:border-blue-500/50"
+                placeholder="Enter inputs separated by new lines"
+                rows={expectedInputCount}
+              />
+            )}
             <button
               type="submit"
               className="w-full px-4 py-2 bg-blue-600/80 text-white rounded-md hover:bg-blue-700/80

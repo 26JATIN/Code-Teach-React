@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../Components/Header';
 import { ThemeProvider } from '../../Components/ThemeProvider';
 import config from '../../../config/config';  // Default import
-import { apiRequest } from '../../../config/config';  // Named import
+import { apiRequest, isAuthenticated } from '../../../config/config';  // Named import
 
 // Optimized Button Component with Memoization
 const Button = React.memo(({ children, onClick, variant = 'default', className = '' }) => {
@@ -34,12 +34,18 @@ function CoursesPage() {
   const [error, setError] = useState(null);
 
   const handleEnrollCourse = useCallback(async (courseId) => {
+    if (!isAuthenticated()) {
+      // Redirect to auth page with return URL
+      const returnUrl = `/courses`;
+      navigate(`/auth?redirect=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+
     try {
       const data = await apiRequest(config.api.endpoints.courses.enroll(courseId), {
         method: 'POST'
       });
 
-      // Update enrolled courses state and navigate
       setEnrolledCourses(prev => [...prev, courseId]);
       navigate('/learning-dashboard');
     } catch (error) {
@@ -129,21 +135,20 @@ function CoursesPage() {
         const coursesData = await apiRequest(config.api.endpoints.courses.list);
         setCourses(coursesData);
         
-        try {
-          // Fetch enrolled courses if user is authenticated
-          const enrolledData = await apiRequest(config.api.endpoints.courses.enrolled);
-          // Handle both array and object response formats
-          const enrolledCoursesData = enrolledData.courses || enrolledData;
-          // Extract just the course IDs for enrollment check
-          const enrolledIds = (enrolledCoursesData || [])
-            .map(course => course._id?.toString())
-            .filter(Boolean);
-          
-          console.log('Enrolled course IDs:', enrolledIds);
-          setEnrolledCourses(enrolledIds);
-        } catch (enrolledError) {
-          console.error('Failed to fetch enrolled courses:', enrolledError);
-          setEnrolledCourses([]);
+        // Only fetch enrolled courses if user is authenticated
+        if (isAuthenticated()) {
+          try {
+            const enrolledData = await apiRequest(config.api.endpoints.courses.enrolled);
+            const enrolledCoursesData = enrolledData.courses || enrolledData;
+            const enrolledIds = (enrolledCoursesData || [])
+              .map(course => course._id?.toString())
+              .filter(Boolean);
+            
+            setEnrolledCourses(enrolledIds);
+          } catch (enrolledError) {
+            console.error('Failed to fetch enrolled courses:', enrolledError);
+            setEnrolledCourses([]);
+          }
         }
       } catch (err) {
         console.error('Error:', err);

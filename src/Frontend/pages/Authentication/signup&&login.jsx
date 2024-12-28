@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Book } from 'lucide-react';
 import config, { apiRequest, setAuthToken, setUser } from '../../../config/config';
 
@@ -17,6 +17,7 @@ const AuthPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
 
   const inputClassName = "w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors";
   const labelClassName = "block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1";
@@ -48,6 +49,12 @@ const AuthPage = () => {
     }
 
     return true;
+  };
+
+  const onAuthSuccess = () => {
+    const params = new URLSearchParams(location.search);
+    const redirectUrl = params.get('redirect') || '/learning-dashboard';
+    navigate(redirectUrl);
   };
 
   const handleSubmit = async (e) => {
@@ -92,7 +99,7 @@ const AuthPage = () => {
 
         setAuthToken(data.token);
         setUser(data.user);
-        navigate('/learning-dashboard');
+        onAuthSuccess();
         
       } catch (error) {
         console.error('Auth error:', error);
@@ -161,7 +168,7 @@ const AuthPage = () => {
       } else {
         setAuthToken(data.token);
         setUser(data.user);
-        navigate('/learning-dashboard');
+        onAuthSuccess();
       }
       
     } catch (error) {

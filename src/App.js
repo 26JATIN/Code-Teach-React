@@ -105,6 +105,7 @@ const App = () => {
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/homepage" element={<Home />} />
+            <Route path="/courses" element={<Courses />} /> {/* Remove ProtectedRoute wrapper */}
             <Route path="/auth" element={
               <PublicRoute>
                 <Auth />
@@ -112,11 +113,6 @@ const App = () => {
             } />
 
             {/* Protected Routes */}
-            <Route path="/courses" element={
-              <ProtectedRoute>
-                <Courses />
-              </ProtectedRoute>
-            } />
             <Route path="/course/:courseId/*" element={
               <ProtectedRoute>
                 <CourseSelector />

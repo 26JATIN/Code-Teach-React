@@ -201,7 +201,6 @@ const CodingArea = ({ onClose }) => {
         setError(data.message);
         return;
       }
-
       const output = data.run.output || data.run.stderr;
       setOutput(output);
       setTerminalHistory(prev => [...prev, { type: 'output', content: output }]);

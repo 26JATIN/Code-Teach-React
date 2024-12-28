@@ -19,6 +19,7 @@ const LearnCpp = lazy(() => import('./Course Modules/Cpp/LearnCpp'));
 const LearningDashboard = lazy(() => import('./Frontend/pages/EnrolledCourse/learningdashboard'));
 const Auth = lazy(() => import('./Frontend/pages/Authentication/signup&&login'));
 const About = lazy(() => import('./Frontend/pages/About/About')); // Add About to lazy imports
+const Contact = lazy(() => import('./Frontend/pages/Contact/Contact')); // Add Contact to lazy imports
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -112,6 +113,7 @@ const App = () => {
               </PublicRoute>
             } />
             <Route path="/about" element={<About />} /> {/* Add About route */}
+            <Route path="/contact" element={<Contact />} /> {/* Add Contact route */}
 
             {/* Protected Routes */}
             <Route path="/course/:courseId/*" element={

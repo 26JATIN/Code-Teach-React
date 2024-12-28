@@ -82,7 +82,6 @@ function CoursesPage() {
 
       // Update the path to include courseId
       const coursePath = `/course/${courseId}/modules`;
-
       return (
         <motion.div
           key={courseId || Math.random()}

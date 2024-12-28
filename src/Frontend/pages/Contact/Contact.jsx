@@ -65,16 +65,8 @@ const Contact = () => {
                   <Mail className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                   <div>
                     <a href="mailto:contact@codeteach.com" className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">
-                      contact@codeteach.com
+                      codeteach26@gmail.com
                     </a>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <Phone className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                  <div>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      +91 123-456-7890
-                    </p>
                   </div>
                 </div>
               </div>

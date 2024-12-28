@@ -61,9 +61,9 @@ function CoursesPage() {
   // Move useMemo before any conditional returns
   const courseCards = useMemo(() => 
     courses.map((course) => {
-      // Safety check for course._id
       const courseId = course?._id?.toString();
       const isEnrolled = courseId && enrolledCourses.includes(courseId);
+      const isDisabled = course.title.includes('Web Development') || course.title.includes('DSA');
 
       // Create icon based on course type/category
       const getIcon = () => {
@@ -114,10 +114,14 @@ function CoursesPage() {
               </Button>
             ) : (
               <Button 
-                onClick={() => courseId && handleEnrollCourse(courseId)}
-                className="bg-purple-500 hover:bg-purple-600 text-white"
+                onClick={() => !isDisabled && courseId && handleEnrollCourse(courseId)}
+                className={`${
+                  isDisabled 
+                    ? 'bg-gray-400 cursor-not-allowed opacity-50' 
+                    : 'bg-purple-500 hover:bg-purple-600'
+                } text-white`}
               >
-                Enroll Now
+                {isDisabled ? 'Coming Soon' : 'Enroll Now'}
               </Button>
             )}
           </div>

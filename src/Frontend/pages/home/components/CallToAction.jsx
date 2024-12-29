@@ -32,8 +32,9 @@ export default function CallToAction() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <Button size="lg" className="rounded-full bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600">
-              onClick={() => navigate('/courses')}
+            <Button size="lg" className="rounded-full bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600"
+            onClick={() => navigate('/courses')}>
+              
               Explore Courses
             </Button>
           </motion.div>

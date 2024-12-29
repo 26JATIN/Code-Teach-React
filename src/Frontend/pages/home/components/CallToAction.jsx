@@ -1,9 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from './ui/button';
+import { useNavigate } from 'react-router-dom';
+
 
 export default function CallToAction() {
+  const navigate = useNavigate();
   return (
+    
     <section className="py-20 bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900 dark:to-blue-900">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center">

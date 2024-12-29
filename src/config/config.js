@@ -1,5 +1,5 @@
 // Define default values
-const DEFAULT_API_URL = 'https://code-teach-backend.onrender.com';
+const DEFAULT_API_URL = 'https://code-teach-backend.vercel.app';
 const DEFAULT_APP_NAME = 'Code Teach';
 
 // Basic config object with defaults

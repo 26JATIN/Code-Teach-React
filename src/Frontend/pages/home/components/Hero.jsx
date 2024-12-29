@@ -94,9 +94,6 @@ const Hero = () => {
               >
                 Get Started
               </Button>
-              <Button size="lg" variant="outline" className="rounded-full border-purple-600 text-purple-600 hover:bg-purple-100 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-900/30">
-                Learn More
-              </Button>
             </div>
           </motion.div>
 

@@ -34,6 +34,8 @@ import SimpleIfStatement from '../../../Course Modules/Java/4.ControlFlow-IfElse
 import IfElseStatement from '../../../Course Modules/Java/4.ControlFlow-IfElse/2.IfElseStatement';
 import IfElseIfLadder from '../../../Course Modules/Java/4.ControlFlow-IfElse/3.IfElseIfLadder';
 import NestedIfStatements from '../../../Course Modules/Java/4.ControlFlow-IfElse/4.NestedIfStatements';
+import PracticeSetIfElse from '../../../Course Modules/Java/4.ControlFlow-IfElse/PracticeSetIfElse';
+
 // import PracticeSetIfElse from '../../../Course Modules/Java/4.ControlFlow-IfElse/PracticeSetIfElse';
 
 // Module 4-10: Comment out all future imports until components are created
@@ -143,7 +145,7 @@ export const modules = [
       { id: '4.2', title: 'If-Else Statement', component: IfElseStatement },
       { id: '4.3', title: 'If-Else-If Ladder', component: IfElseIfLadder },
       { id: '4.4', title: 'Nested If Statements', component: NestedIfStatements },
-      // { id: '4.5', title: 'Practice Set - If Else', component: PracticeSetIfElse }
+      { id: '4.5', title: 'Practice Set - If Else', component: PracticeSetIfElse }
     ]
   },
   // Comment out modules that haven't been created yet

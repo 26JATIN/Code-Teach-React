@@ -43,6 +43,10 @@ import SwitchBasics from '../../../Course Modules/Java/5.ControlFlow-Switch/1.Sw
 import SwitchWithStrings from '../../../Course Modules/Java/5.ControlFlow-Switch/2.SwitchWithStrings';
 import EnhancedSwitch from '../../../Course Modules/Java/5.ControlFlow-Switch/3.EnhancedSwitch';
 import PracticeSetSwitch from '../../../Course Modules/Java/5.ControlFlow-Switch/PracticeSetSwitch';
+
+// Module 6: Loops - For Loop
+import BasicForLoop from '../../../Course Modules/Java/6.Loops-For/1.BasicForLoop';
+
 // Module 4-10: Comment out all future imports until components are created
 /* 
 // Module 6: Loops - For Loop
@@ -155,6 +159,14 @@ export const modules = [
       { id: '5.2', title: 'Switch with Strings', component: SwitchWithStrings },
       { id: '5.3', title: 'Enhanced Switch (Java 14+)', component: EnhancedSwitch },
       { id: '5.4', title: 'Practice Set - Switch', component: PracticeSetSwitch }
+    ]
+  },
+  {
+    id: '6',
+    title: 'Loops - For Loop',
+    subModules: [
+      { id: '6.1', title: 'Basic For Loop', component: BasicForLoop },
+      // Other submodules still commented out
     ]
   },
   /* Comment out modules that haven't been created yet

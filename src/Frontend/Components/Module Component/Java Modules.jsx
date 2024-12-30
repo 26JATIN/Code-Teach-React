@@ -22,8 +22,8 @@ import Set1Datatypes from '../../../Course Modules/Java/2.Syntex And Variables/P
 // Module 3: Operators
 import ArithmeticOperators from '../../../Course Modules/Java/3.Operators/1.ArithmeticOperators';
 import AssignmentOperators from '../../../Course Modules/Java/3.Operators/2.AssignmentOperators';
-/* Commented imports for modules to be created
 import ComparisonOperators from '../../../Course Modules/Java/3.Operators/3.ComparisonOperators';
+/* Commented imports for modules to be created
 import LogicalOperators from '../../../Course Modules/Java/3.Operators/4.LogicalOperators';
 import BitwiseOperators from '../../../Course Modules/Java/3.Operators/5.BitwiseOperators';
 import OperatorPrecedence from '../../../Course Modules/Java/3.Operators/6.OperatorPrecedence';
@@ -127,9 +127,9 @@ export const modules = [
     subModules: [
       { id: '3.1', title: 'Arithmetic Operators', component: ArithmeticOperators },
       { id: '3.2', title: 'Assignment Operators', component: AssignmentOperators },
+      { id: '3.3', title: 'Comparison Operators', component: ComparisonOperators },
       // Comment out submodules that haven't been created yet
       /*
-      { id: '3.3', title: 'Comparison Operators', component: ComparisonOperators },
       { id: '3.4', title: 'Logical Operators', component: LogicalOperators },
       { id: '3.5', title: 'Bitwise Operators', component: BitwiseOperators },
       { id: '3.6', title: 'Operator Precedence', component: OperatorPrecedence }

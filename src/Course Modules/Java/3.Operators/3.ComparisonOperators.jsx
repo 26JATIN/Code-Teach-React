@@ -130,8 +130,107 @@ const ComparisonOperators = () => {
         </div>
       </div>
 
-      {/* Examples and Practice */}
-      // ...rest of the component implementation following the same pattern as previous modules...
+      {/* Examples Section */}
+      <section className="space-y-6">
+        <h2 className="text-2xl font-semibold text-blue-400">See It In Action! 🚀</h2>
+        <CodeSnippet {...examples.basicComparisons} />
+        
+        <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
+          <h3 className="text-lg font-medium text-yellow-400 mb-2">Important Note! ⚠️</h3>
+          <p className="text-gray-300">
+            Remember that comparison operators always return a boolean value (true or false). 
+            This makes them perfect for use in if statements and loops!
+          </p>
+        </div>
+      </section>
+
+      {/* String Comparison Section */}
+      <section className="space-y-6">
+        <h2 className="text-2xl font-semibold text-blue-400">Comparing Strings 📝</h2>
+        <CodeSnippet {...examples.stringComparison} />
+        
+        <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
+          <h3 className="text-lg font-medium text-purple-400 mb-3">Quick Tips for String Comparison 💡</h3>
+          <ul className="space-y-2 text-gray-300">
+            <li>• Always use .equals() to compare String content</li>
+            <li>• Use .equalsIgnoreCase() when case doesn't matter</li>
+            <li>• Never use == for String comparison</li>
+            <li>• .compareTo() returns negative, zero, or positive number based on string order</li>
+          </ul>
+        </div>
+      </section>
+
+      {/* Practice Section */}
+      <section className="space-y-6">
+        <h2 className="text-2xl font-semibold text-green-400">Let's Practice! 💪</h2>
+        
+        {/* Practice Question 1 */}
+        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
+          <h3 className="text-xl font-medium text-green-400 mb-3">Practice 1: Grade Calculator</h3>
+          <p className="text-gray-300 mb-4">
+            Create a program that determines if a student passed or failed based on their score.
+            This will help you practice using comparison operators with numbers!
+          </p>
+          <CodeEditor defaultCode={examples.practiceQuestion1.code} />
+        </div>
+
+        {/* Practice Question 2 */}
+        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
+          <h3 className="text-xl font-medium text-green-400 mb-3">Practice 2: Number Comparison</h3>
+          <p className="text-gray-300 mb-4">
+            Write a program that compares three numbers. This will give you practice with 
+            multiple comparisons and logical thinking!
+          </p>
+          <CodeEditor defaultCode={examples.practiceQuestion2.code} />
+        </div>
+      </section>
+
+      {/* Common Mistakes */}
+      <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
+        <h3 className="text-lg font-medium text-red-400 flex items-center gap-2 mb-2">
+          <span>⚠️ Watch Out For These!</span>
+        </h3>
+        <ul className="list-disc list-inside space-y-2 text-gray-300">
+          <li>Using == to compare Strings instead of .equals()</li>
+          <li>Forgetting parentheses in complex comparisons</li>
+          <li>Confusing = (assignment) with == (comparison)</li>
+          <li>Not considering edge cases in comparisons</li>
+        </ul>
+      </div>
+
+      {/* Summary Section */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-blue-400">Quick Summary 📝</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+            <h3 className="text-lg font-medium text-blue-400 mb-3">For Numbers</h3>
+            <ul className="space-y-2 text-gray-300">
+              <li>✓ Use ==, !=, &gt;, &lt;, &gt;=, &lt;= directly</li>
+              <li>✓ Works with int, double, float, etc.</li>
+              <li>✓ Always returns true or false</li>
+            </ul>
+          </div>
+          
+          <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
+            <h3 className="text-lg font-medium text-purple-400 mb-3">For Strings</h3>
+            <ul className="space-y-2 text-gray-300">
+              <li>✓ Use .equals() for exact match</li>
+              <li>✓ Use .equalsIgnoreCase() for case-insensitive</li>
+              <li>✓ Use .compareTo() for ordering</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Next Steps */}
+      <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+        <h3 className="text-lg font-medium text-green-400 mb-2">🎯 Next Steps</h3>
+        <p className="text-gray-300">
+          Now that you understand comparison operators, you're ready to learn about logical operators 
+          and how to combine multiple conditions! These will be essential for creating more complex 
+          decision-making in your programs.
+        </p>
+      </div>
     </div>
   );
 };

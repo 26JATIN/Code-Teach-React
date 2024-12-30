@@ -46,6 +46,7 @@ import PracticeSetSwitch from '../../../Course Modules/Java/5.ControlFlow-Switch
 
 // Module 6: Loops - For Loop
 import BasicForLoop from '../../../Course Modules/Java/6.Loops-For/1.BasicForLoop';
+import NestedForLoops from '../../../Course Modules/Java/6.Loops-For/2.NestedForLoops';
 
 // Module 4-10: Comment out all future imports until components are created
 /* 
@@ -166,6 +167,7 @@ export const modules = [
     title: 'Loops - For Loop',
     subModules: [
       { id: '6.1', title: 'Basic For Loop', component: BasicForLoop },
+      { id: '6.2', title: 'Nested For Loops', component: NestedForLoops }
       // Other submodules still commented out
     ]
   },

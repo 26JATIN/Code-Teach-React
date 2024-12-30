@@ -134,8 +134,117 @@ const LogicalOperators = () => {
 
       {/* Practice Section */}
       <section className="space-y-6">
-        // ...rest of the component (practice questions, common mistakes, etc.)...
+        <h2 className="text-2xl font-semibold text-green-400">Let's Practice! 💪</h2>
+        
+        {/* Practice Question 1 */}
+        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
+          <h3 className="text-xl font-medium text-green-400 mb-3">Practice 1: Movie Theater Access</h3>
+          <p className="text-gray-300 mb-4">
+            Create a program to check if someone can watch a movie based on multiple conditions.
+          </p>
+          <CodeEditor defaultCode={examples.practiceQuestion1.code} />
+        </div>
+
+        {/* Practice Question 2 */}
+        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
+          <h3 className="text-xl font-medium text-green-400 mb-3">Practice 2: Game Level Access</h3>
+          <p className="text-gray-300 mb-4">
+            Create a program that checks if a player can access a game level using multiple conditions.
+          </p>
+          <CodeEditor defaultCode={examples.practiceQuestion2.code} />
+        </div>
       </section>
+
+      {/* Common Mistakes */}
+      <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
+        <h3 className="text-lg font-medium text-red-400 flex items-center gap-2 mb-2">
+          <span>⚠️ Watch Out For These!</span>
+        </h3>
+        <ul className="list-disc list-inside space-y-2 text-gray-300">
+          <li>Forgetting parentheses around complex conditions</li>
+          <li>Confusing && (AND) with || (OR)</li>
+          <li>Not considering all possible combinations</li>
+          <li>Incorrect order of operations with multiple logical operators</li>
+        </ul>
+      </div>
+
+      {/* Truth Table Section */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-blue-400">Truth Tables 📊</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+            <h3 className="text-lg font-medium text-blue-400 mb-3">AND (&&) Table</h3>
+            <div className="grid grid-cols-3 gap-2 text-sm">
+              <div className="font-medium text-gray-400">A</div>
+              <div className="font-medium text-gray-400">B</div>
+              <div className="font-medium text-gray-400">Result</div>
+              <div className="text-gray-300">true</div>
+              <div className="text-gray-300">true</div>
+              <div className="text-green-400">true</div>
+              <div className="text-gray-300">true</div>
+              <div className="text-gray-300">false</div>
+              <div className="text-red-400">false</div>
+              <div className="text-gray-300">false</div>
+              <div className="text-gray-300">true</div>
+              <div className="text-red-400">false</div>
+              <div className="text-gray-300">false</div>
+              <div className="text-gray-300">false</div>
+              <div className="text-red-400">false</div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
+            <h3 className="text-lg font-medium text-purple-400 mb-3">OR (||) Table</h3>
+            <div className="grid grid-cols-3 gap-2 text-sm">
+              <div className="font-medium text-gray-400">A</div>
+              <div className="font-medium text-gray-400">B</div>
+              <div className="font-medium text-gray-400">Result</div>
+              <div className="text-gray-300">true</div>
+              <div className="text-gray-300">true</div>
+              <div className="text-green-400">true</div>
+              <div className="text-gray-300">true</div>
+              <div className="text-gray-300">false</div>
+              <div className="text-green-400">true</div>
+              <div className="text-gray-300">false</div>
+              <div className="text-gray-300">true</div>
+              <div className="text-green-400">true</div>
+              <div className="text-gray-300">false</div>
+              <div className="text-gray-300">false</div>
+              <div className="text-red-400">false</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Summary Section */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-blue-400">Quick Summary 📝</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+            <h3 className="text-lg font-medium text-blue-400 mb-3">AND (&&)</h3>
+            <p className="text-gray-300">Both conditions must be true</p>
+          </div>
+          
+          <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
+            <h3 className="text-lg font-medium text-purple-400 mb-3">OR (||)</h3>
+            <p className="text-gray-300">At least one must be true</p>
+          </div>
+
+          <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+            <h3 className="text-lg font-medium text-green-400 mb-3">NOT (!)</h3>
+            <p className="text-gray-300">Reverses the condition</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Next Steps */}
+      <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+        <h3 className="text-lg font-medium text-green-400 mb-2">🎯 Where to Next?</h3>
+        <p className="text-gray-300">
+          Now that you understand logical operators, you'll be ready to learn about control flow statements 
+          like if-else and loops. These will help you use these operators to make decisions in your programs!
+        </p>
+      </div>
     </div>
   );
 };

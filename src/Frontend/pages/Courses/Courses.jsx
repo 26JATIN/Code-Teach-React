@@ -196,7 +196,7 @@ function CoursesPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="py-8 px-4 sm:px-6 lg:px-8"
+          className="pt-16 py-8 px-4 sm:px-6 lg:px-8"
         >
           {/* ...existing content... */}
           <div className="max-w-7xl mx-auto">

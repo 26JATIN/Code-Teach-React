@@ -41,7 +41,7 @@ import PracticeSetIfElse from '../../../Course Modules/Java/4.ControlFlow-IfElse
 // Module 5: Control Flow - Switch
 import SwitchBasics from '../../../Course Modules/Java/5.ControlFlow-Switch/1.SwitchBasics';
 import SwitchWithStrings from '../../../Course Modules/Java/5.ControlFlow-Switch/2.SwitchWithStrings';
-
+import EnhancedSwitch from '../../../Course Modules/Java/5.ControlFlow-Switch/3.EnhancedSwitch';
 // Module 4-10: Comment out all future imports until components are created
 /* 
 // Module 6: Loops - For Loop
@@ -152,8 +152,9 @@ export const modules = [
     subModules: [
       { id: '5.1', title: 'Switch Basics', component: SwitchBasics },
       { id: '5.2', title: 'Switch with Strings', component: SwitchWithStrings },
-      /* Remaining switch modules still commented
+      
       { id: '5.3', title: 'Enhanced Switch (Java 14+)', component: EnhancedSwitch },
+      /* Remaining switch modules still commented
       { id: '5.4', title: 'Practice Set - Switch', component: PracticeSetSwitch }
       */
     ]

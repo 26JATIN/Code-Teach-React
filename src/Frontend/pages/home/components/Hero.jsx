@@ -68,6 +68,20 @@ const FEATURES = [
 const Hero = () => {
   const navigate = useNavigate();
 
+  const handleGetStarted = (e) => {
+    e.preventDefault();
+    // Add fade out effect before navigation
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.3s';
+    setTimeout(() => {
+      navigate('/auth');
+      // Reset opacity after navigation
+      requestAnimationFrame(() => {
+        document.body.style.opacity = '1';
+      });
+    }, 300);
+  };
+
   return (
     <section className="py-12 md:py-20 lg:py-32 overflow-hidden bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -90,7 +104,7 @@ const Hero = () => {
               <Button 
                 size="lg" 
                 className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-                onClick={() => navigate('/auth')}
+                onClick={handleGetStarted}
               >
                 Get Started
               </Button>

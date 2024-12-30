@@ -24,6 +24,7 @@ import ArithmeticOperators from '../../../Course Modules/Java/3.Operators/1.Arit
 import AssignmentOperators from '../../../Course Modules/Java/3.Operators/2.AssignmentOperators';
 import LogicalOperators from '../../../Course Modules/Java/3.Operators/3.LogicalOperators';
 import BitwiseOperators from '../../../Course Modules/Java/3.Operators/4.BitwiseOperators';
+import PracticeSetOperators from '../../../Course Modules/Java/3.Operators/PracticeSetOperators';
 /* Commented imports for modules to be created
 import OperatorPrecedence from '../../../Course Modules/Java/3.Operators/5.OperatorPrecedence';
 */
@@ -128,8 +129,9 @@ export const modules = [
       { id: '3.2', title: 'Assignment Operators', component: AssignmentOperators },
       { id: '3.3', title: 'Logical Operators', component: LogicalOperators },
       { id: '3.4', title: 'Bitwise Operators', component: BitwiseOperators },
+      { id: '3.5', title: 'Practice Set: Operators', component: PracticeSetOperators }
       /* Comment out remaining submodule
-      { id: '3.5', title: 'Operator Precedence', component: OperatorPrecedence }
+      { id: '3.6', title: 'Operator Precedence', component: OperatorPrecedence }
       */
     ]
   },

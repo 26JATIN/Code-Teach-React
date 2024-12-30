@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
-import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
+import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
+import Hint from '../../../Frontend/Components/practice compnenets/hint';
+import ViewSolution from '../../../Frontend/Components/practice compnenets/viewsolution';
 
 const PracticeSetOperators = () => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
@@ -483,51 +485,21 @@ System.out.printf("Total Amount: $%.2f", totalAmount);`,
           <h3 className="text-xl font-medium text-green-400 mb-3">{exercise.title}</h3>
           <p className="text-gray-300 mb-4">{exercise.description}</p>
           
-          {/* Code Editor for Practice */}
           <div className="mb-4">
             <CodeEditor defaultCode={exercise.template} />
           </div>
 
-          {/* Solution Section */}
-          <div className="border border-green-500/20 rounded-lg overflow-hidden">
-            <button
-              onClick={() => toggleSolution(key)}
-              className="w-full px-4 py-2 bg-green-500/10 text-green-400 
-                hover:bg-green-500/20 transition-colors duration-200 text-left
-                flex items-center justify-between"
-            >
-              <span>View Solution</span>
-              <span>✨</span>
-            </button>
-            {expandedSolutions[key] && (
-              <div className="border-t border-green-500/20">
-                <CodeSnippet
-                  code={exercise.solution}
-                  language="java"
-                  showLineNumbers={true}
-                  showCopyButton={true}
-                />
-              </div>
-            )}
-          </div>
+          <ViewSolution 
+            solution={exercise.solution}
+            isExpanded={expandedSolutions[key]}
+            onToggle={() => toggleSolution(key)}
+          />
 
-          {/* Hint Section */}
-          <div className="mt-4 border border-yellow-500/20 rounded-lg overflow-hidden">
-            <button
-              onClick={() => toggleHint(key)}
-              className="w-full px-4 py-2 bg-yellow-500/10 text-yellow-400 
-                hover:bg-yellow-500/20 transition-colors duration-200 text-left
-                flex items-center justify-between"
-            >
-              <span>View Hint</span>
-              <span>💡</span>
-            </button>
-            {expandedHints[key] && (
-              <div className="p-4 bg-yellow-500/5 border-t border-yellow-500/20">
-                <p className="text-gray-300">{exercise.hint}</p>
-              </div>
-            )}
-          </div>
+          <Hint 
+            hint={exercise.hint}
+            isExpanded={expandedHints[key]}
+            onToggle={() => toggleHint(key)}
+          />
         </div>
       ))}
     </section>
@@ -571,59 +543,13 @@ System.out.printf("Total Amount: $%.2f", totalAmount);`,
       {/* MCQ Section */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-blue-400">Multiple Choice Questions</h2>
-        {mcqQuestions.map((q) => (
-          <div key={q.id} className="p-6 bg-gray-800/50 rounded-xl border border-gray-700/50">
-            <p className="text-gray-200 mb-4">{q.question}</p>
-            <div className="space-y-2">
-              {q.options.map((option, index) => {
-                const isSelected = selectedAnswers[q.id] === index;
-                const isCorrect = index === q.correctAnswer;
-                const showFeedback = isSelected;
-
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleAnswerSelect(q.id, index)}
-                    className={`w-full p-3 text-left rounded-lg transition-colors duration-200 
-                      ${isSelected
-                        ? isCorrect
-                          ? 'bg-green-500/20 border-green-500/50'
-                          : 'bg-red-500/20 border-red-500/50'
-                        : 'bg-gray-900/50 border-gray-800/50'
-                      } border hover:bg-gray-700/50`}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-4 h-4 rounded-full border-2 
-                          ${isSelected
-                            ? isCorrect
-                              ? 'border-green-400 bg-green-400'
-                              : 'border-red-400 bg-red-400'
-                            : 'border-gray-600'
-                          }`} 
-                        />
-                        <span className="text-gray-300">{option}</span>
-                      </div>
-                      {showFeedback && (
-                        <span className="text-sm">
-                          {isCorrect ? (
-                            <span className="text-green-400">✓ Correct</span>
-                          ) : (
-                            <span className="text-red-400">✗ Incorrect</span>
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            {selectedAnswers[q.id] !== undefined && (
-              <div className="mt-4 p-4 bg-gray-900/50 rounded-lg">
-                <p className="text-gray-400 text-sm">{q.explanation}</p>
-              </div>
-            )}
-          </div>
+        {mcqQuestions.map((question) => (
+          <MCQ
+            key={question.id}
+            question={question}
+            selectedAnswer={selectedAnswers[question.id]}
+            onAnswerSelect={handleAnswerSelect}
+          />
         ))}
       </section>
 

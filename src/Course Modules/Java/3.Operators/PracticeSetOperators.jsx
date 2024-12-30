@@ -213,7 +213,7 @@ const PracticeSetOperators = () => {
         "3",
         "4"
       ],
-      correctAnswer: 2,
+      correctAnswer: 1,
       explanation: "27 divided by 5 gives quotient 5 and remainder 2. x %= 5 assigns the remainder 2 to x."
     },
     {

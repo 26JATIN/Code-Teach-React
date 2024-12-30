@@ -50,7 +50,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen overflow-y-auto bg-gradient-to-br from-purple-100 to-blue-200 dark:from-gray-900 dark:to-gray-800">
       <Header />
       
       <main className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">

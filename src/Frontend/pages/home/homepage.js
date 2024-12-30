@@ -10,7 +10,7 @@ import { ThemeProvider } from '../../Components/ThemeProvider';
 function homepage() {
     return (
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-200 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 bg-red-100">
+        <div className="h-screen overflow-y-auto bg-gradient-to-br from-purple-100 to-blue-200 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
           <Header />
           <main>
             <Hero />

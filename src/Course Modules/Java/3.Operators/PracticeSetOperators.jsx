@@ -10,6 +10,40 @@ const PracticeSetOperators = () => {
   const [expandedHints, setExpandedHints] = useState({});
   const [expandedSolutions, setExpandedSolutions] = useState({});
 
+  const toggleSolution = (exerciseKey) => {
+    setExpandedSolutions(prev => ({
+      ...prev,
+      [exerciseKey]: !prev[exerciseKey]
+    }));
+  };
+
+  const toggleHint = (exerciseKey) => {
+    setExpandedHints(prev => ({
+      ...prev,
+      [exerciseKey]: !prev[exerciseKey]
+    }));
+  };
+
+  const CodeModal = ({ code, onClose }) => (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[1000]">
+      <div className="bg-gray-900 rounded-xl border border-gray-700 p-6 max-w-2xl w-full mx-4 relative">
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white"
+        >
+          <span className="sr-only">Close</span>
+          ✕
+        </button>
+        <CodeSnippet
+          code={code}
+          language="java"
+          showLineNumbers={true}
+          showCopyButton={true}
+        />
+      </div>
+    </div>
+  );
+
   const mcqQuestions = [
     {
       id: 1,

@@ -29,15 +29,15 @@ import PracticeSetOperators from '../../../Course Modules/Java/3.Operators/Pract
 import OperatorPrecedence from '../../../Course Modules/Java/3.Operators/5.OperatorPrecedence';
 */
 
-// Module 4-10: Comment out all future imports until components are created
-/* 
 // Module 4: Control Flow - If Else
 import SimpleIfStatement from '../../../Course Modules/Java/4.ControlFlow-IfElse/1.SimpleIfStatement';
 import IfElseStatement from '../../../Course Modules/Java/4.ControlFlow-IfElse/2.IfElseStatement';
 import IfElseIfLadder from '../../../Course Modules/Java/4.ControlFlow-IfElse/3.IfElseIfLadder';
 import NestedIfStatements from '../../../Course Modules/Java/4.ControlFlow-IfElse/4.NestedIfStatements';
-import PracticeSetIfElse from '../../../Course Modules/Java/4.ControlFlow-IfElse/5.PracticeSetIfElse';
+import PracticeSetIfElse from '../../../Course Modules/Java/4.ControlFlow-IfElse/PracticeSetIfElse';
 
+// Module 4-10: Comment out all future imports until components are created
+/* 
 // Module 5: Control Flow - Switch
 import SwitchBasics from '../../../Course Modules/Java/5.ControlFlow-Switch/1.SwitchBasics';
 import SwitchWithStrings from '../../../Course Modules/Java/5.ControlFlow-Switch/2.SwitchWithStrings';
@@ -135,9 +135,6 @@ export const modules = [
       */
     ]
   },
-  
-  // Comment out modules that haven't been created yet
-  /*
   {
     id: '4',
     title: 'Control Flow - If Else',
@@ -149,6 +146,8 @@ export const modules = [
       { id: '4.5', title: 'Practice Set - If Else', component: PracticeSetIfElse }
     ]
   },
+  // Comment out modules that haven't been created yet
+  /*
   {
     id: '5',
     title: 'Control Flow - Switch',

@@ -34,57 +34,39 @@ const ComparisonOperators = () => {
       showCopyButton: true
     },
 
-    stringComparison: {
-      title: '📝 String Comparison',
-      code: `public class StringComparison {
-    public static void main(String[] args) {
-        String str1 = "Hello";
-        String str2 = "hello";
-        
-        // Comparing strings (case-sensitive)
-        System.out.println("str1.equals(str2): " + str1.equals(str2));           // false
-        
-        // Comparing strings (ignore case)
-        System.out.println("str1.equalsIgnoreCase(str2): " + 
-                          str1.equalsIgnoreCase(str2));                          // true
-        
-        // DON'T use == for String comparison!
-        System.out.println("Using == (unreliable for Strings): " + (str1 == str2)); // Don't do this!
-    }
-}`,
-      showLineNumbers: true,
-      showCopyButton: true
-    },
-
     practiceQuestion1: {
       title: '🎯 Practice: Grade Calculator',
       code: `public class GradeCalculator {
     public static void main(String[] args) {
-        // TODO: Create a program that:
-        // 1. Takes a student's score (0-100)
-        // 2. Prints whether they:
-        //    - Passed (>= 60)
-        //    - Failed (< 60)
-        //    - Got perfect score (== 100)
-        
         Scanner scan = new Scanner(System.in);
+        
+        // Ask for score
+        System.out.println("Enter your score (0-100): ");
+        int score = scan.nextInt();
+        
+        // TODO: Write conditions using comparison operators to:
+        // 1. Check if score is perfect (100)
+        // 2. Check if score is passing (>= 60)
+        // 3. Check if score is failing (< 60)
         // Your code here
+        
+        scan.close();
     }
 }`
     },
 
     practiceQuestion2: {
-      title: '🎯 Practice: Number Comparison',
-      code: `public class NumberComparison {
+      title: '🎯 Practice: Number Ordering',
+      code: `public class NumberOrdering {
     public static void main(String[] args) {
-        // TODO: Write a program that:
-        // 1. Takes three numbers from user
-        // 2. Prints:
-        //    - Which is largest
-        //    - Which is smallest
-        //    - If any are equal
+        int num1 = 15;
+        int num2 = 7;
+        int num3 = 22;
         
-        Scanner scan = new Scanner(System.in);
+        // TODO: Use comparison operators to:
+        // 1. Find the largest number
+        // 2. Find the smallest number
+        // 3. Check if any numbers are equal
         // Your code here
     }
 }`
@@ -106,27 +88,34 @@ const ComparisonOperators = () => {
         </p>
       </div>
 
-      {/* Operator Types Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-lg font-medium text-blue-400 mb-3">Numeric Comparison</h3>
-          <ul className="space-y-2 text-gray-300">
-            <li><code className="text-blue-400">==</code> Equal to</li>
-            <li><code className="text-blue-400">!=</code> Not equal to</li>
-            <li><code className="text-blue-400">&gt;</code> Greater than</li>
-            <li><code className="text-blue-400">&lt;</code> Less than</li>
-            <li><code className="text-blue-400">&gt;=</code> Greater than or equal to</li>
-            <li><code className="text-blue-400">&lt;=</code> Less than or equal to</li>
-          </ul>
-        </div>
-        
-        <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-lg font-medium text-purple-400 mb-3">String Comparison</h3>
-          <ul className="space-y-2 text-gray-300">
-            <li><code className="text-purple-400">.equals()</code> Compare strings (case-sensitive)</li>
-            <li><code className="text-purple-400">.equalsIgnoreCase()</code> Compare strings (ignore case)</li>
-            <li><code className="text-purple-400">.compareTo()</code> Compare string order</li>
-          </ul>
+      {/* Operator Types */}
+      <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+        <h3 className="text-lg font-medium text-blue-400 mb-3">Comparison Operators</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="flex items-center gap-2">
+            <code className="text-blue-400">==</code>
+            <span className="text-gray-300">Equal to</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="text-blue-400">!=</code>
+            <span className="text-gray-300">Not equal to</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="text-blue-400">&gt;</code>
+            <span className="text-gray-300">Greater than</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="text-blue-400">&lt;</code>
+            <span className="text-gray-300">Less than</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="text-blue-400">&gt;=</code>
+            <span className="text-gray-300">Greater than or equal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="text-blue-400">&lt;=</code>
+            <span className="text-gray-300">Less than or equal</span>
+          </div>
         </div>
       </div>
 
@@ -138,25 +127,9 @@ const ComparisonOperators = () => {
         <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
           <h3 className="text-lg font-medium text-yellow-400 mb-2">Important Note! ⚠️</h3>
           <p className="text-gray-300">
-            Remember that comparison operators always return a boolean value (true or false). 
-            This makes them perfect for use in if statements and loops!
+            Comparison operators always return a boolean value (true or false). 
+            These results are essential for making decisions in your programs!
           </p>
-        </div>
-      </section>
-
-      {/* String Comparison Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Comparing Strings 📝</h2>
-        <CodeSnippet {...examples.stringComparison} />
-        
-        <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-lg font-medium text-purple-400 mb-3">Quick Tips for String Comparison 💡</h3>
-          <ul className="space-y-2 text-gray-300">
-            <li>• Always use .equals() to compare String content</li>
-            <li>• Use .equalsIgnoreCase() when case doesn't matter</li>
-            <li>• Never use == for String comparison</li>
-            <li>• .compareTo() returns negative, zero, or positive number based on string order</li>
-          </ul>
         </div>
       </section>
 
@@ -176,7 +149,7 @@ const ComparisonOperators = () => {
 
         {/* Practice Question 2 */}
         <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <h3 className="text-xl font-medium text-green-400 mb-3">Practice 2: Number Comparison</h3>
+          <h3 className="text-xl font-medium text-green-400 mb-3">Practice 2: Number Ordering</h3>
           <p className="text-gray-300 mb-4">
             Write a program that compares three numbers. This will give you practice with 
             multiple comparisons and logical thinking!
@@ -191,36 +164,11 @@ const ComparisonOperators = () => {
           <span>⚠️ Watch Out For These!</span>
         </h3>
         <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Using == to compare Strings instead of .equals()</li>
-          <li>Forgetting parentheses in complex comparisons</li>
           <li>Confusing = (assignment) with == (comparison)</li>
-          <li>Not considering edge cases in comparisons</li>
+          <li>Forgetting parentheses in complex comparisons</li>
+          <li>Not considering edge cases (like maximum/minimum values)</li>
         </ul>
       </div>
-
-      {/* Summary Section */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold text-blue-400">Quick Summary 📝</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-            <h3 className="text-lg font-medium text-blue-400 mb-3">For Numbers</h3>
-            <ul className="space-y-2 text-gray-300">
-              <li>✓ Use ==, !=, &gt;, &lt;, &gt;=, &lt;= directly</li>
-              <li>✓ Works with int, double, float, etc.</li>
-              <li>✓ Always returns true or false</li>
-            </ul>
-          </div>
-          
-          <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-            <h3 className="text-lg font-medium text-purple-400 mb-3">For Strings</h3>
-            <ul className="space-y-2 text-gray-300">
-              <li>✓ Use .equals() for exact match</li>
-              <li>✓ Use .equalsIgnoreCase() for case-insensitive</li>
-              <li>✓ Use .compareTo() for ordering</li>
-            </ul>
-          </div>
-        </div>
-      </section>
 
       {/* Next Steps */}
       <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">

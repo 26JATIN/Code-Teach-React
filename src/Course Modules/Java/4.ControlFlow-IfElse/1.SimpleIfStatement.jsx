@@ -7,29 +7,49 @@ const SimpleIfStatement = () => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
 
   const examples = {
-    basicIf: {
-      title: '🔍 Basic If Statement',
-      code: `public class SimpleIfDemo {
+    basicStructure: {
+      title: '🏗️ If Statement Structure',
+      code: `public class IfStructure {
     public static void main(String[] args) {
-        int number = 10;
-        
-        if (number > 0) {
-            System.out.println("The number is positive!");
+        // Basic if statement structure
+        if (condition) {
+            // Code to execute if condition is true
+            // This block is skipped if condition is false
         }
+        
+        // Program continues here
     }
-}`
+}`,
+      showLineNumbers: true,
+      showCopyButton: true
     },
-    realWorld: {
-      title: '🌟 Real World Example',
-      code: `public class AgeChecker {
+    simpleExample: {
+      title: '👶 Simple Example',
+      code: `public class AgeCheck {
     public static void main(String[] args) {
-        int age = 20;
+        int age = 18;
         
         if (age >= 18) {
-            System.out.println("Welcome! You can enter.");
+            System.out.println("You are an adult!");
         }
     }
-}`
+}`,
+      showLineNumbers: true,
+      showCopyButton: true
+    },
+    booleanExample: {
+      title: '✅ Boolean Conditions',
+      code: `public class LightSwitch {
+    public static void main(String[] args) {
+        boolean isLightOn = true;
+        
+        if (isLightOn) {
+            System.out.println("The room is bright!");
+        }
+    }
+}`,
+      showLineNumbers: true,
+      showCopyButton: true
     }
   };
 
@@ -71,71 +91,83 @@ const SimpleIfStatement = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Title Section */}
       <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Simple If Statements in Java 🔍
+        If Statements in Java 🔍
       </h1>
 
       {/* Introduction */}
       <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
         <p className="text-gray-300 text-lg leading-relaxed">
-          If statements are fundamental building blocks for decision-making in programming. 
-          They allow your program to execute different code based on conditions! 🎯
+          If statements are like decision points in your code. They help your program make choices 
+          based on conditions, just like how we make decisions in real life! 🤔
         </p>
       </div>
 
-      {/* Syntax Overview */}
-      <section className="p-6 bg-gray-800/50 rounded-xl border border-gray-700/50">
-        <h2 className="text-2xl font-semibold text-blue-400 mb-4">Basic Syntax</h2>
-        <div className="bg-black/30 p-4 rounded-lg">
-          <pre className="text-gray-300">
-            <code>{`if (condition) {
-    // code to execute if condition is true
-}`}</code>
-          </pre>
+      {/* Essential Components Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
+          <h3 className="text-xl font-medium text-blue-400 mb-3">Key Components 📌</h3>
+          <ul className="space-y-3 text-gray-300">
+            <li className="flex items-start space-x-2">
+              <span className="text-2xl">🎯</span>
+              <span>Condition (must be boolean)</span>
+            </li>
+            <li className="flex items-start space-x-2">
+              <span className="text-2xl">📦</span>
+              <span>Code Block (in curly braces)</span>
+            </li>
+            <li className="flex items-start space-x-2">
+              <span className="text-2xl">➡️</span>
+              <span>Flow Control</span>
+            </li>
+          </ul>
         </div>
-      </section>
 
-      {/* Basic Concept */}
+        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
+          <h3 className="text-xl font-medium text-purple-400 mb-3">Important Rules ⚡</h3>
+          <ul className="space-y-3 text-gray-300">
+            <li className="flex items-start space-x-2">
+              <span className="text-2xl">✨</span>
+              <span>Condition must be in parentheses</span>
+            </li>
+            <li className="flex items-start space-x-2">
+              <span className="text-2xl">🎨</span>
+              <span>No semicolon after condition</span>
+            </li>
+            <li className="flex items-start space-x-2">
+              <span className="text-2xl">📝</span>
+              <span>Curly braces for multiple statements</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Code Examples */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Understanding If Statements 🤔</h2>
-        <CodeSnippet {...examples.basicIf} />
+        <h2 className="text-2xl font-semibold text-blue-400">Basic Structure 🏗️</h2>
+        <CodeSnippet {...examples.basicStructure} />
         
-        {/* New explanation for if statement */}
         <div className="p-4 bg-gray-800/50 rounded-lg">
-          <h3 className="text-lg font-medium text-blue-400 mb-3">How If Statements Work 🎯</h3>
-          <div className="space-y-4">
-            <p className="text-gray-300">Think of an if statement like a bouncer at a club:</p>
-            <ul className="list-disc list-inside space-y-2 text-gray-300 ml-4">
-              <li>The condition is like the rule (e.g., "Must be 18 or older")</li>
-              <li>If the condition is true, you get in (code inside runs)</li>
-              <li>If the condition is false, you don't get in (code inside is skipped)</li>
-            </ul>
-          </div>
+          <p className="text-gray-300">
+            The condition in an if statement must result in a <code className="text-blue-400">boolean</code> value 
+            (true or false). The code block only runs when the condition is true!
+          </p>
         </div>
       </section>
 
-      {/* MCQ Section 1 */}
+      {/* Simple Example */}
+      <section className="space-y-6">
+        <h2 className="text-2xl font-semibold text-blue-400">Simple Example 👶</h2>
+        <CodeSnippet {...examples.simpleExample} />
+        <CodeSnippet {...examples.booleanExample} />
+      </section>
+
+      {/* MCQ Section */}
       <section className="space-y-4">
-        <h3 className="text-xl font-medium text-purple-400">Quick Check! 📝</h3>
+        <h2 className="text-2xl font-semibold text-purple-400">Quick Check! 📝</h2>
         <MCQ
           question={mcqQuestions[0]}
           selectedAnswer={selectedAnswers[mcqQuestions[0].id]}
-          onAnswerSelect={handleAnswerSelect}
-        />
-      </section>
-
-      {/* Real World Example */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Real World Example 🌟</h2>
-        <CodeSnippet {...examples.realWorld} />
-      </section>
-
-      {/* MCQ Section 2 */}
-      <section className="space-y-4">
-        <h3 className="text-xl font-medium text-purple-400">Test Your Knowledge! 🎯</h3>
-        <MCQ
-          question={mcqQuestions[1]}
-          selectedAnswer={selectedAnswers[mcqQuestions[1].id]}
-          onAnswerSelect={handleAnswerSelect}
+          onAnswerSelect={(id, answer) => handleAnswerSelect(id, answer)}
         />
       </section>
 
@@ -144,26 +176,28 @@ const SimpleIfStatement = () => {
         <h2 className="text-2xl font-semibold text-green-400">Try It Yourself! 💻</h2>
         <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
           <p className="text-gray-300 mb-4">
-            Write a program that checks if a number is greater than 100 and prints "Big number!" if it is.
+            Write a program that checks if a temperature is above 25°C and prints "It's warm today!" if it is.
           </p>
-          <CodeEditor defaultCode={`public class NumberChecker {
+          <CodeEditor 
+            defaultCode={`public class WeatherCheck {
     public static void main(String[] args) {
-        int number = 150;
+        double temperature = 28.5;
         
         // Write your if statement here
         
     }
-}`} />
+}`} 
+          />
         </div>
       </section>
 
-      {/* Common Mistakes Section */}
+      {/* Common Mistakes */}
       <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-        <h3 className="text-lg font-medium text-red-400 mb-2">⚠️ Watch Out For These!</h3>
+        <h3 className="text-lg font-medium text-red-400 mb-2">⚠️ Common Mistakes</h3>
         <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Don't put a semicolon right after the if condition</li>
-          <li>Always use == for comparison, not = (which is for assignment)</li>
-          <li>Remember to use proper boolean expressions in the condition</li>
+          <li>Using = instead of == for comparison</li>
+          <li>Putting a semicolon after the if condition</li>
+          <li>Forgetting parentheses around the condition</li>
         </ul>
       </div>
     </div>

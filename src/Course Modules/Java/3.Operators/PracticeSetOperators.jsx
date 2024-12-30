@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet'; // Keep this for CodeModal
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 import Hint from '../../../Frontend/Components/practice compnenets/hint';
 import ViewSolution from '../../../Frontend/Components/practice compnenets/viewsolution';

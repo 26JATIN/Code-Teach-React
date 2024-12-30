@@ -467,6 +467,13 @@ System.out.printf("Total Amount: $%.2f", totalAmount);`,
     }
   };
 
+  const handleAnswerSelect = (questionId, optionIndex) => {
+    setSelectedAnswers(prev => ({
+      ...prev,
+      [questionId]: optionIndex
+    }));
+  };
+
   const renderCodingExercises = () => (
     <section className="space-y-6">
       <h2 className="text-2xl font-semibold text-green-400">Coding Exercises</h2>
@@ -567,14 +574,54 @@ System.out.printf("Total Amount: $%.2f", totalAmount);`,
         {mcqQuestions.map((q) => (
           <div key={q.id} className="p-6 bg-gray-800/50 rounded-xl border border-gray-700/50">
             <p className="text-gray-200 mb-4">{q.question}</p>
-            {/* ... existing MCQ rendering code ... */}
-            {q.codeExample && selectedAnswers[q.id] === q.correctAnswer && (
-              <CodeSnippet
-                code={q.codeExample}
-                language="java"
-                showLineNumbers={true}
-                showCopyButton={true}
-              />
+            <div className="space-y-2">
+              {q.options.map((option, index) => {
+                const isSelected = selectedAnswers[q.id] === index;
+                const isCorrect = index === q.correctAnswer;
+                const showFeedback = isSelected;
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleAnswerSelect(q.id, index)}
+                    className={`w-full p-3 text-left rounded-lg transition-colors duration-200 
+                      ${isSelected
+                        ? isCorrect
+                          ? 'bg-green-500/20 border-green-500/50'
+                          : 'bg-red-500/20 border-red-500/50'
+                        : 'bg-gray-900/50 border-gray-800/50'
+                      } border hover:bg-gray-700/50`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 rounded-full border-2 
+                          ${isSelected
+                            ? isCorrect
+                              ? 'border-green-400 bg-green-400'
+                              : 'border-red-400 bg-red-400'
+                            : 'border-gray-600'
+                          }`} 
+                        />
+                        <span className="text-gray-300">{option}</span>
+                      </div>
+                      {showFeedback && (
+                        <span className="text-sm">
+                          {isCorrect ? (
+                            <span className="text-green-400">✓ Correct</span>
+                          ) : (
+                            <span className="text-red-400">✗ Incorrect</span>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {selectedAnswers[q.id] !== undefined && (
+              <div className="mt-4 p-4 bg-gray-900/50 rounded-lg">
+                <p className="text-gray-400 text-sm">{q.explanation}</p>
+              </div>
             )}
           </div>
         ))}

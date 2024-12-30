@@ -6,8 +6,8 @@ import { isAuthenticated, apiRequest } from './config/config';  // Named imports
 
 // Custom loading component
 const LoadingSpinner = memo(() => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"/>
+  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-100 to-blue-200 dark:from-gray-900 dark:to-gray-800">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 dark:border-purple-400"/>
   </div>
 ));
 

@@ -9,6 +9,25 @@
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Code Teaching Application" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <script>
+        // Immediately set theme to prevent flash
+        (function() {
+            const theme = localStorage.getItem('app-theme') || 'dark';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <style>
+        /* Match the website's theme colors */
+        body {
+            background-color: #f3f4f6;
+            transition: background-color 0.3s;
+        }
+        .dark body {
+            background: linear-gradient(to bottom right, #111827, #1f2937);
+        }
+    </style>
 </head>
 <body>
     <div id="root"></div>

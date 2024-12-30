@@ -22,11 +22,10 @@ import Set1Datatypes from '../../../Course Modules/Java/2.Syntex And Variables/P
 // Module 3: Operators
 import ArithmeticOperators from '../../../Course Modules/Java/3.Operators/1.ArithmeticOperators';
 import AssignmentOperators from '../../../Course Modules/Java/3.Operators/2.AssignmentOperators';
-import ComparisonOperators from '../../../Course Modules/Java/3.Operators/3.ComparisonOperators';
+import LogicalOperators from '../../../Course Modules/Java/3.Operators/3.LogicalOperators';
 /* Commented imports for modules to be created
-import LogicalOperators from '../../../Course Modules/Java/3.Operators/4.LogicalOperators';
-import BitwiseOperators from '../../../Course Modules/Java/3.Operators/5.BitwiseOperators';
-import OperatorPrecedence from '../../../Course Modules/Java/3.Operators/6.OperatorPrecedence';
+import BitwiseOperators from '../../../Course Modules/Java/3.Operators/4.BitwiseOperators';
+import OperatorPrecedence from '../../../Course Modules/Java/3.Operators/5.OperatorPrecedence';
 */
 
 // Module 4-10: Comment out all future imports until components are created
@@ -127,12 +126,10 @@ export const modules = [
     subModules: [
       { id: '3.1', title: 'Arithmetic Operators', component: ArithmeticOperators },
       { id: '3.2', title: 'Assignment Operators', component: AssignmentOperators },
-      { id: '3.3', title: 'Comparison Operators', component: ComparisonOperators },
-      // Comment out submodules that haven't been created yet
-      /*
-      { id: '3.4', title: 'Logical Operators', component: LogicalOperators },
-      { id: '3.5', title: 'Bitwise Operators', component: BitwiseOperators },
-      { id: '3.6', title: 'Operator Precedence', component: OperatorPrecedence }
+      { id: '3.3', title: 'Logical Operators', component: LogicalOperators },
+      /* Comment out remaining submodules
+      { id: '3.4', title: 'Bitwise Operators', component: BitwiseOperators },
+      { id: '3.5', title: 'Operator Precedence', component: OperatorPrecedence }
       */
     ]
   },

@@ -1,10 +1,5 @@
 import React from 'react';
-import Summary from './summary';
-import KeyFeatures from './KeyFeatures';
-import ConceptExplanation from './ConceptExplanation';
-import ImportantNote from './ImportantNote';
-import MistakesToAvoid from './MistakesToAvoid';
-import HandsOn from './HandsOn';
+
 
 const BinaryExplanation = ({ title, items, description }) => {
   return (

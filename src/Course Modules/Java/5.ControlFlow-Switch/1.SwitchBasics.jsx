@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 
 const SwitchBasics = () => {
@@ -84,83 +88,99 @@ const SwitchBasics = () => {
     }
   ];
 
+  const conceptSections = [
+    {
+      icon: "🔄",
+      title: "Switch Statement Structure",
+      content: [
+        "A switch statement tests a variable against multiple possible values.",
+        "Each case represents a possible value and contains code to execute when matched."
+      ],
+      code: `switch (variable) {
+    case value1:
+        // code
+        break;
+    case value2:
+        // code
+        break;
+    default:
+        // default code
+}`
+    },
+    {
+      icon: "⚡",
+      title: "Break Statement",
+      content: [
+        "The break statement is crucial in switch statements to prevent fall-through execution.",
+        "Without break, execution continues into subsequent cases regardless of their values."
+      ],
+      code: `case 1: // Without break
+    System.out.println("One");
+    // Falls through to case 2
+case 2:
+    System.out.println("Two"); // Both will print`
+    }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Switch Statement Basics in Java 🔄
-      </h1>
-
-      {/* Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          The switch statement is a multi-way branch statement that provides an easy way to dispatch execution 
-          to different parts of code based on the value of an expression. 🎯
-        </p>
-      </div>
-
-      {/* Essential Components Grid */}
+      <Summary 
+        title="Switch Statement Basics in Java 🔄"
+        description="The switch statement is a multi-way branch statement that provides an easy way to dispatch execution to different parts of code based on the value of an expression. 🎯"
+      />
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">Key Components 🔑</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎯</span>
-              <span>Switch expression</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📦</span>
-              <span>Case statements</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔄</span>
-              <span>Break statements</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">⚡</span>
-              <span>Default case</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Supported Types 📋</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔢</span>
-              <span>Primitive types (byte, short, char, int)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📝</span>
-              <span>String (Java 7+)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔰</span>
-              <span>Enum types</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Key Components 🔑"
+          items={[
+            { icon: "🎯", text: "Switch expression" },
+            { icon: "📦", text: "Case statements" },
+            { icon: "🔄", text: "Break statements" },
+            { icon: "⚡", text: "Default case" }
+          ]}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Supported Types 📋"
+          items={[
+            { icon: "🔢", text: "Primitive types (byte, short, char, int)" },
+            { icon: "📝", text: "String (Java 7+)" },
+            { icon: "🔰", text: "Enum types" }
+          ]}
+          variant="purple"
+        />
       </div>
 
-      {/* Code Examples */}
+      <ConceptExplanation sections={conceptSections} />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>
         <CodeSnippet {...examples.basicStructure} />
         <CodeSnippet {...examples.practicalExample} />
       </section>
 
-      {/* Warning Section */}
-      <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-        <h3 className="text-lg font-medium text-yellow-400 mb-2">⚠️ Common Pitfalls</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Forgetting break statements</li>
-          <li>Using non-supported types</li>
-          <li>Duplicate case values</li>
-          <li>Missing default case</li>
-        </ul>
-      </div>
+      <ImportantNote
+        title="Common Pitfalls"
+        points={[
+          "Forgetting break statements",
+          "Using non-supported types",
+          "Duplicate case values",
+          "Missing default case"
+        ]}
+        variant="yellow"
+      />
 
-      {/* MCQ Section */}
+      <ImportantNote
+        title="Best Practices"
+        points={[
+          "Always include a default case",
+          "Use break statements consistently",
+          "Consider using enhanced switch (Java 14+)",
+          "Keep cases simple and readable"
+        ]}
+        variant="blue"
+      />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-purple-400">Test Your Understanding 🤓</h2>
         {mcqQuestions.map((question) => (
@@ -173,15 +193,10 @@ const SwitchBasics = () => {
         ))}
       </section>
 
-      {/* Practice Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Practice Time! 💻</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Create a simple calculator using switch statement that performs basic operations (+, -, *, /)
-          </p>
-          <CodeEditor 
-            defaultCode={`public class Calculator {
+      <HandsOn
+        title="Practice Time! 💻"
+        description="Create a simple calculator using switch statement that performs basic operations (+, -, *, /)"
+        defaultCode={`public class Calculator {
     public static void main(String[] args) {
         int num1 = 10;
         int num2 = 5;
@@ -190,21 +205,8 @@ const SwitchBasics = () => {
         // Write your switch statement here
         
     }
-}`} 
-          />
-        </div>
-      </section>
-
-      {/* Best Practices */}
-      <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-        <h3 className="text-lg font-medium text-blue-400 mb-2">💡 Best Practices:</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Always include a default case</li>
-          <li>Use break statements consistently</li>
-          <li>Consider using enhanced switch (Java 14+)</li>
-          <li>Keep cases simple and readable</li>
-        </ul>
-      </div>
+}`}
+      />
     </div>
   );
 };

@@ -245,17 +245,18 @@ int result = a & b;  // 1000 (8)`
         defaultCode={examples.practiceIntermediate.code}
       />
 
-      <summary
-        title="Quick Summary"
-        points={[
-          "& sets bit to 1 only if both bits are 1",
-          "| sets bit to 1 if either bit is 1",
-          "^ sets bit to 1 if bits are different",
-          "~ inverts all bits",
-          "<< multiplies by 2 for each position",
-          ">> divides by 2 for each position"
-        ]}
-        
+      <Summary 
+        title="Key Takeaways 📝"
+        description={`
+          Bitwise operators provide powerful tools for low-level manipulation:
+          • AND (&) sets bit to 1 only if both bits are 1
+          • OR (|) sets bit to 1 if either bit is 1
+          • XOR (^) sets bit to 1 if bits are different
+          • NOT (~) inverts all bits
+          • Left shift (<<) multiplies by 2 for each position
+          • Right shift (>>) divides by 2 for each position
+        `}
+        variant="green"
       />
     </div>
   );

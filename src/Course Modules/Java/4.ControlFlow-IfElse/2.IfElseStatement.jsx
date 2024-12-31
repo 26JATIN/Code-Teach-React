@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 
 const IfElseStatement = () => {
@@ -83,68 +88,65 @@ const IfElseStatement = () => {
     }
   ];
 
-  const handleAnswerSelect = (questionId, answerIndex) => {
-    setSelectedAnswers(prev => ({
-      ...prev,
-      [questionId]: answerIndex
-    }));
-  };
+  const conceptSections = [
+    {
+      icon: "🔄",
+      title: "Basic Structure",
+      content: [
+        "If-else statements provide two different execution paths based on a condition.",
+        "The condition is evaluated once, and either the if block or else block executes."
+      ],
+      code: `if (condition) {
+    // code when true
+} else {
+    // code when false
+}`
+    },
+    {
+      icon: "⚡",
+      title: "Flow Control",
+      content: [
+        "Only one block of code executes - never both.",
+        "The else block is optional and provides an alternative path."
+      ],
+      code: `if (age >= 18) {
+    System.out.println("Adult");
+} else {
+    System.out.println("Minor");
+}`
+    }
+  ];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        If-Else Statements in Java 🔄
-      </h1>
-
-      {/* Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          If-else statements extend the if statement by providing an alternative path when the condition is false. 
-          Think of it as having a Plan B! 🎯
-        </p>
-      </div>
-
-      {/* Essential Components Grid */}
+      <Summary 
+        title="If-Else Statements in Java 🔄"
+        description="If-else statements extend the if statement by providing an alternative path when the condition is false. Think of it as having a Plan B! 🎯"
+      />
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">Key Components 📌</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎯</span>
-              <span>If Block (primary path)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔄</span>
-              <span>Else Block (alternative path)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">⚡</span>
-              <span>Condition (decides the path)</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Remember 🤔</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">✨</span>
-              <span>Only one block executes</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎨</span>
-              <span>Else is optional</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📝</span>
-              <span>Use {} for multiple statements</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Key Components 📌"
+          items={[
+            { icon: "🎯", text: "If Block (primary path)" },
+            { icon: "🔄", text: "Else Block (alternative path)" },
+            { icon: "⚡", text: "Condition (decides the path)" }
+          ]}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Remember 🤔"
+          items={[
+            { icon: "✨", text: "Only one block executes" },
+            { icon: "🎨", text: "Else is optional" },
+            { icon: "📝", text: "Use {} for multiple statements" }
+          ]}
+          variant="purple"
+        />
       </div>
 
-      {/* Code Examples */}
+      <ConceptExplanation sections={conceptSections} />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-blue-400">Structure and Examples 🏗️</h2>
         <CodeSnippet {...examples.basicStructure} />
@@ -152,49 +154,46 @@ const IfElseStatement = () => {
         <CodeSnippet {...examples.practicalExample} />
       </section>
 
-      {/* MCQ Sections */}
+      <MistakesToAvoid
+        title="Watch Out For"
+        mistakes={[
+          "Don't put semicolon after if condition",
+          "Always match each else with the nearest if",
+          "Use proper indentation for readability",
+          "Don't forget curly braces for multiple statements"
+        ]}
+        alternatives={[
+          "Use consistent formatting",
+          "Consider extracting complex conditions into boolean methods",
+          "Use meaningful condition names",
+          "Keep conditions simple and readable"
+        ]}
+      />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-purple-400">Check Your Understanding 🤓</h2>
-        {mcqQuestions.map((question, index) => (
+        {mcqQuestions.map((question) => (
           <MCQ
             key={question.id}
             question={question}
             selectedAnswer={selectedAnswers[question.id]}
-            onAnswerSelect={handleAnswerSelect}
+            onAnswerSelect={(id, answer) => setSelectedAnswers(prev => ({...prev, [id]: answer}))}
           />
         ))}
       </section>
 
-      {/* Practice Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Practice Time! 💻</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Write a program that checks if a number is even or odd using if-else statement.
-          </p>
-          <CodeEditor 
-            defaultCode={`public class EvenOddChecker {
+      <HandsOn
+        title="Practice Time! 💻"
+        description="Write a program that checks if a number is even or odd using if-else statement"
+        defaultCode={`public class EvenOddChecker {
     public static void main(String[] args) {
         int number = 7;
         
         // Write your if-else statement here
         
     }
-}`} 
-          />
-        </div>
-      </section>
-
-      {/* Common Mistakes */}
-      <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-        <h3 className="text-lg font-medium text-red-400 mb-2">⚠️ Watch Out For:</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Don't put semicolon after if condition</li>
-          <li>Always match each else with the nearest if</li>
-          <li>Use proper indentation for readability</li>
-          <li>Don't forget curly braces for multiple statements</li>
-        </ul>
-      </div>
+}`}
+      />
     </div>
   );
 };

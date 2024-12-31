@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 
 const IfElseIfLadder = () => {
@@ -76,68 +81,99 @@ const IfElseIfLadder = () => {
     }
   ];
 
+  const conceptSections = [
+    {
+      icon: "🔄",
+      title: "If-Else-If Flow",
+      content: [
+        "The if-else-if ladder evaluates conditions in sequence until a true condition is found.",
+        "Once a condition is true, its code block executes and the rest of the ladder is skipped."
+      ],
+      code: `if (condition1) {
+    // code for condition1
+} else if (condition2) {
+    // code for condition2
+} else {
+    // default code
+}`
+    },
+    {
+      icon: "⚡",
+      title: "Order Matters",
+      content: [
+        "Conditions are tested from top to bottom.",
+        "More specific conditions should come before general ones to avoid logical errors."
+      ],
+      code: `if (score >= 90) {     // More specific
+    grade = "A";
+} else if (score >= 80) { // Less specific
+    grade = "B";
+}`
+    }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        If-Else-If Ladder in Java 🪜
-      </h1>
-
-      {/* Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          The if-else-if ladder allows you to test multiple conditions in sequence, like a decision tree. 
-          It's perfect for handling multiple possible scenarios! 🌳
-        </p>
-      </div>
-
-      {/* Essential Components Grid */}
+      <Summary 
+        title="If-Else-If Ladder in Java 🪜"
+        description="The if-else-if ladder allows you to test multiple conditions in sequence, like a decision tree. It's perfect for handling multiple possible scenarios! 🌳"
+      />
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">Key Features 📌</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎯</span>
-              <span>Multiple conditions</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">⚡</span>
-              <span>Sequential testing</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔄</span>
-              <span>Optional else block</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Important Points 🤔</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">1️⃣</span>
-              <span>Only first true condition executes</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📝</span>
-              <span>Order matters</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎯</span>
-              <span>Conditions are tested in sequence</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Key Features 📌"
+          items={[
+            { icon: "🎯", text: "Multiple conditions" },
+            { icon: "⚡", text: "Sequential testing" },
+            { icon: "🔄", text: "Optional else block" }
+          ]}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Important Points 🤔"
+          items={[
+            { icon: "1️⃣", text: "Only first true condition executes" },
+            { icon: "📝", text: "Order matters" },
+            { icon: "🎯", text: "Conditions are tested in sequence" }
+          ]}
+          variant="purple"
+        />
       </div>
 
-      {/* Code Examples */}
+      <ConceptExplanation sections={conceptSections} />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>
         <CodeSnippet {...examples.basicStructure} />
         <CodeSnippet {...examples.practicalExample} />
       </section>
 
-      {/* MCQ Section */}
+      <ImportantNote
+        title="Pro Tips"
+        points={[
+          "Order conditions from most specific to most general",
+          "Use else as a catch-all for unexpected cases",
+          "Keep conditions mutually exclusive"
+        ]}
+        variant="yellow"
+      />
+
+      <MistakesToAvoid
+        title="Watch Out For"
+        mistakes={[
+          "Incorrect order of conditions",
+          "Overlapping conditions",
+          "Missing else block for default case",
+          "Using = instead of == for comparison"
+        ]}
+        alternatives={[
+          "Use clear, descriptive condition checks",
+          "Consider switch statements for equality comparisons",
+          "Use early returns for simpler flow",
+          "Break complex conditions into boolean methods"
+        ]}
+      />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-purple-400">Test Your Understanding 🤓</h2>
         {mcqQuestions.map((question) => (
@@ -150,46 +186,18 @@ const IfElseIfLadder = () => {
         ))}
       </section>
 
-      {/* Practice Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Practice Time! 💻</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Write a program that assigns letter grades based on scores: A (90-100), B (80-89), C (70-79), D (60-69), F (below 60)
-          </p>
-          <CodeEditor 
-            defaultCode={`public class GradingSystem {
+      <HandsOn
+        title="Practice Time! 💻"
+        description="Write a program that assigns letter grades based on scores: A (90-100), B (80-89), C (70-79), D (60-69), F (below 60)"
+        defaultCode={`public class GradingSystem {
     public static void main(String[] args) {
         int score = 85;
         
         // Write your if-else-if ladder here
         
     }
-}`} 
-          />
-        </div>
-      </section>
-
-      {/* Common Mistakes */}
-      <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-        <h3 className="text-lg font-medium text-red-400 mb-2">⚠️ Watch Out For:</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Incorrect order of conditions</li>
-          <li>Overlapping conditions</li>
-          <li>Missing else block for default case</li>
-          <li>Using = instead of == for comparison</li>
-        </ul>
-      </div>
-
-      {/* Tips Section */}
-      <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-        <h3 className="text-lg font-medium text-yellow-400 mb-2">💡 Pro Tips:</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Order conditions from most specific to most general</li>
-          <li>Use else as a catch-all for unexpected cases</li>
-          <li>Keep conditions mutually exclusive</li>
-        </ul>
-      </div>
+}`}
+      />
     </div>
   );
 };

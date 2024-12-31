@@ -1,6 +1,11 @@
 import React from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 
 const AssignmentOperators = () => {
   const examples = {
@@ -72,90 +77,121 @@ public class TemperatureConverter {
     }
   };
 
+  const conceptSections = [
+    {
+      icon: "📝",
+      title: "Basic Assignment",
+      content: [
+        "The simple assignment operator (=) assigns a value to a variable.",
+        "It's the most basic and commonly used operator."
+      ],
+      code: `int number = 10;
+String text = "Hello";
+boolean flag = true;`
+    },
+    {
+      icon: "🔄",
+      title: "Compound Assignment",
+      content: [
+        "Compound operators combine operation and assignment in one step.",
+        "They make code shorter and more efficient."
+      ],
+      code: `number += 5;  // number = number + 5
+score *= 2;  // score = score * 2
+total /= 4;  // total = total / 4`
+    }
+  ];
+
+  const basicFeatures = [
+    { icon: "=", text: "Simple assignment" },
+    { icon: "📝", text: "Right-to-left evaluation" },
+    { icon: "🎯", text: "Type checking" }
+  ];
+
+  const compoundFeatures = [
+    { icon: "+=", text: "Add and assign" },
+    { icon: "-=", text: "Subtract and assign" },
+    { icon: "*=", text: "Multiply and assign" },
+    { icon: "/=", text: "Divide and assign" },
+    { icon: "%=", text: "Modulus and assign" }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Assignment Operators in Java ✍️
-      </h1>
-
-      {/* Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Assignment operators help us store and update values in variables. They're like shortcuts 
-          that make our code cleaner and more efficient! Let's master them! 🎯
-        </p>
-      </div>
-
-      {/* Operator Types Grid */}
+      <Summary 
+        title="Assignment Operators in Java ✍️"
+        description="Assignment operators help us store and update values in variables. They're like shortcuts that make our code cleaner and more efficient! Let's master them! 🎯"
+      />
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-lg font-medium text-blue-400 mb-3">Basic Assignment</h3>
-          <ul className="space-y-2 text-gray-300">
-            <li><code className="text-blue-400">=</code> Simple assignment</li>
-          </ul>
-        </div>
-        
-        <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-lg font-medium text-purple-400 mb-3">Compound Assignment</h3>
-          <ul className="space-y-2 text-gray-300">
-            <li><code className="text-purple-400">+=</code> Add and assign</li>
-            <li><code className="text-purple-400">-=</code> Subtract and assign</li>
-            <li><code className="text-purple-400">*=</code> Multiply and assign</li>
-            <li><code className="text-purple-400">/=</code> Divide and assign</li>
-            <li><code className="text-purple-400">%=</code> Modulus and assign</li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Basic Assignment"
+          items={basicFeatures}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Compound Assignment"
+          items={compoundFeatures}
+          variant="purple"
+        />
       </div>
 
-      {/* Examples and Practice */}
+      <ConceptExplanation sections={conceptSections} />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-blue-400">See It In Action! 🚀</h2>
         <CodeSnippet {...examples.basicAssignment} />
-        
-        <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-          <h3 className="text-lg font-medium text-yellow-400 mb-2">Pro Tip! 💡</h3>
-          <p className="text-gray-300">
-            Compound operators not only make your code shorter but also more efficient. 
-            They perform the operation and assignment in one step!
-          </p>
-        </div>
       </section>
 
-      {/* Practice Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Let's Practice! 💪</h2>
-        
-        {/* Practice Question 1 */}
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <h3 className="text-xl font-medium text-green-400 mb-3">Practice 1: Score Calculator</h3>
-          <p className="text-gray-300 mb-4">
-            Let's create a program that manipulates a game score using different assignment operators!
-          </p>
-          <CodeEditor defaultCode={examples.practiceQuestion1.code} />
-        </div>
+      <MistakesToAvoid
+        title="Common Mistakes"
+        mistakes={[
+          "Confusing = (assignment) with == (comparison)",
+          "Forgetting that /= and %= work like regular division and modulus",
+          "Not initializing variables before using compound assignment"
+        ]}
+        alternatives={[
+          "Use meaningful variable names",
+          "Initialize variables before using compound operators",
+          "Consider potential division by zero with /=",
+          "Be careful with type conversion in compound assignments"
+        ]}
+      />
 
-        {/* Practice Question 2 */}
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <h3 className="text-xl font-medium text-green-400 mb-3">Practice 2: Temperature Converter</h3>
-          <p className="text-gray-300 mb-4">
-            Create a temperature converter using compound assignment operators!
-          </p>
-          <CodeEditor defaultCode={examples.practiceQuestion2.code} />
-        </div>
-      </section>
+      <HandsOn
+        title="Practice 1: Score Calculator 🎮"
+        description="Let's create a program that manipulates a game score using different assignment operators!"
+        defaultCode={examples.practiceQuestion1.code}
+      />
 
-      {/* Common Mistakes */}
-      <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-        <h3 className="text-lg font-medium text-red-400 flex items-center gap-2 mb-2">
-          <span>⚠️ Watch Out For These!</span>
-        </h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Confusing = (assignment) with == (comparison)</li>
-          <li>Forgetting that /= and %= work like regular division and modulus</li>
-          <li>Not initializing variables before using compound assignment</li>
-        </ul>
-      </div>
+      <HandsOn
+        title="Practice 2: Temperature Converter 🌡️"
+        description="Create a temperature converter using compound assignment operators!"
+        defaultCode={examples.practiceQuestion2.code}
+      />
+
+      <ImportantNote
+        title="Pro Tips!"
+        points={[
+          "Compound operators perform the operation and assignment in one step",
+          "They're more efficient than separate operations",
+          "Be careful with type promotion in compound assignments",
+          "Initialize variables before using compound operators"
+        ]}
+        variant="yellow"
+      />
+
+      <Summary 
+        title="Key Takeaways 📝"
+        description={`
+          Remember these important points about assignment operators:
+          • = assigns values to variables
+          • Compound operators (+=, -=, *=, /=, %=) combine operation and assignment
+          • Always initialize variables before using compound operators
+          • Be mindful of type conversions in assignments
+        `}
+        variant="green"
+      />
     </div>
   );
 };

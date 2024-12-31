@@ -1,6 +1,11 @@
 import React from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 
 const ArithmeticOperators = () => {
   const examples = {
@@ -56,100 +61,119 @@ const ArithmeticOperators = () => {
     }
   };
 
+  const conceptSections = [
+    {
+      icon: "➕",
+      title: "Basic Arithmetic",
+      content: [
+        "Arithmetic operators perform basic mathematical operations.",
+        "They work with numeric data types (int, double, etc.)."
+      ],
+      code: `int sum = a + b;     // Addition
+int diff = a - b;    // Subtraction
+int product = a * b; // Multiplication`
+    },
+    {
+      icon: "➗",
+      title: "Division Types",
+      content: [
+        "Integer division drops decimal places.",
+        "Float division preserves decimal places."
+      ],
+      code: `int result1 = 10 / 3;      // = 3
+double result2 = 10.0 / 3.0; // = 3.3333...`
+    }
+  ];
+
+  const basicOperators = [
+    { icon: "➕", text: "Addition (+)" },
+    { icon: "➖", text: "Subtraction (-)" },
+    { icon: "✖️", text: "Multiplication (*)" },
+    { icon: "➗", text: "Division (/)" },
+    { icon: "🔄", text: "Modulus (%)" }
+  ];
+
+  const quickTips = [
+    { icon: "💡", text: "Integer division gives integer result" },
+    { icon: "📝", text: "Use float/double for decimal division" },
+    { icon: "🎯", text: "Modulus finds remainders" }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Arithmetic Operators in Java 🧮
-      </h1>
+      <Summary 
+        title="Arithmetic Operators in Java 🧮"
+        description="Arithmetic operators are the basic building blocks of mathematical operations in Java. They help us perform calculations just like we do in regular math! 🎯"
+      />
 
-      {/* Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Arithmetic operators are the basic building blocks of mathematical operations in Java. 
-          They help us perform calculations just like we do in regular math! 🎯
-        </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <KeyFeatures
+          title="Basic Operators"
+          items={basicOperators}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Quick Tips 💡"
+          items={quickTips}
+          variant="purple"
+        />
       </div>
 
-      {/* Basic Operators Section */}
+      <ConceptExplanation sections={conceptSections} />
+
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Basic Operators</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2">
-                <span className="text-2xl">➕</span>
-                <span className="text-gray-300"><code className="text-blue-400">+</code> Addition</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-2xl">➖</span>
-                <span className="text-gray-300"><code className="text-blue-400">-</code> Subtraction</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-2xl">✖️</span>
-                <span className="text-gray-300"><code className="text-blue-400">*</code> Multiplication</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-2xl">➗</span>
-                <span className="text-gray-300"><code className="text-blue-400">/</code> Division</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-2xl">🔄</span>
-                <span className="text-gray-300"><code className="text-blue-400">%</code> Modulus (Remainder)</span>
-              </li>
-            </ul>
-          </div>
-          
-          <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-            <h3 className="text-lg font-medium text-purple-400 mb-3">Quick Tips 💡</h3>
-            <ul className="space-y-2 text-gray-300">
-              <li>• Division between integers gives integer result</li>
-              <li>• Use float/double for decimal division</li>
-              <li>• Modulus is great for finding remainders</li>
-            </ul>
-          </div>
-        </div>
-        
+        <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>
         <CodeSnippet {...examples.basicOperators} />
       </section>
 
-      {/* Division Types Section */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-blue-400">Understanding Division 📊</h2>
         <CodeSnippet {...examples.divisionTypes} />
         
-        <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-          <h3 className="text-lg font-medium text-yellow-400 mb-2">Important Note! ⚠️</h3>
-          <p className="text-gray-300">
-            Remember that integer division drops decimal places. If you need decimal results, 
-            make sure at least one operand is a floating-point number!
-          </p>
-        </div>
+        <ImportantNote
+          title="Important Note!"
+          points={[
+            "Integer division drops decimal places",
+            "Use at least one floating-point number for decimal results",
+            "Always check for division by zero"
+          ]}
+          variant="yellow"
+        />
       </section>
 
-      {/* Practice Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Let's Practice! 💪</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Create a calculator program that takes two numbers from the user and performs all arithmetic operations.
-            Try to make it user-friendly!
-          </p>
-          <CodeEditor defaultCode={examples.practiceExample.code} />
-        </div>
-      </section>
+      <MistakesToAvoid
+        title="Common Mistakes"
+        mistakes={[
+          "Forgetting that integer division truncates decimals",
+          "Not handling division by zero",
+          "Mixing integer and floating-point calculations without proper casting"
+        ]}
+        alternatives={[
+          "Cast to double/float for decimal division",
+          "Always validate denominators",
+          "Use explicit type casting when mixing types",
+          "Break complex calculations into steps"
+        ]}
+      />
 
-      {/* Common Mistakes Section */}
-      <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-        <h3 className="text-lg font-medium text-red-400 flex items-center gap-2 mb-2">
-          <span>⚠️ Common Mistakes to Avoid</span>
-        </h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Forgetting that integer division truncates decimals</li>
-          <li>Not handling division by zero</li>
-          <li>Mixing integer and floating-point calculations without proper casting</li>
-        </ul>
-      </div>
+      <HandsOn
+        title="Let's Practice! 💪"
+        description="Create a calculator program that takes two numbers from the user and performs all arithmetic operations. Try to make it user-friendly!"
+        defaultCode={examples.practiceExample.code}
+      />
+
+      <Summary 
+        title="Key Takeaways 📝"
+        description={`
+          Remember these essential points about arithmetic operators:
+          • Basic operators: +, -, *, /, %
+          • Integer division drops decimal places
+          • Use floating-point numbers for decimal division
+          • Always handle division by zero cases
+          • Modulus (%) is great for finding remainders
+        `}
+        variant="green"
+      />
     </div>
   );
 };

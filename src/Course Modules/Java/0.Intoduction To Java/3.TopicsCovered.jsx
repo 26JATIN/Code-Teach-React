@@ -1,4 +1,8 @@
 import React from 'react';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
 
 // Topic card component for consistent styling
 const TopicCard = ({ title, emoji, description, subtopics }) => (
@@ -91,52 +95,81 @@ const TopicsCovered = () => {
     }
   ];
 
+  const practiceFeatures = [
+    { icon: "✓", text: "Interactive code examples" },
+    { icon: "✓", text: "Hands-on exercises" },
+    { icon: "✓", text: "Mini-projects" },
+    { icon: "✓", text: "Knowledge checks" }
+  ];
+
+  const sections = courseContent.map((content, index) => ({
+    icon: content.emoji,
+    title: content.title,
+    content: [content.description, ...content.subtopics],
+    code: null
+  }));
+
   return (
     <div className="space-y-8">
-      {/* Introduction Banner */}
-      <div className="p-6 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-xl border border-blue-500/20">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-100 mb-3">
-          Your Java Learning Journey 🗺️
-        </h1>
-        <p className="text-gray-300">
-          Don't worry about understanding everything at once! We'll take it step by step, 
-          with lots of examples and practice exercises. Think of it like building a house - 
-          we'll start with the foundation and work our way up! 🏗️
-        </p>
+      <Summary 
+        title="Your Java Learning Journey 🗺️"
+        description="Don't worry about understanding everything at once! We'll take it step by step, with lots of examples and practice exercises. Think of it like building a house - we'll start with the foundation and work our way up! 🏗️"
+      />
+
+      <ConceptExplanation sections={sections} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <KeyFeatures
+          title="Learning Methods 📚"
+          items={[
+            { icon: "📝", text: "Step-by-step tutorials" },
+            { icon: "💻", text: "Interactive coding" },
+            { icon: "🎯", text: "Practical examples" },
+            { icon: "🧪", text: "Instant feedback" }
+          ]}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="What You'll Learn 🎓"
+          items={[
+            { icon: "🏗️", text: "Core Java concepts" },
+            { icon: "🧩", text: "Problem-solving skills" },
+            { icon: "📦", text: "Object-oriented programming" },
+            { icon: "⚡", text: "Best practices" }
+          ]}
+          variant="purple"
+        />
       </div>
 
-      {/* Learning Path */}
-      <div className="grid gap-6">
-        {courseContent.map((topic, index) => (
-          <TopicCard key={index} {...topic} />
-        ))}
-      </div>
+      <ImportantNote
+        title="Practice Makes Perfect! 🎯"
+        points={[
+          "Each section includes interactive examples",
+          "Regular hands-on exercises",
+          "Real-world mini-projects",
+          "Self-assessment opportunities"
+        ]}
+        variant="green"
+      />
 
-      {/* Practice Section */}
-      <div className="p-6 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-xl border border-green-500/20">
-        <h2 className="text-xl text-green-400 mb-3">🎯 Practice Makes Perfect!</h2>
-        <p className="text-gray-300 mb-4">
-          Each section includes:
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex items-center gap-3 text-gray-300">
-            <span className="text-green-400">✓</span>
-            <span>Interactive code examples</span>
-          </div>
-          <div className="flex items-center gap-3 text-gray-300">
-            <span className="text-green-400">✓</span>
-            <span>Hands-on exercises</span>
-          </div>
-          <div className="flex items-center gap-3 text-gray-300">
-            <span className="text-green-400">✓</span>
-            <span>Mini-projects</span>
-          </div>
-          <div className="flex items-center gap-3 text-gray-300">
-            <span className="text-green-400">✓</span>
-            <span>Knowledge checks</span>
-          </div>
-        </div>
-      </div>
+      <KeyFeatures
+        title="Course Features ⭐"
+        items={practiceFeatures}
+        variant="yellow"
+      />
+
+      <Summary 
+        title="Ready to Begin? 🚀"
+        description={`
+          We've designed this course to be:
+          • Beginner-friendly
+          • Hands-on and practical
+          • Step-by-step progression
+          • Rich in examples and exercises
+          • Focused on real-world skills
+        `}
+        variant="green"
+      />
     </div>
   );
 };

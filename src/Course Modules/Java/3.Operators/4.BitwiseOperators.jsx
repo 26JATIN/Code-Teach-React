@@ -245,7 +245,7 @@ int result = a & b;  // 1000 (8)`
         defaultCode={examples.practiceIntermediate.code}
       />
 
-      <ImportantNote
+      <summary
         title="Quick Summary"
         points={[
           "& sets bit to 1 only if both bits are 1",
@@ -255,7 +255,7 @@ int result = a & b;  // 1000 (8)`
           "<< multiplies by 2 for each position",
           ">> divides by 2 for each position"
         ]}
-        variant="blue"
+        
       />
     </div>
   );

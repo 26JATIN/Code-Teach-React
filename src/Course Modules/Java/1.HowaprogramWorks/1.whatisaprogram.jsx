@@ -1,4 +1,8 @@
 import React from 'react';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
 
 const ProgramFlowchart = () => (
   <svg className="w-full max-w-2xl mx-auto" viewBox="0 0 600 300">
@@ -38,20 +42,72 @@ const ProgramFlowchart = () => (
   </svg>
 );
 
-const WhatIsAProgram = ({ nextModule, onNext }) => {
-  return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        What is a Program? 🚀
-      </h1>
+const WhatIsAProgram = () => {
+  const programSteps = [
+    { icon: "📝", text: "Move your right foot forward" },
+    { icon: "🔄", text: "Spin around once" },
+    { icon: "👏", text: "Clap your hands" }
+  ];
 
-      <div className="mt-6 p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Imagine you're teaching a friendly robot to make your favorite sandwich! 🤖🥪 
-          That's exactly what programming is - giving clear, step-by-step instructions to a computer. 
-          Every click, swipe, or tap on your phone or computer is actually running a program behind the scenes!
-        </p>
-      </div>
+  const dataPoints = [
+    { icon: "🔢", text: "Numbers for calculations" },
+    { icon: "📝", text: "Text for messages" },
+    { icon: "🖼️", text: "Images and other media" },
+    { icon: "📦", text: "Any information needed" }
+  ];
+
+  const logicPoints = [
+    { icon: "🤔", text: "Makes decisions based on conditions" },
+    { icon: "🔄", text: "Handles different situations" },
+    { icon: "⚡", text: "Controls program flow" }
+  ];
+
+  const examplePoints = [
+    { icon: "📸", text: "Instagram filters (transforming photos)" },
+    { icon: "🧮", text: "Calculator app (processing numbers)" },
+    { icon: "🌤️", text: "Weather app (showing forecasts)" },
+    { icon: "🎮", text: "Games (responding to controls)" }
+  ];
+
+  const conceptSections = [
+    {
+      icon: "📝",
+      title: "Instructions (The Recipe)",
+      content: [
+        "Programs work like following a dance tutorial",
+        "They follow precise instructions one at a time",
+        "Each step is clear and specific"
+      ],
+      code: null
+    },
+    {
+      icon: "📦",
+      title: "Data (The Ingredients)",
+      content: [
+        "Data is like ingredients in your recipe",
+        "Programs work with numbers, text, images",
+        "Different types of data for different tasks"
+      ],
+      code: null
+    },
+    {
+      icon: "🧠",
+      title: "Logic (The Decision-Making)",
+      content: [
+        "Programs make decisions based on conditions",
+        "Like cooking: 'if water is boiling, add pasta'",
+        "Different actions for different situations"
+      ],
+      code: null
+    }
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      <Summary 
+        title="What is a Program? 🚀"
+        description="Imagine you're teaching a friendly robot to make your favorite sandwich! 🤖🥪 That's exactly what programming is - giving clear, step-by-step instructions to a computer. Every click, swipe, or tap on your phone or computer is actually running a program behind the scenes!"
+      />
 
       <div className="mt-8">
         <h2 className="text-2xl font-semibold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
@@ -64,77 +120,57 @@ const WhatIsAProgram = ({ nextModule, onNext }) => {
 
       <h2 className="mt-8 text-2xl font-semibold">The Three Superpowers of Programming 💫</h2>
       
-      <div className="space-y-6 mt-4">
-        {/* Adding smooth transitions and better hover effects */}
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20 
-            transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/10">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">📝 Instructions (The Recipe)</h3>
-          <p className="text-gray-300">
-            Just like when you're following a dance tutorial:
-          </p>
-          <ul className="list-disc list-inside mt-2 space-y-2 text-gray-300">
-            <li>Step 1: Move your right foot forward</li>
-            <li>Step 2: Spin around once</li>
-            <li>Step 3: Clap your hands</li>
-          </ul>
-          <p className="mt-3 text-gray-300">
-            Programs work the same way! They follow precise instructions one at a time.
-          </p>
-        </div>
-        
-        {/* Apply similar transitions to other sections */}
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-green-700/10 rounded-xl border border-green-500/20 
-            transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/10">
-          <h3 className="text-xl font-medium text-green-400 mb-3">📦 Data (The Ingredients)</h3>
-          <p className="text-gray-300">
-            Think of data like the ingredients in your recipe. It's the information your program 
-            works with - numbers, text, images, or anything else your program needs to do its job.
-          </p>
-        </div>
+      <ConceptExplanation sections={conceptSections} />
 
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20 
-            transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">🧠 Logic (The Decision-Making)</h3>
-          <p className="text-gray-300">
-            This is like the decision-making in cooking - "if the water is boiling, add the pasta". 
-            In programs, we tell the computer how to make decisions and what to do in different situations.
-          </p>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <KeyFeatures
+          title="Program Steps 📝"
+          items={programSteps}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Program Data 📦"
+          items={dataPoints}
+          variant="purple"
+        />
       </div>
 
-      <div className="mt-8 p-6 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-xl border border-yellow-500/20">
-        <h3 className="text-xl font-medium text-yellow-400 mb-3">👋 Let's Try It Together!</h3>
-        <p className="text-gray-300">
-          Think about making a simple calculator program:
-        </p>
-        <div className="mt-4 space-y-2 text-gray-300">
-          <div className="flex items-center space-x-2">
-            <span>Instructions:</span> Add two numbers
-          </div>
-          <div className="flex items-center space-x-2">
-            <span>Data:</span> The numbers 5 and 3
-          </div>
-          <div className="flex items-center space-x-2">
-            <span>Logic:</span> If both are numbers, add them; if not, show error
-          </div>
-          <div className="flex items-center space-x-2">
-            <span>Result:</span> 5 + 3 = 8
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <KeyFeatures
+          title="Program Logic 🧠"
+          items={logicPoints}
+          variant="green"
+        />
+        <KeyFeatures
+          title="Real Examples 🌟"
+          items={examplePoints}
+          variant="yellow"
+        />
       </div>
 
-      <div className="mt-8 p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-        <h3 className="text-xl font-medium text-green-400 mb-3">🎮 Real-World Examples</h3>
-        <div className="space-y-4 text-gray-300">
-          <p>Here are some everyday programs you might use:</p>
-          <ul className="list-disc list-inside space-y-2">
-            <li>Instagram filters (transforming your photos)</li>
-            <li>Calculator app (processing numbers)</li>
-            <li>Weather app (showing forecasts)</li>
-            <li>Games (responding to your controls)</li>
-          </ul>
-        </div>
-      </div>
+      <ImportantNote
+        title="Calculator Example"
+        points={[
+          "Instructions: Add two numbers",
+          "Data: The numbers 5 and 3",
+          "Logic: If both are numbers, add them",
+          "Result: 5 + 3 = 8"
+        ]}
+        variant="blue"
+      />
+
+      <Summary 
+        title="Key Points 📝"
+        description={`
+          Remember these key points about programs:
+          • Programs are like recipes with clear instructions
+          • They work with different types of data
+          • They make decisions using logic
+          • They're behind everything your computer does
+          • They can be simple or complex
+        `}
+        variant="green"
+      />
     </div>
   );
 };

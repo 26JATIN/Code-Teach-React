@@ -52,16 +52,11 @@ import PatternPrograms from '../../../Course Modules/Java/6.Loops-For/4.PatternP
 import PracticeSetForLoops from '../../../Course Modules/Java/6.Loops-For/5.PracticeSetForLoops';
 
 // Module 4-10: Comment out all future imports until components are created
+import WhileLoopBasics from '../../../Course Modules/Java/7.Loops-While/1.WhileLoopBasics';
+
 /* 
-// Module 6: Loops - For Loop
-import BasicForLoop from '../../../Course Modules/Java/6.Loops-For/1.BasicForLoop';
-import NestedForLoops from '../../../Course Modules/Java/6.Loops-For/2.NestedForLoops';
-import EnhancedForLoop from '../../../Course Modules/Java/6.Loops-For/3.EnhancedForLoop';
-import PatternPrograms from '../../../Course Modules/Java/6.Loops-For/4.PatternPrograms';
-import PracticeSetForLoops from '../../../Course Modules/Java/6.Loops-For/5.PracticeSetForLoops';
 
 // Module 7: Loops - While & Do-While
-import WhileLoopBasics from '../../../Course Modules/Java/7.Loops-While/1.WhileLoopBasics';
 import DoWhileLoop from '../../../Course Modules/Java/7.Loops-While/2.DoWhileLoop';
 import NestedWhileLoops from '../../../Course Modules/Java/7.Loops-While/3.NestedWhileLoops';
 import BreakStatement from '../../../Course Modules/Java/7.Loops-While/4.BreakStatement';
@@ -95,6 +90,7 @@ import ThisKeyword from '../../../Course Modules/Java/10.OOP-1/5.ThisKeyword';
 import StaticMembers from '../../../Course Modules/Java/10.OOP-1/6.StaticMembers';
 import PracticeSetOOP1 from '../../../Course Modules/Java/10.OOP-1/7.PracticeSetOOP1';
 */
+
 
 export const modules = [
   {
@@ -174,6 +170,14 @@ export const modules = [
       { id: '6.3', title: 'Enhanced For Loop', component: EnhancedForLoop },
       { id: '6.4', title: 'Pattern Programs', component: PatternPrograms },
       { id: '6.5', title: 'Practice Set - For Loops', component: PracticeSetForLoops }
+    ]
+  },
+  {
+    id: '7',
+    title: 'Loops - While & Do-While',
+    subModules: [
+      { id: '7.1', title: 'While Loop Basics', component: WhileLoopBasics }
+      // Additional submodules will be added as they're created
     ]
   },
   /* Comment out modules that haven't been created yet

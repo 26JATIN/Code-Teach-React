@@ -1,6 +1,11 @@
 import React from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 
 const LogicalOperators = () => {
   const examples = {
@@ -203,205 +208,201 @@ const LogicalOperators = () => {
     }
   };
 
+  const basicConcepts = [
+    {
+      icon: "🧠",
+      title: "Understanding Logical Operators",
+      content: [
+        "Logical operators work with boolean values to make decisions.",
+        "They help combine multiple conditions into a single result."
+      ],
+      code: `boolean result = condition1 && condition2;`
+    }
+  ];
+
+  const operatorConcepts = [
+    {
+      icon: "&&",
+      title: "AND Operator",
+      content: [
+        "Returns true only when both conditions are true.",
+        "Often used for checking multiple requirements."
+      ],
+      code: `if (age >= 18 && hasLicense) {
+    // Can drive
+}`
+    },
+    {
+      icon: "||",
+      title: "OR Operator",
+      content: [
+        "Returns true if at least one condition is true.",
+        "Used when any of multiple conditions is acceptable."
+      ],
+      code: `if (hasCreditCard || hasDebitCard) {
+    // Can pay electronically
+}`
+    },
+    {
+      icon: "!",
+      title: "NOT Operator",
+      content: [
+        "Reverses the boolean value.",
+        "Used to check for the opposite condition."
+      ],
+      code: `if (!isBlocked) {
+    // User can access
+}`
+    }
+  ];
+
+  const advancedConcepts = [
+    {
+      icon: "🔄",
+      title: "Short-Circuit Evaluation",
+      content: [
+        "&& stops if first condition is false",
+        "|| stops if first condition is true",
+        "Helps improve performance and avoid errors"
+      ],
+      code: `// Second part won't execute if obj is null
+if (obj != null && obj.getValue() > 0)`
+    }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Logical Operators in Java 🧠
-      </h1>
+      <Summary 
+        title="Logical Operators in Java 🧠"
+        description="Logical operators help us combine multiple conditions and make complex decisions. They're like the brain of your program, helping it make smart choices! 🤔"
+      />
 
-      {/* Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Logical operators help us combine multiple conditions and make complex decisions. 
-          They're like the brain of your program, helping it make smart choices! 🤔
-        </p>
-      </div>
-
-      {/* Operator Types */}
+      <ConceptExplanation sections={basicConcepts} />
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-lg font-medium text-blue-400 mb-3">AND (&&)</h3>
-          <p className="text-gray-300">Both conditions must be true</p>
-          <div className="mt-2 text-sm">
-            <code className="text-blue-400">true && true = true</code>
-            <br />
-            <code className="text-blue-400">true && false = false</code>
-          </div>
-        </div>
-        
-        <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-lg font-medium text-purple-400 mb-3">OR (||)</h3>
-          <p className="text-gray-300">At least one must be true</p>
-          <div className="mt-2 text-sm">
-            <code className="text-purple-400">true || false = true</code>
-            <br />
-            <code className="text-purple-400">false || false = false</code>
-          </div>
-        </div>
-
-        <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
-          <h3 className="text-lg font-medium text-green-400 mb-3">NOT (!)</h3>
-          <p className="text-gray-300">Reverses the condition</p>
-          <div className="mt-2 text-sm">
-            <code className="text-green-400">!true = false</code>
-            <br />
-            <code className="text-green-400">!false = true</code>
-          </div>
-        </div>
+        <KeyFeatures
+          title="AND Operator"
+          items={[
+            { icon: "&&", text: "Both must be true" },
+            { icon: "🎯", text: "Stops on first false" },
+            { icon: "📦", text: "Multiple requirements" }
+          ]}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="OR Operator"
+          items={[
+            { icon: "||", text: "One must be true" },
+            { icon: "⚡", text: "Stops on first true" },
+            { icon: "🔄", text: "Alternative options" }
+          ]}
+          variant="purple"
+        />
+        <KeyFeatures
+          title="NOT Operator"
+          items={[
+            { icon: "!", text: "Reverses boolean" },
+            { icon: "🔄", text: "Simple inversion" },
+            { icon: "✨", text: "Opposite check" }
+          ]}
+          variant="green"
+        />
       </div>
 
-      {/* Examples Section */}
+      <ConceptExplanation sections={operatorConcepts} />
+
+      {/* Truth Tables Section - Using KeyFeatures in a different way */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <KeyFeatures
+          title="AND Truth Table"
+          items={[
+            { icon: "T+T", text: "= True" },
+            { icon: "T+F", text: "= False" },
+            { icon: "F+T", text: "= False" },
+            { icon: "F+F", text: "= False" }
+          ]}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="OR Truth Table"
+          items={[
+            { icon: "T+T", text: "= True" },
+            { icon: "T+F", text: "= True" },
+            { icon: "F+T", text: "= True" },
+            { icon: "F+F", text: "= False" }
+          ]}
+          variant="purple"
+        />
+      </div>
+
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">See It In Action! 🚀</h2>
+        <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>
         <CodeSnippet {...examples.whatAreLogicalOperators} />
         <CodeSnippet {...examples.andOperator} />
         <CodeSnippet {...examples.orOperator} />
         <CodeSnippet {...examples.notOperator} />
         <CodeSnippet {...examples.complexConditions} />
-        
-        <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-          <h3 className="text-lg font-medium text-yellow-400 mb-2">Pro Tip! 💡</h3>
-          <p className="text-gray-300">
-            When using multiple logical operators, use parentheses to make your code clearer 
-            and control the order of evaluation!
-          </p>
-        </div>
       </section>
 
-      {/* Truth Table Section */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold text-blue-400">Truth Tables 📊</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-            <h3 className="text-lg font-medium text-blue-400 mb-3">AND (&&) Table</h3>
-            <div className="grid grid-cols-3 gap-2 text-sm">
-              <div className="font-medium text-gray-400">A</div>
-              <div className="font-medium text-gray-400">B</div>
-              <div className="font-medium text-gray-400">Result</div>
-              <div className="text-gray-300">true</div>
-              <div className="text-gray-300">true</div>
-              <div className="text-green-400">true</div>
-              <div className="text-gray-300">true</div>
-              <div className="text-gray-300">false</div>
-              <div className="text-red-400">false</div>
-              <div className="text-gray-300">false</div>
-              <div className="text-gray-300">true</div>
-              <div className="text-red-400">false</div>
-              <div className="text-gray-300">false</div>
-              <div className="text-gray-300">false</div>
-              <div className="text-red-400">false</div>
-            </div>
-          </div>
+      <ConceptExplanation sections={advancedConcepts} />
 
-          <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-            <h3 className="text-lg font-medium text-purple-400 mb-3">OR (||) Table</h3>
-            <div className="grid grid-cols-3 gap-2 text-sm">
-              <div className="font-medium text-gray-400">A</div>
-              <div className="font-medium text-gray-400">B</div>
-              <div className="font-medium text-gray-400">Result</div>
-              <div className="text-gray-300">true</div>
-              <div className="text-gray-300">true</div>
-              <div className="text-green-400">true</div>
-              <div className="text-gray-300">true</div>
-              <div className="text-gray-300">false</div>
-              <div className="text-green-400">true</div>
-              <div className="text-gray-300">false</div>
-              <div className="text-gray-300">true</div>
-              <div className="text-green-400">true</div>
-              <div className="text-gray-300">false</div>
-              <div className="text-gray-300">false</div>
-              <div className="text-red-400">false</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <MistakesToAvoid
+        title="Common Mistakes"
+        mistakes={[
+          "Forgetting parentheses around complex conditions",
+          "Confusing && (AND) with || (OR)",
+          "Not considering all possible combinations",
+          "Incorrect order of operations"
+        ]}
+        alternatives={[
+          "Use parentheses to make order explicit",
+          "Break complex conditions into smaller parts",
+          "Test all possible combinations",
+          "Use meaningful variable names for clarity"
+        ]}
+      />
 
-      {/* Common Mistakes */}
-      <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-        <h3 className="text-lg font-medium text-red-400 flex items-center gap-2 mb-2">
-          <span>⚠️ Watch Out For These!</span>
-        </h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Forgetting parentheses around complex conditions</li>
-          <li>Confusing && (AND) with || (OR)</li>
-          <li>Not considering all possible combinations</li>
-          <li>Incorrect order of operations with multiple logical operators</li>
-        </ul>
-      </div>
+      <HandsOn
+        title="Basic Practice 🎯"
+        description="Start with basic logical operations and simple combinations"
+        defaultCode={examples.practiceQuestions.basic.code}
+      />
 
-      {/* Summary Section */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold text-blue-400">Quick Summary 📝</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-            <h3 className="text-lg font-medium text-blue-400 mb-3">AND (&&)</h3>
-            <p className="text-gray-300">Both conditions must be true</p>
-          </div>
-          
-          <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-            <h3 className="text-lg font-medium text-purple-400 mb-3">OR (||)</h3>
-            <p className="text-gray-300">At least one must be true</p>
-          </div>
+      <HandsOn
+        title="Intermediate Practice 🎯"
+        description="Apply logical operators to real-world scenarios"
+        defaultCode={examples.practiceQuestions.intermediate.code}
+      />
 
-          <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
-            <h3 className="text-lg font-medium text-green-400 mb-3">NOT (!)</h3>
-            <p className="text-gray-300">Reverses the condition</p>
-          </div>
-        </div>
-      </section>
+      <HandsOn
+        title="Advanced Practice 🎯"
+        description="Master complex combinations of logical operators"
+        defaultCode={examples.practiceQuestions.advanced.code}
+      />
 
-      {/* Practice Section - Moved to end */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Time to Practice! 🎯</h2>
-        
-        {/* Basic Practice */}
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <h3 className="text-xl font-medium text-green-400 mb-3">Level 1: Basic Logical Operations</h3>
-          <p className="text-gray-300 mb-4">
-            Start with basic logical operations and simple combinations of conditions.
-          </p>
-          <CodeEditor defaultCode={examples.practiceQuestions.basic.code} />
-        </div>
+      <ImportantNote
+        title="Practice Tips"
+        points={[
+          "Start with the basic practice and work your way up",
+          "Try to solve each problem without looking at solutions",
+          "Test your code with different input combinations",
+          "Challenge yourself to make the conditions more complex"
+        ]}
+        variant="yellow"
+      />
 
-        {/* Intermediate Practice */}
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <h3 className="text-xl font-medium text-green-400 mb-3">Level 2: Theme Park Rides</h3>
-          <p className="text-gray-300 mb-4">
-            Apply logical operators to real-world scenarios with multiple conditions.
-          </p>
-          <CodeEditor defaultCode={examples.practiceQuestions.intermediate.code} />
-        </div>
-
-        {/* Advanced Practice */}
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <h3 className="text-xl font-medium text-green-400 mb-3">Level 3: Game Access System</h3>
-          <p className="text-gray-300 mb-4">
-            Master complex combinations of logical operators in a game system.
-          </p>
-          <CodeEditor defaultCode={examples.practiceQuestions.advanced.code} />
-        </div>
-
-        {/* Practice Tips */}
-        <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-          <h3 className="text-lg font-medium text-yellow-400 mb-2">Practice Tips 💡</h3>
-          <ul className="list-disc list-inside space-y-2 text-gray-300">
-            <li>Start with the basic practice and work your way up</li>
-            <li>Try to solve each problem without looking at solutions</li>
-            <li>Test your code with different input combinations</li>
-            <li>Challenge yourself to make the conditions more complex</li>
-          </ul>
-        </div>
-      </section>
-
-      {/* Next Steps */}
-      <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
-        <h3 className="text-lg font-medium text-green-400 mb-2">🎯 What's Next?</h3>
-        <p className="text-gray-300">
-          Ready to move on? Next, we'll explore control flow statements like if-else and loops 
-          where you'll put these logical operators to great use!
-        </p>
-      </div>
+      <Summary 
+        title="Key Takeaways 📝"
+        description={`
+          Remember these essential points about logical operators:
+          • AND (&&) requires both conditions to be true
+          • OR (||) requires at least one condition to be true
+          • NOT (!) reverses the boolean value
+          • Use parentheses for complex conditions
+          • Consider short-circuit evaluation for efficiency
+        `}
+        variant="green"
+      />
     </div>
   );
 };

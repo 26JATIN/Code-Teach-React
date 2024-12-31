@@ -1,6 +1,11 @@
 import React from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 
 const TakingInputInJava = () => {
   const examples = {
@@ -113,141 +118,157 @@ public class AboutYou {
     }
   };
 
+  const conceptSections = [
+    {
+      icon: "📚",
+      title: "Understanding Scanner",
+      content: [
+        "Scanner is like a helper tool that reads input from various sources.",
+        "Think of it as a friendly robot that helps your program understand what users type!",
+        "Before using Scanner, we need to import it from java.util package."
+      ],
+      code: `import java.util.Scanner; // Import first!
+Scanner scan = new Scanner(System.in);`
+    },
+    {
+      icon: "🎯",
+      title: "Reading Different Types",
+      content: [
+        "Scanner has different methods for reading different types of input:",
+        "• nextLine() - reads text (whole line)",
+        "• next() - reads a single word",
+        "• nextInt() - reads whole numbers",
+        "• nextDouble() - reads decimal numbers",
+        "• nextBoolean() - reads true/false"
+      ],
+      code: `String name = scan.nextLine();    // "John Doe"
+String word = scan.next();        // "John"
+int age = scan.nextInt();         // 25
+double height = scan.nextDouble(); // 5.9
+boolean isStudent = scan.nextBoolean(); // true`
+    }
+  ];
+
+  const scannerMethods = [
+    { icon: "📝", text: "nextLine() - Full text line" },
+    { icon: "🔤", text: "next() - Single word" },
+    { icon: "🔢", text: "nextInt() - Whole numbers" },
+    { icon: "📊", text: "nextDouble() - Decimal numbers" },
+    { icon: "✅", text: "nextBoolean() - true/false" }
+  ];
+
+  const bestPractices = [
+    { icon: "🎯", text: "Always close Scanner when done" },
+    { icon: "⚠️", text: "Handle input errors" },
+    { icon: "📝", text: "Show clear prompts" },
+    { icon: "🔄", text: "Validate user input" }
+  ];
+
+  const extraConcepts = [
+    {
+      icon: "⚡",
+      title: "Common Pitfalls & Solutions",
+      content: [
+        "Sometimes nextLine() behaves unexpectedly after nextInt()/nextDouble()",
+        "This happens because numeric methods don't consume the newline character",
+        "Solution: Add an extra nextLine() after numeric input"
+      ],
+      code: `int age = scan.nextInt();     // User types "25<enter>"
+scan.nextLine();              // Consume leftover newline
+String name = scan.nextLine(); // Now this works correctly`
+    }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Let's Learn About Taking Input! 🎮
-      </h1>
+      <Summary 
+        title="Let's Learn About Taking Input! 🎮"
+        description="Hey there! 👋 Today we're going to learn something super cool - how to make our programs talk to us! Instead of just showing messages, we'll make programs that can ask questions and remember our answers. It's like having a conversation with your computer! 🗣️💻"
+      />
 
-      {/* Friendly Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Hey there! 👋 Today we're going to learn something super cool - how to make our programs 
-          talk to us! Instead of just showing messages, we'll make programs that can ask questions 
-          and remember our answers. It's like having a conversation with your computer! 🗣️💻
-        </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <KeyFeatures
+          title="Scanner Methods 🛠️"
+          items={scannerMethods}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Best Practices ✨"
+          items={bestPractices}
+          variant="purple"
+        />
       </div>
 
-      {/* Scanner Explanation */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">First, Meet Your New Friend: Scanner! 🤝</h2>
-        
-        <div className="p-6 bg-blue-500/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-4">What's a Scanner? 🤔</h3>
-          <p className="text-gray-300 mb-4">
-            Think of Scanner like a friendly robot that helps your program read things! 
-            Just like you use your eyes to read, your program uses Scanner to read what 
-            you type. It's that simple! 🤖
-          </p>
+      <ConceptExplanation sections={conceptSections} />
 
-          <div className="mt-4 space-y-4">
-            <div className="bg-black/30 p-4 rounded-lg">
-              <h4 className="text-green-400 mb-2">How to Use Scanner:</h4>
-              <ol className="list-decimal list-inside space-y-2 text-gray-300">
-                <li>First, tell Java you want to use Scanner (import it)</li>
-                <li>Create a new Scanner</li>
-                <li>Use it to read input</li>
-                <li>When done, close it (clean up)</li>
-              </ol>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ImportantNote
+        title="Before You Start!"
+        points={[
+          "Always import java.util.Scanner at the top of your file",
+          "Create Scanner object only once and reuse it",
+          "Remember to close Scanner when you're done",
+          "Show clear messages before asking for input"
+        ]}
+        variant="yellow"
+      />
 
-      {/* First Example */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Your First Input Program! 🎉</h2>
-        <div className="p-6 bg-purple-500/10 rounded-xl border border-purple-500/20">
-          <p className="text-gray-300 mb-4">
-            Let's write a program that asks for your name and says hello! 
-            We'll go through it line by line: 👇
-          </p>
-        </div>
+        <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>
         <CodeSnippet {...examples.basicInput} />
-        
-        <div className="p-6 bg-blue-500/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-4">Let's Break It Down! 📝</h3>
-          <ul className="space-y-4 text-gray-300">
-            <li className="flex items-start gap-3">
-              <span className="text-2xl">1️⃣</span>
-              <div>
-                <code className="text-blue-400">import java.util.Scanner;</code>
-                <p className="mt-1">This line tells Java we want to use the Scanner tool</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-2xl">2️⃣</span>
-              <div>
-                <code className="text-blue-400">Scanner scan = new Scanner(System.in);</code>
-                <p className="mt-1">Creates our Scanner tool and names it 'scan'</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-2xl">3️⃣</span>
-              <div>
-                <code className="text-blue-400">String name = scan.nextLine();</code>
-                <p className="mt-1">Waits for user to type something and saves it in 'name'</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-2xl">4️⃣</span>
-              <div>
-                <code className="text-blue-400">scan.close();</code>
-                <p className="mt-1">Tells Java we're done using Scanner</p>
-              </div>
-            </li>
-          </ul>
-        </div>
+        <CodeSnippet {...examples.simpleCalculator} />
+        <CodeSnippet {...examples.differentTypes} />
       </section>
 
-      {/* Reading Different Types */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Reading Different Types of Input 📚</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-6 bg-blue-500/10 rounded-xl border border-blue-500/20">
-            <h3 className="text-xl font-medium text-blue-400 mb-4">Scanner's Special Powers 🦸‍♂️</h3>
-            <ul className="space-y-3 text-gray-300">
-              <li>• <code>nextLine()</code> - Reads text (like names)</li>
-              <li>• <code>nextInt()</code> - Reads whole numbers</li>
-              <li>• <code>nextDouble()</code> - Reads decimal numbers</li>
-            </ul>
-          </div>
-          
-          <div className="p-6 bg-purple-500/10 rounded-xl border border-purple-500/20">
-            <h3 className="text-xl font-medium text-purple-400 mb-4">Remember! 🧠</h3>
-            <ul className="space-y-3 text-gray-300">
-              <li>• Always show a message before asking for input</li>
-              <li>• Use the right method for the right type</li>
-              <li>• Don't forget to close your Scanner</li>
-            </ul>
-          </div>
-        </div>
-      </section>
+      <ConceptExplanation sections={extraConcepts} />
 
-      {/* Practice Time */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Your Turn! 🎯</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Let's write a program that asks for your favorite color and lucky number! 
-            Try completing this code:
-          </p>
-          <CodeEditor defaultCode={examples.practiceQuestion.code} />
-        </div>
-      </section>
+      <MistakesToAvoid
+        title="Common Mistakes to Watch Out For!"
+        mistakes={[
+          "Forgetting to import Scanner",
+          "Not closing Scanner when done",
+          "Mixing nextLine() with other methods without handling newline",
+          "Not handling invalid input",
+          "Creating multiple Scanner objects unnecessarily"
+        ]}
+        alternatives={[
+          "Always add import statement at the top",
+          "Use try-with-resources or close Scanner in finally block",
+          "Add extra nextLine() after numeric input if needed",
+          "Use try-catch to handle invalid input",
+          "Create one Scanner object and reuse it"
+        ]}
+      />
 
-      {/* Tips Section */}
-      <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-        <h3 className="text-lg font-medium text-yellow-400 mb-2">Friendly Reminders! 💝</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Always import Scanner at the top</li>
-          <li>Always close your Scanner when done</li>
-          <li>Be careful mixing nextLine() with other methods</li>
-          <li>Add clear prompts for users</li>
-          <li>Always validate important input</li>
-        </ul>
-      </div>
+      <HandsOn
+        title="Let's Practice! 💪"
+        description="Create a program that asks for your favorite color and lucky number, then combines them into a fun message!"
+        defaultCode={examples.practiceQuestion.code}
+      />
+
+      <ImportantNote
+        title="Pro Tips for Beginners! 🌟"
+        points={[
+          "Always test your program with different types of input",
+          "Think about what could go wrong (invalid input, wrong type)",
+          "Use meaningful variable names for storing input",
+          "Add helpful messages to guide the user",
+          "Start simple, then add more features"
+        ]}
+        variant="green"
+      />
+
+      <Summary 
+        title="Key Takeaways 📝"
+        description={`
+          Remember these important points about taking input:
+          • Scanner is your friend for reading input
+          • Different methods for different types of input
+          • Always show clear prompts before asking for input
+          • Close Scanner when you're done
+          • Handle invalid input gracefully
+        `}
+        variant="green"
+      />
     </div>
   );
 };

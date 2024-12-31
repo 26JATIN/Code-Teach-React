@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 
 const SimpleIfStatement = () => {
@@ -80,72 +85,70 @@ const SimpleIfStatement = () => {
     }
   ];
 
-  const handleAnswerSelect = (questionId, answerIndex) => {
-    setSelectedAnswers(prev => ({
-      ...prev,
-      [questionId]: answerIndex
-    }));
-  };
+  const conceptSections = [
+    {
+      icon: "🔄",
+      title: "Basic Structure",
+      content: [
+        "The if statement is the most basic form of control flow in Java.",
+        "It executes a block of code only when a specified condition evaluates to true."
+      ],
+      code: `if (condition) {
+    // This code only runs
+    // when condition is true
+}`
+    },
+    {
+      icon: "⚡",
+      title: "Boolean Conditions",
+      content: [
+        "The condition must result in a boolean value (true/false).",
+        "Common comparisons include >, <, >=, <=, ==, and !="
+      ],
+      code: `boolean isRaining = true;
+if (isRaining) {
+    // Runs when isRaining is true
+}
+
+if (temperature > 25) {
+    // Runs when temperature is greater than 25
+}`
+    }
+  ];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        If Statements in Java 🔍
-      </h1>
-
-      {/* Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          If statements are like decision points in your code. They help your program make choices 
-          based on conditions, just like how we make decisions in real life! 🤔
-        </p>
-      </div>
-
-      {/* Essential Components Grid */}
+      <Summary 
+        title="If Statements in Java 🔍"
+        description="If statements are like decision points in your code. They help your program make choices based on conditions, just like how we make decisions in real life! 🤔"
+      />
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">Key Components 📌</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎯</span>
-              <span>Condition (must be boolean)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📦</span>
-              <span>Code Block (in curly braces)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">➡️</span>
-              <span>Flow Control</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Important Rules ⚡</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">✨</span>
-              <span>Condition must be in parentheses</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎨</span>
-              <span>No semicolon after condition</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📝</span>
-              <span>Curly braces for multiple statements</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Key Components 📌"
+          items={[
+            { icon: "🎯", text: "Condition (must be boolean)" },
+            { icon: "📦", text: "Code Block (in curly braces)" },
+            { icon: "➡️", text: "Flow Control" }
+          ]}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Important Rules ⚡"
+          items={[
+            { icon: "✨", text: "Condition must be in parentheses" },
+            { icon: "🎨", text: "No semicolon after condition" },
+            { icon: "📝", text: "Curly braces for multiple statements" }
+          ]}
+          variant="purple"
+        />
       </div>
 
-      {/* Code Examples */}
+      <ConceptExplanation sections={conceptSections} />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-blue-400">Basic Structure 🏗️</h2>
         <CodeSnippet {...examples.basicStructure} />
-        
         <div className="p-4 bg-gray-800/50 rounded-lg">
           <p className="text-gray-300">
             The condition in an if statement must result in a <code className="text-blue-400">boolean</code> value 
@@ -154,52 +157,51 @@ const SimpleIfStatement = () => {
         </div>
       </section>
 
-      {/* Simple Example */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Simple Example 👶</h2>
+        <h2 className="text-2xl font-semibold text-blue-400">Simple Examples 👶</h2>
         <CodeSnippet {...examples.simpleExample} />
         <CodeSnippet {...examples.booleanExample} />
       </section>
 
-      {/* MCQ Section */}
+      <MistakesToAvoid
+        title="Common Mistakes"
+        mistakes={[
+          "Using = instead of == for comparison",
+          "Putting a semicolon after the if condition",
+          "Forgetting parentheses around the condition"
+        ]}
+        alternatives={[
+          "Use meaningful variable names for boolean conditions",
+          "Extract complex conditions into boolean methods",
+          "Use proper indentation for better readability",
+          "Consider using constants for magic numbers"
+        ]}
+      />
+
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold text-purple-400">Quick Check! 📝</h2>
-        <MCQ
-          question={mcqQuestions[0]}
-          selectedAnswer={selectedAnswers[mcqQuestions[0].id]}
-          onAnswerSelect={(id, answer) => handleAnswerSelect(id, answer)}
-        />
+        {mcqQuestions.map((question) => (
+          <MCQ
+            key={question.id}
+            question={question}
+            selectedAnswer={selectedAnswers[question.id]}
+            onAnswerSelect={(id, answer) => setSelectedAnswers(prev => ({...prev, [id]: answer}))}
+          />
+        ))}
       </section>
 
-      {/* Practice Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Try It Yourself! 💻</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Write a program that checks if a temperature is above 25°C and prints "It's warm today!" if it is.
-          </p>
-          <CodeEditor 
-            defaultCode={`public class WeatherCheck {
+      <HandsOn
+        title="Try It Yourself! 💻"
+        description="Write a program that checks if a temperature is above 25°C and prints 'It's warm today!' if it is."
+        defaultCode={`public class WeatherCheck {
     public static void main(String[] args) {
         double temperature = 28.5;
         
         // Write your if statement here
         
     }
-}`} 
-          />
-        </div>
-      </section>
-
-      {/* Common Mistakes */}
-      <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-        <h3 className="text-lg font-medium text-red-400 mb-2">⚠️ Common Mistakes</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Using = instead of == for comparison</li>
-          <li>Putting a semicolon after the if condition</li>
-          <li>Forgetting parentheses around the condition</li>
-        </ul>
-      </div>
+}`}
+      />
     </div>
   );
 };

@@ -4,6 +4,7 @@ import Summary from '../../../Frontend/Components/Interface Components/ReadingAr
 import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
 import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
 import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 
 const EnhancedSwitch = () => {
@@ -82,13 +83,50 @@ const EnhancedSwitch = () => {
     }
   ];
 
+  const conceptSections = [
+    {
+      icon: "🎯",
+      title: "Basic Syntax",
+      content: [
+        "Enhanced switch expressions introduce a more concise syntax using the arrow operator (->). This eliminates the need for break statements and makes the code more readable.",
+        "You can group multiple cases together using commas, which is particularly useful when different cases should yield the same result."
+      ],
+      code: `case "MONDAY", "TUESDAY" -> "Weekday"`
+    },
+    {
+      icon: "🔄",
+      title: "Expression vs Statement",
+      content: [
+        "Unlike traditional switch statements, enhanced switch can be used as an expression that returns a value.",
+        "The compiler ensures that all possible cases are handled, making the code more robust and preventing potential runtime errors."
+      ],
+      code: `String result = switch(value) {
+    case 1 -> "One";
+    case 2 -> "Two";
+    default -> "Other";
+};`
+    },
+    {
+      icon: "⚡",
+      title: "Using yield",
+      content: [
+        "When you need to execute multiple statements in a case, you can use a block with the yield keyword to return a value.",
+        "The yield statement is similar to return but specifically designed for switch expressions."
+      ],
+      code: `case 1 -> {
+    System.out.println("Processing...");
+    yield "Result";
+}`
+    }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <Summary 
         title="Enhanced Switch Expressions 🚀"
         description="Java 14 introduced enhanced switch expressions with arrow syntax and multiple case labels, making switch statements more concise and powerful! Let's explore these modern features. 🎯"
       />
-
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <KeyFeatures
           title="New Features 🆕"
@@ -109,6 +147,8 @@ const EnhancedSwitch = () => {
           variant="purple"
         />
       </div>
+
+      <ConceptExplanation sections={conceptSections} />
 
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>

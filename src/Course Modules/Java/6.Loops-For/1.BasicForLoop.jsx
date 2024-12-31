@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 
 const BasicForLoop = () => {
@@ -51,6 +56,49 @@ const BasicForLoop = () => {
     }
   };
 
+  const loopComponents = [
+    { icon: "1️⃣", text: "Initialization (start)" },
+    { icon: "2️⃣", text: "Condition (continue?)" },
+    { icon: "3️⃣", text: "Update (change)" }
+  ];
+
+  const commonUses = [
+    { icon: "🔄", text: "Iterating specific times" },
+    { icon: "📦", text: "Processing arrays" },
+    { icon: "🔍", text: "Search operations" }
+  ];
+
+  const conceptSections = [
+    {
+      icon: "🔄",
+      title: "Basic For Loop Structure",
+      content: [
+        "A for loop consists of three main parts:",
+        "1. Initialization - where we start",
+        "2. Condition - when to continue",
+        "3. Update - how to change each time"
+      ],
+      code: `for (int i = 0; i < 5; i++) {
+    // Code to repeat
+}`
+    },
+    {
+      icon: "⚡",
+      title: "Loop Flow",
+      content: [
+        "1. Initialize counter variable",
+        "2. Check condition",
+        "3. Execute loop body if condition is true",
+        "4. Update counter",
+        "5. Repeat steps 2-4 until condition is false"
+      ],
+      code: `// Prints: 0 1 2 3 4
+for (int i = 0; i < 5; i++) {
+    System.out.print(i + " ");
+}`
+    }
+  ];
+
   const mcqQuestions = [
     {
       id: 1,
@@ -80,71 +128,47 @@ const BasicForLoop = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Basic For Loops in Java 🔄
-      </h1>
-
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          For loops are one of the most commonly used control structures in Java. 
-          They allow you to execute a block of code repeatedly based on a condition. 
-          Let's master the basics! 🎯
-        </p>
-      </div>
+      <Summary 
+        title="Basic For Loops in Java 🔄"
+        description="For loops are one of the most commonly used control structures in Java. They allow you to execute a block of code repeatedly based on a condition. Let's master the basics! 🎯"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">Loop Components 🔍</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">1️⃣</span>
-              <span>Initialization (start)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">2️⃣</span>
-              <span>Condition (continue?)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">3️⃣</span>
-              <span>Update (change)</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Common Uses 🎯</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔄</span>
-              <span>Iterating specific times</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📦</span>
-              <span>Processing arrays</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔍</span>
-              <span>Search operations</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Loop Components 🔍"
+          items={loopComponents}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Common Uses 🎯"
+          items={commonUses}
+          variant="purple"
+        />
       </div>
 
+      <ConceptExplanation sections={conceptSections} />
+
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Code Examples 💡</h2>
+        <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>
         <CodeSnippet {...examples.basicSyntax} />
         <CodeSnippet {...examples.commonPatterns} />
       </section>
 
-      <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-        <h3 className="text-lg font-medium text-yellow-400 mb-2">⚠️ Common Mistakes</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Using comma instead of semicolon in for loop syntax</li>
-          <li>Forgetting to update the loop variable</li>
-          <li>Creating infinite loops with wrong conditions</li>
-          <li>Using wrong comparison operators</li>
-        </ul>
-      </div>
+      <MistakesToAvoid
+        title="Common Mistakes"
+        mistakes={[
+          "Using comma instead of semicolon in for loop syntax",
+          "Forgetting to update the loop variable",
+          "Creating infinite loops with wrong conditions",
+          "Using wrong comparison operators"
+        ]}
+        alternatives={[
+          "Use semicolons to separate loop components",
+          "Always include counter update statement",
+          "Double-check loop conditions",
+          "Test with small numbers first"
+        ]}
+      />
 
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-purple-400">Test Your Knowledge 🤓</h2>
@@ -158,23 +182,29 @@ const BasicForLoop = () => {
         ))}
       </section>
 
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Practice Exercise 💻</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Create a program that prints the first 10 even numbers using a for loop
-          </p>
-          <CodeEditor 
-            defaultCode={`public class EvenNumbers {
+      <HandsOn
+        title="Practice Exercise 💻"
+        description="Create a program that prints the first 10 even numbers using a for loop"
+        defaultCode={`public class EvenNumbers {
     public static void main(String[] args) {
         // Write your for loop here to print first 10 even numbers
         // Expected output: 2 4 6 8 10 12 14 16 18 20
-        
     }
-}`} 
-          />
-        </div>
-      </section>
+}`}
+      />
+
+      <Summary 
+        title="Key Takeaways 📝"
+        description={`
+          Remember these key points about for loops:
+          • Three main components: initialization, condition, update
+          • Components are separated by semicolons
+          • Loop body executes while condition is true
+          • Counter variable usually named 'i'
+          • Great for known number of iterations
+        `}
+        variant="green"
+      />
     </div>
   );
 };

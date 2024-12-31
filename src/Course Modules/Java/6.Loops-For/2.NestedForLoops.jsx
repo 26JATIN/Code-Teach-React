@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 
 const NestedForLoops = () => {
@@ -55,6 +60,54 @@ const NestedForLoops = () => {
     }
   };
 
+  const keyConcepts = [
+    { icon: "🔄", text: "Outer & Inner Loops" },
+    { icon: "📊", text: "Loop Dependencies" },
+    { icon: "⚡", text: "Iteration Order" }
+  ];
+
+  const commonUses = [
+    { icon: "🎨", text: "Pattern Printing" },
+    { icon: "📱", text: "Matrix Operations" },
+    { icon: "🔍", text: "Grid Processing" }
+  ];
+
+  const conceptSections = [
+    {
+      icon: "🔄",
+      title: "Understanding Nested Loops",
+      content: [
+        "Nested loops are loops within loops",
+        "The inner loop completes all its iterations for each iteration of the outer loop",
+        "Total iterations = outer loop iterations × inner loop iterations"
+      ],
+      code: `for (int i = 1; i <= 3; i++) {    // Outer loop
+    for (int j = 1; j <= 2; j++) {  // Inner loop
+        // Executes 6 times (3 × 2)
+    }
+}`
+    },
+    {
+      icon: "🎯",
+      title: "Loop Control Flow",
+      content: [
+        "Outer loop controls the number of rows/iterations",
+        "Inner loop controls elements within each row/iteration",
+        "Variables i and j are commonly used for outer and inner loops"
+      ],
+      code: `// Prints:
+// * * *
+// * * *
+// * * *
+for (int i = 1; i <= 3; i++) {      // Rows
+    for (int j = 1; j <= 3; j++) {  // Columns
+        System.out.print("* ");
+    }
+    System.out.println();  // New line after each row
+}`
+    }
+  ];
+
   const mcqQuestions = [
     {
       id: 1,
@@ -84,54 +137,25 @@ const NestedForLoops = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Nested For Loops in Java 🔄
-      </h1>
-
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Nested loops are loops within loops, powerful for working with 2D patterns, matrices, 
-          and complex iterations. Master them to solve advanced programming challenges! 🎯
-        </p>
-      </div>
+      <Summary 
+        title="Nested For Loops in Java 🔄"
+        description="Nested loops are loops within loops, powerful for working with 2D patterns, matrices, and complex iterations. Master them to solve advanced programming challenges! 🎯"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">Key Concepts 🔑</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔄</span>
-              <span>Outer & Inner Loops</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📊</span>
-              <span>Loop Dependencies</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">⚡</span>
-              <span>Iteration Order</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Common Uses 🎯</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎨</span>
-              <span>Pattern Printing</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📱</span>
-              <span>Matrix Operations</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔍</span>
-              <span>Grid Processing</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Key Concepts 🔑"
+          items={keyConcepts}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Common Uses 🎯"
+          items={commonUses}
+          variant="purple"
+        />
       </div>
+
+      <ConceptExplanation sections={conceptSections} />
 
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>
@@ -140,15 +164,21 @@ const NestedForLoops = () => {
         <CodeSnippet {...examples.multiplicationTable} />
       </section>
 
-      <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-        <h3 className="text-lg font-medium text-yellow-400 mb-2">⚠️ Common Mistakes</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Using same variable name in nested loops</li>
-          <li>Incorrect loop termination conditions</li>
-          <li>Not understanding iteration order</li>
-          <li>Creating infinite nested loops</li>
-        </ul>
-      </div>
+      <MistakesToAvoid
+        title="Common Mistakes"
+        mistakes={[
+          "Using same variable name in nested loops",
+          "Incorrect loop termination conditions",
+          "Not understanding iteration order",
+          "Creating infinite nested loops"
+        ]}
+        alternatives={[
+          "Use different variable names (i, j, k)",
+          "Draw the pattern on paper first",
+          "Start with small numbers to test",
+          "Print debug statements to track flow"
+        ]}
+      />
 
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-purple-400">Test Your Knowledge 🤓</h2>
@@ -162,14 +192,10 @@ const NestedForLoops = () => {
         ))}
       </section>
 
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Practice Exercise 💻</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Create a program that prints a number pyramid pattern using nested loops
-          </p>
-          <CodeEditor 
-            defaultCode={`public class NumberPyramid {
+      <HandsOn
+        title="Practice Exercise 💻"
+        description="Create a program that prints a number pyramid pattern using nested loops"
+        defaultCode={`public class NumberPyramid {
     public static void main(String[] args) {
         int rows = 5;
         // Create a pyramid pattern like:
@@ -178,12 +204,34 @@ const NestedForLoops = () => {
         //   12321
         //  1234321
         // 123454321
-        
     }
-}`} 
-          />
-        </div>
-      </section>
+}`}
+      />
+
+      <ImportantNote
+        title="Tips for Success"
+        points={[
+          "Start with simple patterns and work up to complex ones",
+          "Use paper to draw the pattern first",
+          "Count rows and columns carefully",
+          "Test with different input sizes",
+          "Pay attention to spaces in patterns"
+        ]}
+        variant="yellow"
+      />
+
+      <Summary 
+        title="Key Takeaways 📝"
+        description={`
+          Remember these key points about nested loops:
+          • Inner loop completes fully for each outer loop iteration
+          • Total iterations = outer × inner iterations
+          • Great for working with 2D patterns and matrices
+          • Use different variables for each loop level
+          • Plan your pattern on paper first
+        `}
+        variant="green"
+      />
     </div>
   );
 };

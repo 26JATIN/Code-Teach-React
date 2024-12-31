@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 
 const SwitchWithStrings = () => {
@@ -87,79 +91,91 @@ const SwitchWithStrings = () => {
     }
   ];
 
+  const conceptSections = [
+    {
+      icon: "📝",
+      title: "String Comparison in Switch",
+      content: [
+        "Java 7 introduced the ability to use Strings in switch statements, enabling more readable code for string-based logic.",
+        "The comparison is case-sensitive and uses String.equals() method internally."
+      ],
+      code: `switch(str) {
+    case "hello": // Uses String.equals("hello")
+    case "world": // Uses String.equals("world")
+}`
+    },
+    {
+      icon: "⚡",
+      title: "Null Handling",
+      content: [
+        "Switch statements with String require careful null handling as they can throw NullPointerException.",
+        "It's recommended to check for null before the switch statement."
+      ],
+      code: `if (str != null) {
+    switch(str) {
+        // cases
+    }
+}`
+    }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Switch Statements with Strings 📝
-      </h1>
-
-      {/* Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Since Java 7, switch statements can work with String values, making them even more versatile 
-          for text-based control flow. Let's explore how to use them effectively! 🎯
-        </p>
-      </div>
-
-      {/* Key Features Grid */}
+      <Summary 
+        title="Switch Statements with Strings 📝"
+        description="Since Java 7, switch statements can work with String values, making them even more versatile for text-based control flow. Let's explore how to use them effectively! 🎯"
+      />
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">Key Features 🔑</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📝</span>
-              <span>Case-sensitive comparison</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔄</span>
-              <span>String method support</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">⚡</span>
-              <span>Compile-time constants</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Common Use Cases 🎯</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎮</span>
-              <span>Command processing</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🗺️</span>
-              <span>Menu navigation</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔍</span>
-              <span>State handling</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Key Features 🔑"
+          items={[
+            { icon: "📝", text: "Case-sensitive comparison" },
+            { icon: "🔄", text: "String method support" },
+            { icon: "⚡", text: "Compile-time constants" }
+          ]}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Common Use Cases 🎯"
+          items={[
+            { icon: "🎮", text: "Command processing" },
+            { icon: "🗺️", text: "Menu navigation" },
+            { icon: "🔍", text: "State handling" }
+          ]}
+          variant="purple"
+        />
       </div>
 
-      {/* Code Examples */}
+      <ConceptExplanation sections={conceptSections} />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>
         <CodeSnippet {...examples.basicStructure} />
         <CodeSnippet {...examples.practicalExample} />
       </section>
 
-      {/* Warning Section */}
-      <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-        <h3 className="text-lg font-medium text-yellow-400 mb-2">⚠️ Important Considerations</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Always check for null values</li>
-          <li>Remember case sensitivity</li>
-          <li>Use string normalization when needed</li>
-          <li>Consider performance with large string comparisons</li>
-        </ul>
-      </div>
+      <ImportantNote
+        title="Important Considerations"
+        points={[
+          "Always check for null values",
+          "Remember case sensitivity",
+          "Use string normalization when needed",
+          "Consider performance with large string comparisons"
+        ]}
+      />
 
-      {/* MCQ Section */}
+      <ImportantNote
+        title="Best Practices"
+        points={[
+          "Normalize strings before comparison",
+          "Handle null values appropriately",
+          "Use constants for repeated strings",
+          "Consider using enums for fixed sets of strings"
+        ]}
+        variant="blue"
+      />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-purple-400">Test Your Understanding 🤓</h2>
         {mcqQuestions.map((question) => (
@@ -172,15 +188,10 @@ const SwitchWithStrings = () => {
         ))}
       </section>
 
-      {/* Practice Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Practice Time! 💻</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Create a simple menu system using switch with String input for different operations
-          </p>
-          <CodeEditor 
-            defaultCode={`public class MenuSystem {
+      <HandsOn
+        title="Practice Time! 💻"
+        description="Create a simple menu system using switch with String input for different operations"
+        defaultCode={`public class MenuSystem {
     public static void main(String[] args) {
         String menuChoice = "help";
         
@@ -191,21 +202,8 @@ const SwitchWithStrings = () => {
         // Add appropriate messages for each case
         
     }
-}`} 
-          />
-        </div>
-      </section>
-
-      {/* Best Practices */}
-      <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-        <h3 className="text-lg font-medium text-blue-400 mb-2">💡 Best Practices:</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Normalize strings before comparison</li>
-          <li>Handle null values appropriately</li>
-          <li>Use constants for repeated strings</li>
-          <li>Consider using enums for fixed sets of strings</li>
-        </ul>
-      </div>
+}`}
+      />
     </div>
   );
 };

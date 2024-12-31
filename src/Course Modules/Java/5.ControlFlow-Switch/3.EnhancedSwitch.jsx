@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 
 const EnhancedSwitch = () => {
@@ -81,53 +84,30 @@ const EnhancedSwitch = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Enhanced Switch Expressions 🚀
-      </h1>
-
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Java 14 introduced enhanced switch expressions with arrow syntax and multiple case labels, 
-          making switch statements more concise and powerful! Let's explore these modern features. 🎯
-        </p>
-      </div>
+      <Summary 
+        title="Enhanced Switch Expressions 🚀"
+        description="Java 14 introduced enhanced switch expressions with arrow syntax and multiple case labels, making switch statements more concise and powerful! Let's explore these modern features. 🎯"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">New Features 🆕</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">➡️</span>
-              <span>Arrow syntax</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📦</span>
-              <span>Multiple case labels</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎯</span>
-              <span>Expression form</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Advantages ✨</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📝</span>
-              <span>More concise syntax</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔄</span>
-              <span>No break statements needed</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">✅</span>
-              <span>Exhaustiveness checking</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="New Features 🆕"
+          items={[
+            { icon: "➡️", text: "Arrow syntax" },
+            { icon: "📦", text: "Multiple case labels" },
+            { icon: "🎯", text: "Expression form" }
+          ]}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Advantages ✨"
+          items={[
+            { icon: "📝", text: "More concise syntax" },
+            { icon: "🔄", text: "No break statements needed" },
+            { icon: "✅", text: "Exhaustiveness checking" }
+          ]}
+          variant="purple"
+        />
       </div>
 
       <section className="space-y-6">
@@ -136,15 +116,15 @@ const EnhancedSwitch = () => {
         <CodeSnippet {...examples.yieldExample} />
       </section>
 
-      <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-        <h3 className="text-lg font-medium text-yellow-400 mb-2">⚠️ Important Notes</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Enhanced switch requires Java 14 or later</li>
-          <li>Arrow syntax eliminates need for break statements</li>
-          <li>Multiple case labels must be comma-separated</li>
-          <li>Switch expressions must be exhaustive</li>
-        </ul>
-      </div>
+      <ImportantNote
+        title="Important Notes"
+        points={[
+          "Enhanced switch requires Java 14 or later",
+          "Arrow syntax eliminates need for break statements",
+          "Multiple case labels must be comma-separated",
+          "Switch expressions must be exhaustive"
+        ]}
+      />
 
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-purple-400">Test Your Knowledge 🤓</h2>
@@ -158,14 +138,10 @@ const EnhancedSwitch = () => {
         ))}
       </section>
 
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Practice Exercise 💻</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Create an enhanced switch expression to convert numerical grades to letter grades
-          </p>
-          <CodeEditor 
-            defaultCode={`public class GradeConverter {
+      <HandsOn
+        title="Practice Exercise 💻"
+        description="Create an enhanced switch expression to convert numerical grades to letter grades"
+        defaultCode={`public class GradeConverter {
     public static void main(String[] args) {
         int score = 87;
         
@@ -177,10 +153,8 @@ const EnhancedSwitch = () => {
         // F for scores below 60
         
     }
-}`} 
-          />
-        </div>
-      </section>
+}`}
+      />
     </div>
   );
 };

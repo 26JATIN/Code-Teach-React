@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 
 const EnhancedForLoop = () => {
@@ -50,6 +55,52 @@ const EnhancedForLoop = () => {
     }
   };
 
+  const advantageFeatures = [
+    { icon: "📝", text: "Cleaner syntax" },
+    { icon: "🐛", text: "Fewer bugs" },
+    { icon: "🎯", text: "No index needed" }
+  ];
+
+  const useCaseFeatures = [
+    { icon: "📦", text: "Array traversal" },
+    { icon: "📝", text: "Collection iteration" },
+    { icon: "🔍", text: "Read-only operations" }
+  ];
+
+  const conceptSections = [
+    {
+      icon: "🔄",
+      title: "Enhanced For Loop Basics",
+      content: [
+        "Enhanced for loop (for-each) simplifies array and collection iteration",
+        "Automatically traverses each element without explicit indexing",
+        "Perfect for when you just need to process each element once"
+      ],
+      code: `String[] fruits = {"apple", "banana", "orange"};
+for (String fruit : fruits) {
+    System.out.println(fruit);
+}`
+    },
+    {
+      icon: "⚡",
+      title: "Regular vs Enhanced For Loop",
+      content: [
+        "Enhanced for loop is more concise but less flexible",
+        "Use it when you don't need the index",
+        "Great for read-only operations"
+      ],
+      code: `// Regular for loop
+for (int i = 0; i < array.length; i++) {
+    System.out.println(array[i]);
+}
+
+// Enhanced for loop
+for (int item : array) {
+    System.out.println(item);
+}`
+    }
+  ];
+
   const mcqQuestions = [
     {
       id: 1,
@@ -79,70 +130,47 @@ const EnhancedForLoop = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Enhanced For Loop in Java 🚀
-      </h1>
-
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          The enhanced for loop (for-each) provides a simpler way to iterate over arrays and collections. 
-          It's more readable and less prone to errors, but comes with some limitations. Let's explore! 🎯
-        </p>
-      </div>
+      <Summary 
+        title="Enhanced For Loop in Java 🚀"
+        description="The enhanced for loop (for-each) provides a simpler way to iterate over arrays and collections. It's more readable and less prone to errors, but comes with some limitations. Let's explore! 🎯"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">Advantages 🎯</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📝</span>
-              <span>Cleaner syntax</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🐛</span>
-              <span>Fewer bugs</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎯</span>
-              <span>No index needed</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Use Cases 🔍</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📦</span>
-              <span>Array traversal</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📝</span>
-              <span>Collection iteration</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔍</span>
-              <span>Read-only operations</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Advantages 🎯"
+          items={advantageFeatures}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Use Cases 🔍"
+          items={useCaseFeatures}
+          variant="purple"
+        />
       </div>
 
+      <ConceptExplanation sections={conceptSections} />
+
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Code Examples 💡</h2>
+        <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>
         <CodeSnippet {...examples.basicSyntax} />
         <CodeSnippet {...examples.limitations} />
       </section>
 
-      <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-        <h3 className="text-lg font-medium text-yellow-400 mb-2">⚠️ Limitations</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Cannot modify collection elements</li>
-          <li>No access to index</li>
-          <li>Cannot control iteration direction</li>
-          <li>Cannot skip elements</li>
-        </ul>
-      </div>
+      <MistakesToAvoid
+        title="Limitations and Watch-outs"
+        mistakes={[
+          "Cannot modify collection elements",
+          "No access to index",
+          "Cannot control iteration direction",
+          "Cannot skip elements"
+        ]}
+        alternatives={[
+          "Use regular for loop when you need index",
+          "Use regular for loop for modifying elements",
+          "Use regular for loop for custom iteration patterns",
+          "Consider your needs before choosing loop type"
+        ]}
+      />
 
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-purple-400">Test Your Knowledge 🤓</h2>
@@ -156,23 +184,40 @@ const EnhancedForLoop = () => {
         ))}
       </section>
 
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Practice Exercise 💻</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Create a program that finds the sum and average of array elements using enhanced for loop
-          </p>
-          <CodeEditor 
-            defaultCode={`public class ArrayStats {
+      <HandsOn
+        title="Practice Exercise 💻"
+        description="Create a program that finds the sum and average of array elements using enhanced for loop"
+        defaultCode={`public class ArrayStats {
     public static void main(String[] args) {
         int[] numbers = {23, 45, 12, 89, 34, 67};
         // Use enhanced for loop to calculate sum and average
-        
     }
-}`} 
-          />
-        </div>
-      </section>
+}`}
+      />
+
+      <ImportantNote
+        title="Best Practices"
+        points={[
+          "Use enhanced for loop when you don't need the index",
+          "Prefer it for its cleaner syntax and readability",
+          "Consider performance implications for large collections",
+          "Be aware of the limitations before using"
+        ]}
+        variant="yellow"
+      />
+
+      <Summary 
+        title="Key Takeaways 📝"
+        description={`
+          Remember these key points about enhanced for loops:
+          • Simpler syntax for iterating collections
+          • Best for read-only operations
+          • No index access needed
+          • Cannot modify elements during iteration
+          • Choose based on your specific needs
+        `}
+        variant="green"
+      />
     </div>
   );
 };

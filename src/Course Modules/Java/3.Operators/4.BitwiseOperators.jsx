@@ -6,6 +6,7 @@ import ImportantNote from '../../../Frontend/Components/Interface Components/Rea
 import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
 import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
 import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
+import BinaryVisualization from '../../../Frontend/Components/Interface Components/ReadingArea/BinaryVisualization';
 
 const BitwiseOperators = () => {
   const examples = {
@@ -183,6 +184,17 @@ int result = a & b;  // 1000 (8)`
     { icon: "🔐", text: "Cryptography" }
   ];
 
+  const binaryExamples = [
+    {
+      label: "5 in binary",
+      bits: [0,1,0,1]
+    },
+    {
+      label: "3 in binary",
+      bits: [0,0,1,1]
+    }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <Summary 
@@ -207,6 +219,11 @@ int result = a & b;  // 1000 (8)`
           variant="green"
         />
       </div>
+
+      <BinaryVisualization 
+        title="Binary Visualization 👀"
+        numbers={binaryExamples}
+      />
 
       <ConceptExplanation sections={conceptSections} />
 

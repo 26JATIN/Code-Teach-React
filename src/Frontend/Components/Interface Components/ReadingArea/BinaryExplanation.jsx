@@ -1,5 +1,5 @@
 import React from 'react';
-import Summary from './Summary';
+import Summary from './summary';
 import KeyFeatures from './KeyFeatures';
 import ConceptExplanation from './ConceptExplanation';
 import ImportantNote from './ImportantNote';

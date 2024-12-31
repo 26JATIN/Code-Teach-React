@@ -53,6 +53,7 @@ import PracticeSetForLoops from '../../../Course Modules/Java/6.Loops-For/5.Prac
 
 // Module 4-10: Comment out all future imports until components are created
 import WhileLoopBasics from '../../../Course Modules/Java/7.Loops-While/1.WhileLoopBasics';
+import DoWhileLoop from '../../../Course Modules/Java/7.Loops-While/2.DoWhileLoop';
 
 /* 
 
@@ -176,7 +177,8 @@ export const modules = [
     id: '7',
     title: 'Loops - While & Do-While',
     subModules: [
-      { id: '7.1', title: 'While Loop Basics', component: WhileLoopBasics }
+      { id: '7.1', title: 'While Loop Basics', component: WhileLoopBasics },
+      { id: '7.2', title: 'Do-While Loop', component: DoWhileLoop }
       // Additional submodules will be added as they're created
     ]
   },

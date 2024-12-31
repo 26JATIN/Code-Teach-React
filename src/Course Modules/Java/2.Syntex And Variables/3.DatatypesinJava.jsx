@@ -1,6 +1,11 @@
 import React from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 
 const DatatypesinJava = () => {
   const examples = {
@@ -141,200 +146,154 @@ String name = "John";  // Uses more boxes for longer names`,
     }
   };
 
+  const conceptSections = [
+    {
+      icon: "🔢",
+      title: "Number Types",
+      content: [
+        "Java has different types for storing numbers:",
+        "• int - for whole numbers (-2 billion to 2 billion)",
+        "• long - for very big whole numbers",
+        "• double - for decimal numbers (most common)",
+        "• float - for decimal numbers (less precise)"
+      ],
+      code: `int age = 25;
+long population = 7800000000L;
+double price = 19.99;
+float temperature = 98.6f;`
+    },
+    {
+      icon: "📝",
+      title: "Text and Characters",
+      content: [
+        "For storing text and characters:",
+        "• String - for text of any length",
+        "• char - for single characters"
+      ],
+      code: `String name = "John";
+char grade = 'A';`
+    },
+    {
+      icon: "✅",
+      title: "Boolean Type",
+      content: [
+        "Boolean type stores true/false values",
+        "Perfect for yes/no conditions"
+      ],
+      code: `boolean isStudent = true;
+boolean isPassed = false;`
+    }
+  ];
+
+  const numberTypes = [
+    { icon: "1️⃣", text: "int (whole numbers)" },
+    { icon: "🔄", text: "long (big numbers)" },
+    { icon: "📊", text: "double (decimals)" },
+    { icon: "🌡️", text: "float (simple decimals)" }
+  ];
+
+  const textTypes = [
+    { icon: "📝", text: "String (text)" },
+    { icon: "🔤", text: "char (single character)" },
+    { icon: "✅", text: "boolean (true/false)" }
+  ];
+
+  const memoryBoxes = [
+    { icon: "📦", text: "byte: 1 box" },
+    { icon: "📦📦", text: "short: 2 boxes" },
+    { icon: "📦📦📦📦", text: "int: 4 boxes" },
+    { icon: "📦×8", text: "long: 8 boxes" }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Understanding Data Types in Java 📝
-      </h1>
+      <Summary 
+        title="Understanding Data Types in Java 📝"
+        description="Think of data types as different kinds of containers. Just like you wouldn't store water in a pencil box, in Java, different types of information need different types of containers! Let's learn about them in a simple way! 🎈"
+      />
 
-      {/* Simple Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Think of data types as different kinds of containers. Just like you wouldn't store water in a 
-          pencil box, in Java, different types of information need different types of containers! 
-          Let's learn about them in a simple way! 🎈
-        </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <KeyFeatures
+          title="Number Types 🔢"
+          items={numberTypes}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Text Types 📝"
+          items={textTypes}
+          variant="purple"
+        />
       </div>
 
-      {/* Main Types Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">The Main Types We Use 📦</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-6 bg-blue-500/10 rounded-xl border border-blue-500/20">
-            <h3 className="text-xl font-medium text-blue-400 mb-4">Numbers 🔢</h3>
-            <ul className="space-y-4 text-gray-300">
-              <li className="flex items-start gap-3">
-                <span className="text-2xl">1️⃣</span>
-                <div>
-                  <code className="text-blue-400">int</code>
-                  <p className="text-sm mt-1">For whole numbers like 1, 42, -8</p>
-                  <p className="text-xs text-gray-400">Example: int age = 25;</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-2xl">🔢</span>
-                <div>
-                  <code className="text-blue-400">double</code>
-                  <p className="text-sm mt-1">For decimal numbers like 3.14, 2.5</p>
-                  <p className="text-xs text-gray-400">Example: double price = 19.99;</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div className="p-6 bg-purple-500/10 rounded-xl border border-purple-500/20">
-            <h3 className="text-xl font-medium text-purple-400 mb-4">Text & Characters 📝</h3>
-            <ul className="space-y-4 text-gray-300">
-              <li className="flex items-start gap-3">
-                <span className="text-2xl">💬</span>
-                <div>
-                  <code className="text-purple-400">String</code>
-                  <p className="text-sm mt-1">For text like names, messages</p>
-                  <p className="text-xs text-gray-400">Example: String name = "John";</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-2xl">🔤</span>
-                <div>
-                  <code className="text-purple-400">char</code>
-                  <p className="text-sm mt-1">For single characters like 'A', '1', '$'</p>
-                  <p className="text-xs text-gray-400">Example: char grade = 'A';</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Boolean Section */}
-        <div className="p-6 bg-green-500/10 rounded-xl border border-green-500/20">
-          <h3 className="text-xl font-medium text-green-400 mb-4">Yes/No Values ✅</h3>
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">⚡</span>
-            <div>
-              <code className="text-green-400">boolean</code>
-              <p className="text-sm mt-1">For true/false values only</p>
-              <p className="text-xs text-gray-400">Example: boolean isStudent = true;</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ConceptExplanation sections={conceptSections} />
 
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Memory Boxes 📦</h2>
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-          <p className="text-gray-300 mb-4">
-            Think of computer memory like a row of boxes. Different types need different numbers of boxes:
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-800/50 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-blue-400 mb-2">Small Numbers 📱</h3>
-              <ul className="space-y-2 text-gray-300">
-                <li>• <code>byte</code>: 1 box (like storing age)</li>
-                <li>• <code>short</code>: 2 boxes (like storing a year)</li>
-                <li>• <code>int</code>: 4 boxes (most common for numbers)</li>
-              </ul>
-            </div>
-            <div className="bg-gray-800/50 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-purple-400 mb-2">Big Numbers 🌍</h3>
-              <ul className="space-y-2 text-gray-300">
-                <li>• <code>long</code>: 8 boxes (like world population)</li>
-                <li>• <code>double</code>: 8 boxes (for decimal numbers)</li>
-                <li>• <code>float</code>: 4 boxes (smaller decimals)</li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        <h2 className="text-2xl font-semibold text-blue-400">Memory Usage 💾</h2>
+        <KeyFeatures
+          title="Memory Boxes 📦"
+          items={memoryBoxes}
+          variant="green"
+        />
         <CodeSnippet {...examples.simpleMemoryExample} />
       </section>
 
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Printing Variables 🖨️</h2>
-        <div className="p-6 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-          <h3 className="text-lg font-medium text-yellow-400 mb-2">Ways to Print:</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start gap-2">
-              <span>1️⃣</span>
-              <div>
-                <p className="font-medium">Simple Way (+ symbol)</p>
-                <code className="text-sm bg-gray-900/50 px-2 py-1 rounded">System.out.println("Age: " + age);</code>
-              </div>
-            </li>
-            <li className="flex items-start gap-2">
-              <span>2️⃣</span>
-              <div>
-                <p className="font-medium">Formatted Way (printf)</p>
-                <code className="text-sm bg-gray-900/50 px-2 py-1 rounded">System.out.printf("Age: %d\n", age);</code>
-              </div>
-            </li>
-          </ul>
-        </div>
-        <CodeSnippet {...examples.printingVariables} />
-        
-        <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-          <h3 className="text-lg font-medium text-blue-400 mb-2">Format Specifiers 🎯</h3>
-          <ul className="space-y-2 text-gray-300">
-            <li>• %s - for text (String)</li>
-            <li>• %d - for whole numbers (int, long)</li>
-            <li>• %f - for decimal numbers (float, double)</li>
-            <li>• %c - for single characters (char)</li>
-            <li>• %b - for true/false values (boolean)</li>
-          </ul>
-        </div>
-      </section>
+      <ImportantNote
+        title="Important Rules to Remember!"
+        points={[
+          "Text always goes in double quotes: \"like this\"",
+          "Single characters go in single quotes: 'A'",
+          "Numbers don't need quotes: 42",
+          "Decimal numbers need a dot: 3.14",
+          "Long numbers need 'L' at the end: 1000000L",
+          "Float numbers need 'f' at the end: 3.14f"
+        ]}
+        variant="yellow"
+      />
 
-      {/* Simple Examples Section */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Let's See Them in Action! 🎬</h2>
+        <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>
         <CodeSnippet {...examples.basicTypes} />
-        
-        <div className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-          <h3 className="text-lg font-medium text-yellow-400 mb-2">Remember! 💡</h3>
-          <ul className="space-y-2 text-gray-300">
-            <li>• Text always goes in double quotes: "like this"</li>
-            <li>• Single characters go in single quotes: 'A'</li>
-            <li>• Numbers don't need quotes: 42</li>
-            <li>• true and false don't need quotes</li>
-          </ul>
-        </div>
-      </section>
-
-      {/* Real World Example */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">A Real Example 🎯</h2>
-        <p className="text-gray-300">Here's how we might store information about a student:</p>
         <CodeSnippet {...examples.simpleExample} />
+        <CodeSnippet {...examples.printingVariables} />
       </section>
 
-      {/* Practice Time */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Your Turn! 💪</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Try creating a program about yourself! Store and display:
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-gray-300 mb-4">
-            <li>Your name (use String)</li>
-            <li>Your age (use int)</li>
-            <li>Your favorite grade (use char)</li>
-            <li>Whether you're a student (use boolean)</li>
-          </ul>
-          <CodeEditor defaultCode={examples.practiceQuestion.code} />
-        </div>
-      </section>
+      <MistakesToAvoid
+        title="Common Mistakes to Watch Out For"
+        mistakes={[
+          "Using the wrong quotes for String vs char",
+          "Forgetting L for long numbers",
+          "Forgetting f for float numbers",
+          "Using int for decimal numbers",
+          "Not considering size limits"
+        ]}
+        alternatives={[
+          "Double quotes for String: \"text\"",
+          "Single quotes for char: 'A'",
+          "Use double for most decimal numbers",
+          "Check value ranges before choosing type",
+          "When in doubt, use int for whole numbers and double for decimals"
+        ]}
+      />
 
-      {/* Tips Section */}
-      <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-        <h3 className="text-lg font-medium text-blue-400 mb-2">Quick Tips 💡</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Use <code className="text-blue-400">int</code> for counting things</li>
-          <li>Use <code className="text-blue-400">double</code> for measurements</li>
-          <li>Use <code className="text-blue-400">String</code> for any text</li>
-          <li>Use <code className="text-blue-400">char</code> for single characters</li>
-          <li>Use <code className="text-blue-400">boolean</code> for yes/no decisions</li>
-        </ul>
-      </div>
+      <HandsOn
+        title="Practice Time! 💪"
+        description="Create variables about yourself using different data types!"
+        defaultCode={examples.practiceQuestion.code}
+      />
+
+      <Summary 
+        title="Key Takeaways 📝"
+        description={`
+          Remember these key points about Java data types:
+          • Use int for whole numbers
+          • Use double for decimal numbers
+          • Use String for text
+          • Use char for single characters
+          • Use boolean for true/false values
+          • Always choose the right type for your data
+        `}
+        variant="green"
+      />
     </div>
   );
 };

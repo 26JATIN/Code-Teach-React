@@ -6,6 +6,7 @@ import ImportantNote from '../../../Frontend/Components/Interface Components/Rea
 import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
 import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
 import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
+import BinaryExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/BinaryExplanation';
 
 const DatatypesinJava = () => {
   const examples = {
@@ -198,11 +199,15 @@ boolean isPassed = false;`
     { icon: "✅", text: "boolean (true/false)" }
   ];
 
-  const memoryBoxes = [
-    { icon: "📦", text: "byte: 1 box" },
-    { icon: "📦📦", text: "short: 2 boxes" },
-    { icon: "📦📦📦📦", text: "int: 4 boxes" },
-    { icon: "📦×8", text: "long: 8 boxes" }
+  const memoryItems = [
+    { icon: "📦", name: "byte", size: "1 byte" },
+    { icon: "📦📦", name: "short", size: "2 bytes" },
+    { icon: "📦📦📦📦", name: "int", size: "4 bytes" },
+    { icon: "📦×8", name: "long", size: "8 bytes" },
+    { icon: "💧", name: "float", size: "4 bytes" },
+    { icon: "💧💧", name: "double", size: "8 bytes" },
+    { icon: "🔤", name: "char", size: "2 bytes" },
+    { icon: "✅", name: "boolean", size: "1 byte" }
   ];
 
   return (
@@ -227,15 +232,11 @@ boolean isPassed = false;`
 
       <ConceptExplanation sections={conceptSections} />
 
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Memory Usage 💾</h2>
-        <KeyFeatures
-          title="Memory Boxes 📦"
-          items={memoryBoxes}
-          variant="green"
-        />
-        <CodeSnippet {...examples.simpleMemoryExample} />
-      </section>
+      <BinaryExplanation
+        title="Memory Usage 💾"
+        description="Think of memory like boxes that store your data. Different types need different numbers of boxes!"
+        items={memoryItems}
+      />
 
       <ImportantNote
         title="Important Rules to Remember!"

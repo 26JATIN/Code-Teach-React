@@ -1,8 +1,13 @@
 import React from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 
-const Syntexofjava = () => {
+const SyntexofJava = () => {
   const examples = {
     basicStructure: {
       title: '🏗️ Java Program Structure',
@@ -30,154 +35,134 @@ public class MyProgram {
     }
   };
 
+  const essentialComponents = [
+    { icon: "📦", text: "Class Declaration" },
+    { icon: "🎯", text: "Main Method" },
+    { icon: "🔤", text: "Statements & Expressions" }
+  ];
+
+  const syntaxRules = [
+    { icon: "✨", text: "Each statement ends with a semicolon" },
+    { icon: "🎨", text: "Code blocks are enclosed in curly braces" },
+    { icon: "📝", text: "Case-sensitive language" }
+  ];
+
+  const conceptSections = [
+    {
+      icon: "📦",
+      title: "Basic Program Structure",
+      content: [
+        "Every Java program must have a class",
+        "The main method is where your program starts executing",
+        "Code blocks are enclosed in curly braces { }"
+      ],
+      code: `public class MyProgram {
+    public static void main(String[] args) {
+        // Your code goes here
+    }
+}`
+    },
+    {
+      icon: "🖨️",
+      title: "Understanding System.out.println",
+      content: [
+        "System - The built-in Java class that contains useful tools",
+        "out - The output stream to display information",
+        "println - The method that prints text and adds a new line"
+      ],
+      code: `System.out.println("Hello, World!");
+// Displays: Hello, World!`
+    }
+  ];
+
+  const fileNamingRules = [
+    { icon: "📄", text: "File name must match class name" },
+    { icon: "🔍", text: "Case sensitivity matters" },
+    { icon: "📝", text: "Must end with .java extension" }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Understanding Java Syntax 📝
-      </h1>
+      <Summary 
+        title="Understanding Java Syntax 📝"
+        description="Java syntax is like the grammar rules of the language. Just as English has rules for forming sentences, Java has rules for writing programs. Let's explore these rules! 🚀"
+      />
 
-      {/* Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Java syntax is like the grammar rules of the language. Just as English has rules for forming 
-          sentences, Java has rules for writing programs. Let's explore these rules! 🚀
-        </p>
-      </div>
-
-      {/* Program Structure Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">Essential Components 📌</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📦</span>
-              <span>Class Declaration</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎯</span>
-              <span>Main Method</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔤</span>
-              <span>Statements & Expressions</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Syntax Rules ⚡</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">✨</span>
-              <span>Each statement ends with a semicolon</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎨</span>
-              <span>Code blocks are enclosed in curly braces</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📝</span>
-              <span>Case-sensitive language</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Essential Components 📌"
+          items={essentialComponents}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Syntax Rules ⚡"
+          items={syntaxRules}
+          variant="purple"
+        />
       </div>
 
-      {/* Code Examples */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Program Structure 🏗️</h2>
-        <CodeSnippet {...examples.basicStructure} />
-        
-        <div className="p-4 bg-gray-800/50 rounded-lg">
-          <p className="text-gray-300">
-            Every Java program must have a <code className="text-blue-400">class</code> and a 
-            <code className="text-blue-400"> main</code> method. This is where your program starts executing!
-          </p>
-          <div className="mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-            <p className="text-yellow-400 font-medium">🌟 Note for Beginners</p>
-            <p className="text-gray-300 mt-2">
-              Don't worry about understanding classes and methods in detail right now! For now, just remember this basic structure like a template. Think of it as a magic formula that makes your Java programs work. We'll explain every part in detail later in the course. Just focus on the code you write inside the main method!
-            </p>
-          </div>
-        </div>
-      </section>
+      <ConceptExplanation sections={conceptSections} />
 
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400">Your First Program: Hello World! 👋</h2>
+        <h2 className="text-2xl font-semibold text-blue-400">Your First Program 🎉</h2>
         <CodeSnippet {...examples.helloWorld} />
-        
-        {/* Add this new explanation div */}
-        <div className="p-4 bg-gray-800/50 rounded-lg space-y-3">
-          <h3 className="text-lg font-medium text-blue-400">Understanding System.out.println 🖨️</h3>
-          <p className="text-gray-300">
-            Let's break down <code className="text-blue-400">System.out.println()</code>:
-          </p>
-          <ul className="space-y-2 text-gray-300 list-disc list-inside pl-4">
-            <li><code className="text-blue-400">System</code> - The built-in Java class that contains useful tools</li>
-            <li><code className="text-blue-400">out</code> - The output stream to display information</li>
-            <li><code className="text-blue-400">println</code> - The method that prints text and adds a new line</li>
-            <li>Think of it as telling Java: "Hey, display this message on the screen!"</li>
-          </ul>
-        </div>
       </section>
 
-      {/* Add this new warning section */}
-      <section className="space-y-4">
-        <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-          <h3 className="text-lg font-medium text-red-400 flex items-center gap-2 mb-2">
-            <span>⚠️ Important Note for VS Code Users</span>
-          </h3>
-          <p className="text-gray-300 mb-3">
-            When coding in VS Code or any IDE, the name of your Java file <strong>must match</strong> the name of your public class. For example:
-          </p>
-          
-          {/* Code example with highlighted matching parts */}
-          <div className="bg-gray-900/50 rounded-lg p-3 font-mono text-sm mb-4">
-            <div className="space-y-1">
-              <div className="border-b-2 border-yellow-400/50 pb-1 mb-2">
-                <p className="text-blue-400">{'// File: '}<span className="underline decoration-yellow-400 decoration-wavy decoration-2">HelloWorld</span>.java</p>
-                <p className="text-gray-300">public class <span className="underline decoration-yellow-400 decoration-wavy decoration-2">HelloWorld</span> &#123;</p>
-              </div>
-              <p className="text-gray-300 ml-4">    public static void main(String[] args) &#123;</p>
-              <p className="text-gray-300 ml-8">{'    // Your code here'}</p>
-              <p className="text-gray-300 ml-4">    &#125;</p>
-              <p className="text-gray-300">&#125;</p>
-            </div>
-          </div>
+      <ImportantNote
+        title="File Naming Rules ⚠️"
+        points={[
+          "The Java file name must exactly match the public class name",
+          "If your class is HelloWorld, your file must be HelloWorld.java",
+          "Java is case-sensitive, so the names must match exactly",
+          "Each public class must be in its own file"
+        ]}
+        variant="yellow"
+      />
 
-          {/* Screenshot area */}
-          <div className="mt-4 p-4 border-2 border-dashed border-yellow-500/30 rounded-lg bg-black/30">
-            <div className="flex items-center justify-center min-h-[200px]">
-              <div className="text-center text-gray-400">
-                <p className="text-sm mb-2">👇 Real-world Example 👇</p>
-                <p className="text-xs">Screenshot showing file name and class name in VS Code will be added here</p>
-              </div>
-            </div>
-          </div>
+      <KeyFeatures
+        title="File Naming Convention 📄"
+        items={fileNamingRules}
+        variant="green"
+      />
 
-          <p className="text-red-400 mt-3 text-sm flex items-center gap-2">
-            <span>❌</span>
-            <span>If they don't match, your code won't compile!</span>
-          </p>
-        </div>
-      </section>
+      <MistakesToAvoid
+        title="Common Syntax Mistakes"
+        mistakes={[
+          "Forgetting semicolons at the end of statements",
+          "Mismatched curly braces",
+          "Wrong file name (doesn't match class name)",
+          "Missing main method",
+          "Incorrect capitalization"
+        ]}
+        alternatives={[
+          "Use an IDE to help with syntax",
+          "Keep proper indentation",
+          "Double-check class and file names",
+          "Copy the basic structure until familiar"
+        ]}
+      />
 
-      {/* Interactive Code Editor */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Try It Yourself! 💻</h2>
-        <div className="space-y-2">
-          <p className="text-gray-300">
-            Write your first Java program completely from scratch! Try to recreate the Hello World program by typing everything yourself.
-          </p>
-          <p className="text-yellow-400 text-sm">
-            ℹ️ File name: <code className="bg-gray-800/50 px-2 py-0.5 rounded">Main.java</code>
-          </p>
-        </div>
-        <CodeEditor defaultCode=" " />
-      </section>
+      <HandsOn
+        title="Try It Yourself! 💻"
+        description="Write your first Java program completely from scratch! Try to recreate the Hello World program by typing everything yourself."
+        defaultCode={`// File: Main.java
+// Write your Hello World program here`}
+      />
+
+      <Summary 
+        title="Key Takeaways 📝"
+        description={`
+          Remember these essential points about Java syntax:
+          • Every program needs a class and main method
+          • Statements end with semicolons
+          • Code blocks use curly braces
+          • File name must match class name
+          • Java is case-sensitive
+        `}
+        variant="green"
+      />
     </div>
   );
 };
 
-export default Syntexofjava;
+export default SyntexofJava;

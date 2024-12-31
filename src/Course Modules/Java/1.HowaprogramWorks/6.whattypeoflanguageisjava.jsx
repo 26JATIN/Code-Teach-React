@@ -1,8 +1,76 @@
 import React from 'react';
-import CodeExample from '../../../Frontend/Components/Code Components/CodeEditor';
+import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
 
 const WhatTypeOfLanguageIsJava = () => {
-  const simpleExample = `public class Main {
+  const javaFeatures = [
+    { icon: "🎯", text: "Easy to read and write" },
+    { icon: "📚", text: "Similar to English" },
+    { icon: "🛠️", text: "Handles complex tasks automatically" }
+  ];
+
+  const objectFeatures = [
+    { icon: "📦", text: "Organizes code into objects" },
+    { icon: "🔄", text: "Reusable components" },
+    { icon: "🏗️", text: "Models real-world things" }
+  ];
+
+  const platformFeatures = [
+    { icon: "💻", text: "Runs anywhere" },
+    { icon: "🔒", text: "Secure by design" },
+    { icon: "🚀", text: "Write once, run anywhere" }
+  ];
+
+  const specialFeatures = [
+    { icon: "🔄", text: "Automatic Memory Management" },
+    { icon: "🛡️", text: "Strong Type Safety" },
+    { icon: "📚", text: "Rich Standard Library" }
+  ];
+
+  const useCases = [
+    { icon: "📱", text: "Android Apps" },
+    { icon: "💼", text: "Enterprise Software" },
+    { icon: "🎮", text: "Game Development" }
+  ];
+
+  const conceptSections = [
+    {
+      icon: "📚",
+      title: "High-Level Language",
+      content: [
+        "Java abstracts away complex low-level details",
+        "Code is easy to read and understand",
+        "Automatic memory management removes manual memory handling"
+      ],
+      code: `// Simple and readable code
+String message = "Hello World";
+System.out.println(message);`
+    },
+    {
+      icon: "🎯",
+      title: "Object-Oriented",
+      content: [
+        "Everything in Java is organized into objects",
+        "Programs are built using classes and objects",
+        "Promotes code reuse and modularity"
+      ],
+      code: `class Car {
+    String model;
+    void start() {
+        System.out.println("Starting " + model);
+    }
+}`
+    }
+  ];
+
+  const examples = {
+    simpleJava: {
+      title: '👋 Your First Java Program',
+      code: `public class Main {
     public static void main(String[] args) {
         // This is a simple Java program
         System.out.println("Welcome to Java!");
@@ -11,152 +79,100 @@ const WhatTypeOfLanguageIsJava = () => {
         int result = 10 + 5;
         System.out.println("10 + 5 = " + result);
     }
-}`;
+}`,
+      showLineNumbers: true,
+      showCopyButton: true
+    },
+    objectExample: {
+      title: '📦 Object-Oriented Example',
+      code: `class Car {
+    String model;
+    void start() {
+        System.out.println("Starting " + model);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Car myCar = new Car();
+        myCar.model = "Tesla";
+        myCar.start();  // Prints: Starting Tesla
+    }
+}`,
+      showLineNumbers: true,
+      showCopyButton: true
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        What Type of Language is Java? ☕
-      </h1>
-
-      <div className="mt-6 p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Java is like a Swiss Army knife of programming languages - it's versatile, reliable, and 
-          designed to help you build almost anything! Let's explore what makes Java special. 🚀
-        </p>
-      </div>
+      <Summary 
+        title="What Type of Language is Java? ☕"
+        description="Java is like a Swiss Army knife of programming languages - it's versatile, reliable, and designed to help you build almost anything! Let's explore what makes Java special. 🚀"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">High-Level Language 📝</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎯</span>
-              <span>Easy to read and write</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📚</span>
-              <span>Similar to English</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🛠️</span>
-              <span>Handles complex tasks automatically</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Object-Oriented 🎨</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📦</span>
-              <span>Organizes code into objects</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔄</span>
-              <span>Reusable components</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🏗️</span>
-              <span>Models real-world things</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-green-700/10 rounded-xl border border-green-500/20">
-          <h3 className="text-xl font-medium text-green-400 mb-3">Platform Independent 🌐</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">💻</span>
-              <span>Runs anywhere</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔒</span>
-              <span>Secure by design</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🚀</span>
-              <span>Write once, run anywhere</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="High-Level Language 📝"
+          items={javaFeatures}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Object-Oriented 🎨"
+          items={objectFeatures}
+          variant="purple"
+        />
+        <KeyFeatures
+          title="Platform Independent 🌐"
+          items={platformFeatures}
+          variant="green"
+        />
       </div>
 
-      <div className="p-6 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-xl border border-yellow-500/20">
-        <h2 className="text-2xl font-semibold text-yellow-400 mb-4">Let's Write Some Java! 💫</h2>
-        <p className="text-gray-300 mb-4">Here's a simple Java program to get started:</p>
-        <CodeExample defaultCode={simpleExample} />
-        <div className="mt-4 p-4 bg-gray-800/50 rounded-lg">
-          <p className="text-gray-300">
-            This is a basic Java program. Don't worry if some parts look confusing! 
-            We'll learn about object-oriented programming concepts like classes and methods 
-            in detail later in the course. 🎓
-          </p>
-          <div className="mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-            <p className="text-blue-400 font-medium">Coming Up Next! 📚</p>
-            <p className="text-gray-300 text-sm mt-1">
-              We'll dive deep into object-oriented programming concepts like classes, objects, 
-              methods, and more in our OOP section of the course.
-            </p>
-          </div>
-        </div>
-      </div>
+      <ConceptExplanation sections={conceptSections} />
+
+      <section className="space-y-6">
+        <h2 className="text-2xl font-semibold text-blue-400">Java in Action! 💫</h2>
+        <CodeSnippet {...examples.simpleJava} />
+        <CodeSnippet {...examples.objectExample} />
+      </section>
+
+      <ImportantNote
+        title="Coming Up Next! 📚"
+        points={[
+          "We'll dive deep into object-oriented programming concepts",
+          "Learn about classes, objects, and methods",
+          "Understand Java's type system",
+          "Explore Java's standard library"
+        ]}
+        variant="blue"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-indigo-500/10 to-blue-700/10 rounded-xl border border-indigo-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">Java's Special Features ✨</h3>
-          <ul className="space-y-4 text-gray-300">
-            <li className="flex items-start space-x-3">
-              <span className="text-2xl">🔄</span>
-              <div>
-                <p className="font-medium text-blue-400">Automatic Memory Management</p>
-                <p className="text-sm">No need to manually manage memory</p>
-              </div>
-            </li>
-            <li className="flex items-start space-x-3">
-              <span className="text-2xl">🛡️</span>
-              <div>
-                <p className="font-medium text-blue-400">Strong Type Safety</p>
-                <p className="text-sm">Catches errors before running</p>
-              </div>
-            </li>
-            <li className="flex items-start space-x-3">
-              <span className="text-2xl">📚</span>
-              <div>
-                <p className="font-medium text-blue-400">Rich Standard Library</p>
-                <p className="text-sm">Lots of built-in functionality</p>
-              </div>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Where Java Shines 🌟</h3>
-          <ul className="space-y-4 text-gray-300">
-            <li className="flex items-start space-x-3">
-              <span className="text-2xl">📱</span>
-              <div>
-                <p className="font-medium text-purple-400">Android Apps</p>
-                <p className="text-sm">Primary language for Android development</p>
-              </div>
-            </li>
-            <li className="flex items-start space-x-3">
-              <span className="text-2xl">💼</span>
-              <div>
-                <p className="font-medium text-purple-400">Enterprise Software</p>
-                <p className="text-sm">Powers many business applications</p>
-              </div>
-            </li>
-            <li className="flex items-start space-x-3">
-              <span className="text-2xl">🎮</span>
-              <div>
-                <p className="font-medium text-purple-400">Game Development</p>
-                <p className="text-sm">Used in games like Minecraft</p>
-              </div>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Java's Special Features ✨"
+          items={specialFeatures}
+          variant="indigo"
+        />
+        <KeyFeatures
+          title="Where Java Shines 🌟"
+          items={useCases}
+          variant="purple"
+        />
       </div>
+
+      <Summary 
+        title="Key Points 📝"
+        description={`
+          Java combines the best of many worlds:
+          • High-level language for easy coding
+          • Object-oriented for better organization
+          • Platform independent for maximum flexibility
+          • Secure and reliable for enterprise use
+          • Rich ecosystem for any type of development
+        `}
+        variant="green"
+      />
     </div>
   );
 };

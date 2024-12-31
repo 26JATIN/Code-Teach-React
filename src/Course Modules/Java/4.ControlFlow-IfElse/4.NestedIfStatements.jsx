@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import CodeSnippet from '../../../Frontend/Components/Code Components/CodeSnippet';
-import CodeEditor from '../../../Frontend/Components/Code Components/CodeEditor';
+import Summary from '../../../Frontend/Components/Interface Components/ReadingArea/summary';
+import KeyFeatures from '../../../Frontend/Components/Interface Components/ReadingArea/KeyFeatures';
+import ImportantNote from '../../../Frontend/Components/Interface Components/ReadingArea/importantnote';
+import HandsOn from '../../../Frontend/Components/Interface Components/ReadingArea/handson';
+import ConceptExplanation from '../../../Frontend/Components/Interface Components/ReadingArea/ConceptExplanation';
+import MistakesToAvoid from '../../../Frontend/Components/Interface Components/ReadingArea/Mistakestoavoid';
 import MCQ from '../../../Frontend/Components/practice compnenets/mcq';
 
 const NestedIfStatements = () => {
@@ -80,82 +85,100 @@ const NestedIfStatements = () => {
     }
   ];
 
+  const conceptSections = [
+    {
+      icon: "📦",
+      title: "Understanding Nested If",
+      content: [
+        "Nested if statements allow you to test multiple conditions in a hierarchical manner.",
+        "Each inner if statement represents a more specific condition that depends on the outer condition."
+      ],
+      code: `if (outerCondition) {
+    // outer code
+    if (innerCondition) {
+        // inner code
+    }
+}`
+    },
+    {
+      icon: "🎯",
+      title: "Control Flow",
+      content: [
+        "Inner conditions are only evaluated when outer conditions are true.",
+        "This creates a logical hierarchy of decision-making in your code."
+      ],
+      code: `if (age >= 18) {
+    if (hasLicense) {
+        // Only reached if both conditions are true
+    }
+}`
+    }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title Section */}
-      <h1 className="text-4xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-        Nested If Statements in Java 📦
-      </h1>
-
-      {/* Introduction */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Nested if statements are like Russian nesting dolls - one if statement inside another! 
-          They help you check multiple conditions in a hierarchical way. 🪆
-        </p>
-      </div>
-
-      {/* Essential Components Grid */}
+      <Summary 
+        title="Nested If Statements in Java 📦"
+        description="Nested if statements are like Russian nesting dolls - one if statement inside another! They help you check multiple conditions in a hierarchical way. 🪆"
+      />
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl border border-blue-500/20">
-          <h3 className="text-xl font-medium text-blue-400 mb-3">Key Concepts 📌</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📦</span>
-              <span>Multiple levels of conditions</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎯</span>
-              <span>Hierarchical decision making</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🔄</span>
-              <span>Independent conditions</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl border border-purple-500/20">
-          <h3 className="text-xl font-medium text-purple-400 mb-3">Best Practices 🎯</h3>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">📝</span>
-              <span>Limit nesting levels (2-3 max)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">🎨</span>
-              <span>Use proper indentation</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-2xl">✨</span>
-              <span>Consider alternatives for deep nesting</span>
-            </li>
-          </ul>
-        </div>
+        <KeyFeatures
+          title="Key Concepts 📌"
+          items={[
+            { icon: "📦", text: "Multiple levels of conditions" },
+            { icon: "🎯", text: "Hierarchical decision making" },
+            { icon: "🔄", text: "Independent conditions" }
+          ]}
+          variant="blue"
+        />
+        <KeyFeatures
+          title="Best Practices 🎯"
+          items={[
+            { icon: "📝", text: "Limit nesting levels (2-3 max)" },
+            { icon: "🎨", text: "Use proper indentation" },
+            { icon: "✨", text: "Consider alternatives for deep nesting" }
+          ]}
+          variant="purple"
+        />
       </div>
 
-      {/* Code Examples */}
+      <ConceptExplanation sections={conceptSections} />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-blue-400">Examples 💡</h2>
         <CodeSnippet {...examples.basicStructure} />
         <CodeSnippet {...examples.practicalExample} />
       </section>
 
-      {/* Warning Section */}
-      <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-        <h3 className="text-lg font-medium text-yellow-400 mb-2">⚠️ Nesting Depth Warning</h3>
-        <p className="text-gray-300">
-          While you can nest if statements as deep as you want, too much nesting can make your code:
-        </p>
-        <ul className="list-disc list-inside space-y-2 text-gray-300 mt-2">
-          <li>Hard to read and understand</li>
-          <li>Difficult to maintain</li>
-          <li>More prone to errors</li>
-          <li>Complex to debug</li>
-        </ul>
-      </div>
+      <ImportantNote
+        title="Nesting Depth Warning"
+        points={[
+          "While you can nest if statements as deep as you want, too much nesting can make your code:",
+          "Hard to read and understand",
+          "Difficult to maintain",
+          "More prone to errors",
+          "Complex to debug"
+        ]}
+        variant="yellow"
+      />
 
-      {/* MCQ Section */}
+      <MistakesToAvoid
+        title="Common Mistakes to Avoid"
+        mistakes={[
+          "Forgetting to match braces correctly",
+          "Poor indentation making code hard to read",
+          "Too many levels of nesting",
+          "Not considering alternative approaches"
+        ]}
+        alternatives={[
+          "Use && operators instead of deep nesting",
+          "Break complex nested conditions into separate methods",
+          "Use early returns to reduce nesting",
+          "Consider using switch statements when applicable"
+        ]}
+      />
+
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-purple-400">Test Your Understanding 🤓</h2>
         {mcqQuestions.map((question) => (
@@ -168,15 +191,10 @@ const NestedIfStatements = () => {
         ))}
       </section>
 
-      {/* Practice Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-green-400">Practice Time! 💻</h2>
-        <div className="p-6 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-          <p className="text-gray-300 mb-4">
-            Write a program that checks if a user can vote based on age (18+) and whether they have valid ID (true/false)
-          </p>
-          <CodeEditor 
-            defaultCode={`public class VotingEligibility {
+      <HandsOn
+        title="Practice Time! 💻"
+        description="Write a program that checks if a user can vote based on age (18+) and whether they have valid ID (true/false)"
+        defaultCode={`public class VotingEligibility {
     public static void main(String[] args) {
         int age = 19;
         boolean hasValidID = true;
@@ -184,31 +202,8 @@ const NestedIfStatements = () => {
         // Write your nested if statements here
         
     }
-}`} 
-          />
-        </div>
-      </section>
-
-      {/* Common Mistakes */}
-      <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-        <h3 className="text-lg font-medium text-red-400 mb-2">⚠️ Common Mistakes:</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Forgetting to match braces correctly</li>
-          <li>Poor indentation making code hard to read</li>
-          <li>Too many levels of nesting</li>
-          <li>Not considering alternative approaches</li>
-        </ul>
-      </div>
-
-      {/* Alternative Approaches */}
-      <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-        <h3 className="text-lg font-medium text-blue-400 mb-2">💡 Pro Tips:</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-300">
-          <li>Consider using && operators instead of deep nesting</li>
-          <li>Break complex nested conditions into separate methods</li>
-          <li>Use early returns to reduce nesting</li>
-        </ul>
-      </div>
+}`}
+      />
     </div>
   );
 };

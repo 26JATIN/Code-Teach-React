@@ -14,6 +14,7 @@ const TakingInputInJava = () => {
       code: `// First, we need to import Scanner - it's like borrowing a special tool
 import java.util.Scanner;
 
+
 public class MyFirstInput {
     public static void main(String[] args) {
         // Step 1: Create our Scanner tool

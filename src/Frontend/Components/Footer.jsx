@@ -63,9 +63,9 @@ const Footer = memo(() => {
   };
 
   const socialLinks = [
-    { Icon: Github, link: 'https://github.com' },
-    { Icon: Twitter, link: 'https://twitter.com' },
-    { Icon: Linkedin, link: 'https://linkedin.com' }
+    { Icon: Github, link: 'https://github.com/26JATIN' },
+    { Icon: Twitter, link: 'https://x.com/JatinGupta93145' },
+    { Icon: Linkedin, link: 'https://www.linkedin.com/in/jatin-gupta-335b08271/' }
   ];
 
   return (

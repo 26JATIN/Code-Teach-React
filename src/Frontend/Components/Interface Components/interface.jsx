@@ -788,7 +788,7 @@ const CourseLayout = ({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: swipeDirection === 'left' ? -100 : 100 }}
                     transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className="h-full overflow-y-auto content-scroll-area pb-24" // Added padding bottom
+                    className="h-full overflow-y-auto content-scroll-area"
                     style={{
                       position: 'absolute',
                       width: '100%',
@@ -806,7 +806,22 @@ const CourseLayout = ({
                               element={
                                 <ErrorBoundary>
                                   <React.Suspense fallback={<LoadingSpinner />}>
-                                    <subModule.component />
+                                    <>
+                                      <subModule.component />
+                                      <div className="mt-8 flex justify-end">
+                                        <Routes>
+                                          <Route
+                                            path="*"
+                                            element={
+                                              <NextButton 
+                                                nextModule={findNextModule(module.id, subModule.id)} 
+                                                onNext={navigateToContent}
+                                              />
+                                            }
+                                          />
+                                        </Routes>
+                                      </div>
+                                    </>
                                   </React.Suspense>
                                 </ErrorBoundary>
                               }
@@ -818,28 +833,6 @@ const CourseLayout = ({
                     </div>
                   </motion.div>
                 </AnimatePresence>
-                
-                {/* Next button container - fixed at bottom */}
-                <div className="absolute bottom-0 right-0 left-0 p-4 bg-gradient-to-t from-gray-950 to-transparent pointer-events-none">
-                  <div className="max-w-6xl mx-auto flex justify-end pointer-events-auto">
-                    <Routes>
-                      {modules.map((module) =>
-                        module.subModules.map((subModule) => (
-                          <Route
-                            key={`${module.id}-${subModule.id}`}
-                            path={`/${module.id}/${subModule.id}`}
-                            element={
-                              <NextButton 
-                                nextModule={findNextModule(module.id, subModule.id)} 
-                                onNext={navigateToContent}
-                              />
-                            }
-                          />
-                        ))
-                      )}
-                    </Routes>
-                  </div>
-                </div>
               </div>
             )}
           </div>

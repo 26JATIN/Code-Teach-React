@@ -104,7 +104,7 @@ const Contact = () => {
                 </h3>
                 <div className="flex space-x-4">
                   <motion.a
-                    href="https://github.com/yourgithub"
+                    href="https://github.com/26JATIN"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-purple-100 dark:hover:bg-purple-900"
@@ -114,7 +114,7 @@ const Contact = () => {
                     <Github className="w-5 h-5" />
                   </motion.a>
                   <motion.a
-                    href="https://linkedin.com/in/yourprofile"
+                    href="https://www.linkedin.com/in/jatin-gupta-335b08271/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-purple-100 dark:hover:bg-purple-900"

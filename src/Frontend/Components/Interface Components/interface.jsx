@@ -341,39 +341,6 @@ const CourseLayout = ({
     setTouchEnd(null);
   };
 
-  // Page transition variants for animations
-  const pageTransitionVariants = {
-    enter: (direction) => ({
-      transform: `translateX(${direction === 'left' ? '100%' : '-100%'})`,
-      opacity: 0,
-      position: 'absolute',
-      width: '100%',
-      willChange: 'transform, opacity'
-    }),
-    center: {
-      transform: 'translateX(0%)',
-      opacity: 1,
-      position: 'relative',
-      width: '100%',
-      transition: {
-        type: "tween",
-        duration: 0.25,
-        ease: "easeOut"
-      }
-    },
-    exit: (direction) => ({
-      transform: `translateX(${direction === 'left' ? '-100%' : '100%'})`,
-      opacity: 0,
-      position: 'absolute',
-      width: '100%',
-      transition: {
-        type: "tween",
-        duration: 0.25,
-        ease: "easeIn"
-      }
-    })
-  };
-
   const extractCourseId = useCallback((pathname) => {
     // Match course ID from path pattern /course/:courseId/modules/...
     const match = pathname.match(/\/course\/([^/]+)\/modules/);
@@ -814,85 +781,49 @@ const CourseLayout = ({
               <CodingArea onClose={toggleEditor} />
             ) : (
               <div className="flex-1 overflow-hidden">
-                <AnimatePresence 
-                  mode="wait" 
-                  initial={false} 
-                  custom={swipeDirection}
-                  onExitComplete={() => {
-                    const contentArea = document.querySelector('.content-scroll-area');
-                    if (contentArea) {
-                      contentArea.scrollTop = 0;
-                    }
-                    setSwipeDirection(null); // Reset swipe direction
-                  }}
-                >
+                <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={location.pathname}
-                    custom={swipeDirection}
-                    variants={pageTransitionVariants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    className="h-full overflow-y-auto content-scroll-area page-transition"
+                    initial={{ opacity: 0, x: swipeDirection === 'left' ? 100 : -100 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: swipeDirection === 'left' ? -100 : 100 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="h-full overflow-y-auto content-scroll-area"
                     style={{
-                      isolation: 'isolate',
-                      contain: 'content',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      transform: 'translateZ(0)',
-                      WebkitTransform: 'translateZ(0)',
-                    }}
-                    onAnimationStart={() => {
-                      const contentArea = document.querySelector('.content-scroll-area');
-                      if (contentArea) {
-                        contentArea.style.scrollBehavior = 'auto';
-                        contentArea.scrollTop = 0;
-                      }
-                    }}
-                    onAnimationComplete={() => {
-                      const contentArea = document.querySelector('.content-scroll-area');
-                      if (contentArea) {
-                        contentArea.style.scrollBehavior = 'smooth';
-                      }
+                      position: 'absolute',
+                      width: '100%',
+                      height: '100%'
                     }}
                   >
-                    {React.memo(() => (
-                      <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
-                        <Routes>
-                          <Route 
-                            index 
-                            element={<WelcomePage />} 
-                          />
-                          {modules.map((module) =>
-                            module.subModules.map((subModule) => (
-                              <Route
-                                key={`${module.id}-${subModule.id}`}
-                                path={`/${module.id}/${subModule.id}`}
-                                element={
-                                  <ErrorBoundary>
-                                    <React.Suspense fallback={<LoadingSpinner />}>
-                                      <>
-                                        <subModule.component />
-                                        <div className="mt-8 flex justify-end">
-                                          <NextButton 
-                                            nextModule={findNextModule(module.id, subModule.id)} 
-                                            onNext={navigateToContent}
-                                          />
-                                        </div>
-                                      </>
-                                    </React.Suspense>
-                                  </ErrorBoundary>
-                                }
-                              />
-                            ))
-                          )}
-                          <Route 
-                            path="*" 
-                            element={<NotFoundPage />} 
-                          />
-                        </Routes>
-                      </div>
-                    ))}
+                    <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
+                      <Routes>
+                        <Route index element={<WelcomePage />} />
+                        {modules.map((module) =>
+                          module.subModules.map((subModule) => (
+                            <Route
+                              key={`${module.id}-${subModule.id}`}
+                              path={`/${module.id}/${subModule.id}`}
+                              element={
+                                <ErrorBoundary>
+                                  <React.Suspense fallback={<LoadingSpinner />}>
+                                    <>
+                                      <subModule.component />
+                                      <div className="mt-8 flex justify-end">
+                                        <NextButton 
+                                          nextModule={findNextModule(module.id, subModule.id)} 
+                                          onNext={navigateToContent}
+                                        />
+                                      </div>
+                                    </>
+                                  </React.Suspense>
+                                </ErrorBoundary>
+                              }
+                            />
+                          ))
+                        )}
+                        <Route path="*" element={<NotFoundPage />} />
+                      </Routes>
+                    </div>
                   </motion.div>
                 </AnimatePresence>
               </div>

@@ -344,32 +344,32 @@ const CourseLayout = ({
   // Page transition variants for animations
   const pageTransitionVariants = {
     enter: (direction) => ({
-      x: direction === 'left' ? 1000 : -1000, // Changed 'right' to 'left'
-      opacity: 0,
-      position: 'absolute', // Add this to prevent layout shifts
-      width: '100%', // Add this to maintain consistent width
-      willChange: 'transform, opacity' // Add this for performance
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-      position: 'relative', // Reset position when centered
-      width: '100%',
-      willChange: 'transform, opacity',
-      transition: {
-        x: { type: "spring", stiffness: 350, damping: 30 },
-        opacity: { duration: 0.2 }
-      }
-    },
-    exit: (direction) => ({
-      x: direction === 'left' ? -1000 : 1000, // Changed 'right' to 'left'
+      transform: `translateX(${direction === 'left' ? '100%' : '-100%'})`,
       opacity: 0,
       position: 'absolute',
       width: '100%',
-      willChange: 'transform, opacity',
+      willChange: 'transform, opacity'
+    }),
+    center: {
+      transform: 'translateX(0%)',
+      opacity: 1,
+      position: 'relative',
+      width: '100%',
       transition: {
-        x: { type: "spring", stiffness: 350, damping: 30 },
-        opacity: { duration: 0.2 }
+        type: "tween",
+        duration: 0.25,
+        ease: "easeOut"
+      }
+    },
+    exit: (direction) => ({
+      transform: `translateX(${direction === 'left' ? '-100%' : '100%'})`,
+      opacity: 0,
+      position: 'absolute',
+      width: '100%',
+      transition: {
+        type: "tween",
+        duration: 0.25,
+        ease: "easeIn"
       }
     })
   };
@@ -615,6 +615,49 @@ const CourseLayout = ({
     </button>
   );
 
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .page-transition {
+        contain: content;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        perspective: 1000px;
+        will-change: transform, opacity;
+      }
+      
+      .content-scroll-area {
+        contain: content;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      @media (prefers-reduced-motion: reduce) {
+        .page-transition {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
+  useEffect(() => {
+    let rafId;
+    const cleanup = () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+    window.addEventListener('visibilitychange', cleanup);
+    return () => {
+      cleanup();
+      window.removeEventListener('visibilitychange', cleanup);
+    };
+  }, []);
+
   return (
     <>
       <div className="flex flex-col md:flex-row h-screen bg-gray-950 overflow-hidden">
@@ -776,11 +819,11 @@ const CourseLayout = ({
                   initial={false} 
                   custom={swipeDirection}
                   onExitComplete={() => {
-                    // Reset scroll position after animation completes
                     const contentArea = document.querySelector('.content-scroll-area');
                     if (contentArea) {
                       contentArea.scrollTop = 0;
                     }
+                    setSwipeDirection(null); // Reset swipe direction
                   }}
                 >
                   <motion.div
@@ -790,46 +833,31 @@ const CourseLayout = ({
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    className="h-full overflow-y-auto content-scroll-area"
+                    className="h-full overflow-y-auto content-scroll-area page-transition"
                     style={{
-                      isolation: 'isolate', // Create new stacking context
-                      backfaceVisibility: 'hidden', // Prevent flickering
+                      isolation: 'isolate',
+                      contain: 'content',
+                      backfaceVisibility: 'hidden',
                       WebkitBackfaceVisibility: 'hidden',
-                      scrollBehavior: 'instant' // Add this to prevent smooth scrolling
+                      transform: 'translateZ(0)',
+                      WebkitTransform: 'translateZ(0)',
                     }}
                     onAnimationStart={() => {
-                      // Ensure scroll is at top when animation starts
                       const contentArea = document.querySelector('.content-scroll-area');
                       if (contentArea) {
+                        contentArea.style.scrollBehavior = 'auto';
                         contentArea.scrollTop = 0;
                       }
                     }}
+                    onAnimationComplete={() => {
+                      const contentArea = document.querySelector('.content-scroll-area');
+                      if (contentArea) {
+                        contentArea.style.scrollBehavior = 'smooth';
+                      }
+                    }}
                   >
-                    <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
-                      <div className="prose prose-invert max-w-none
-                        prose-headings:text-gray-100 
-                        prose-h1:text-xl sm:prose-h1:text-2xl md:prose-h1:text-3xl
-                        prose-h2:text-lg sm:prose-h2:text-xl md:prose-h2:text-2xl
-                        prose-p:text-gray-300 
-                        prose-p:text-sm sm:prose-p:text-base
-                        prose-strong:text-gray-200
-                        prose-code:text-gray-300 
-                        prose-code:bg-gray-800/50
-                        prose-code:px-1.5 
-                        prose-code:py-0.5 
-                        prose-code:text-sm
-                        prose-code:rounded-md
-                        prose-a:text-gray-300 
-                        prose-a:no-underline 
-                        prose-a:hover:text-gray-100
-                        prose-li:text-gray-300
-                        prose-li:text-sm sm:prose-li:text-base
-                        prose-pre:bg-gray-800/50
-                        prose-pre:border
-                        prose-pre:border-gray-700/50
-                        prose-pre:p-3 sm:prose-pre:p-4
-                        prose-pre:text-sm sm:prose-pre:text-base
-                        prose-img:rounded-lg">
+                    {React.memo(() => (
+                      <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl mx-auto">
                         <Routes>
                           <Route 
                             index 
@@ -864,7 +892,7 @@ const CourseLayout = ({
                           />
                         </Routes>
                       </div>
-                    </div>
+                    ))}
                   </motion.div>
                 </AnimatePresence>
               </div>

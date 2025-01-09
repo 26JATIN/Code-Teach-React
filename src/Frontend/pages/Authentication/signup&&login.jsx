@@ -16,6 +16,8 @@ const AuthPage = () => {
   const [resetStep, setResetStep] = useState('email'); // 'email', 'otp', 'newPassword'
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [sessionId, setSessionId] = useState('');
+  const [verificationError, setVerificationError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -59,6 +61,7 @@ const AuthPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setVerificationError('');
     
     if (!validateForm()) {
       return;
@@ -127,16 +130,19 @@ const AuthPage = () => {
         throw new Error(data.message || 'Signup failed');
       }
 
+      // Store sessionId received from server
+      setSessionId(data.sessionId);
       setIsVerifying(true);
       
     } catch (error) {
       console.error('Auth error:', error);
-      alert(error.message || 'An unexpected error occurred');
+      setVerificationError(error.message || 'An unexpected error occurred');
     }
   };
 
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
+    setVerificationError('');
     
     try {
       // For both email verification and password reset
@@ -146,7 +152,7 @@ const AuthPage = () => {
 
       const body = isForgotPassword
         ? { email, otp, newPassword: password }
-        : { email, otp };
+        : { email, otp, sessionId }; // Include sessionId for email verification
 
       const response = await fetch(`${config.api.baseUrl}${endpoint}`, {
         method: 'POST',
@@ -173,7 +179,7 @@ const AuthPage = () => {
       
     } catch (error) {
       console.error('Verification error:', error);
-      alert(error.message || 'Verification failed');
+      setVerificationError(error.message || 'Verification failed');
     }
   };
 
@@ -394,24 +400,39 @@ const AuthPage = () => {
               type="text"
               required
               placeholder="Enter verification code"
-              className={inputClassName}
+              className={`${inputClassName} ${verificationError ? 'border-red-500' : ''}`}
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               maxLength={6}
             />
+            {verificationError && (
+              <p className="text-red-500 text-sm mt-1">{verificationError}</p>
+            )}
             <button
               type="submit"
-              className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold"
+              className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
             >
               Verify Email
             </button>
           </form>
-          <button
-            onClick={handleResendOTP}
-            className="mt-4 w-full text-blue-600 hover:text-blue-700 text-sm"
-          >
-            Resend verification code
-          </button>
+          <div className="mt-4 space-y-4">
+            <button
+              onClick={handleResendOTP}
+              className="w-full text-blue-600 hover:text-blue-700 text-sm"
+            >
+              Resend verification code
+            </button>
+            <button
+              onClick={() => {
+                setIsVerifying(false);
+                setVerificationError('');
+                setOtp('');
+              }}
+              className="w-full text-gray-600 hover:text-gray-700 text-sm"
+            >
+              Go back to signup
+            </button>
+          </div>
         </div>
       </div>
     );

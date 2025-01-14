@@ -157,6 +157,7 @@ const AdminPanel = () => {
 
       if (!response.ok) throw new Error('Failed to delete course');
       
+      
       fetchAdminData();
     } catch (error) {
       console.error('Delete course error:', error);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Users, BookOpen, LineChart, Settings, LogOut, Plus, Edit, Trash2 } from 'lucide-react';
+import { Users, BookOpen, LineChart, Settings, LogOut, Plus, Edit, Trash2, Menu, X } from 'lucide-react';
 import config from '../../../config/config';
 
 const AdminPanel = () => {
@@ -20,6 +20,7 @@ const AdminPanel = () => {
     price: '',
     image: ''
   });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     checkAdminSession();
@@ -191,6 +192,10 @@ const AdminPanel = () => {
     }
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   const StatCard = ({ title, value, icon: Icon }) => (
     <motion.div
       whileHover={{ scale: 1.05 }}
@@ -217,9 +222,25 @@ const AdminPanel = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={toggleSidebar}
+        className="fixed top-4 left-4 z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg md:hidden"
+      >
+        {isSidebarOpen ? (
+          <X className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+        ) : (
+          <Menu className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+        )}
+      </button>
+
       <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-white dark:bg-gray-800 h-screen fixed shadow-lg">
+        {/* Sidebar - Modified for mobile */}
+        <div className={`
+          fixed top-0 left-0 z-40 w-64 h-screen transform transition-transform duration-200 ease-in-out
+          md:translate-x-0 bg-white dark:bg-gray-800 shadow-lg
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}>
           <div className="p-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Panel</h1>
           </div>
@@ -250,18 +271,26 @@ const AdminPanel = () => {
           </nav>
         </div>
 
-        {/* Main content */}
-        <div className="ml-64 p-8 w-full">
+        {/* Overlay for mobile */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Main content - Modified for mobile */}
+        <div className="w-full md:ml-64 p-4 md:p-8 mt-16 md:mt-0">
           {activeTab === 'dashboard' && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-8"
+              className="space-y-6"
             >
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h2>
               
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Stats Grid - Modified for mobile */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <StatCard
                   title="Total Users"
                   value={stats?.totalUsers || '0'}
@@ -274,8 +303,8 @@ const AdminPanel = () => {
                 />
               </div>
 
-              {/* Recent Activity */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Activity - Modified for mobile */}
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* Recent Users */}
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Recent Users</h3>
@@ -321,65 +350,71 @@ const AdminPanel = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">User Management</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">User Management</h2>
               
+              {/* Responsive Table */}
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-700">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Username
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Email
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Join Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                      {users.map(user => (
-                        <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {user.username}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {user.email}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                              ${user.isEmailVerified 
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}
-                            >
-                              {user.isEmailVerified ? 'Verified' : 'Pending'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {user.email !== process.env.REACT_APP_ADMIN_EMAIL && (
-                              <button
-                                onClick={() => handleDeleteUser(user._id)}
-                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                              >
-                                <Trash2 className="h-5 w-5" />
-                              </button>
-                            )}
-                          </td>
+                  <div className="inline-block min-w-full">
+                    <table className="min-w-full">
+                      <thead className="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Username
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Email
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Join Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Actions
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
+                        {users.map(user => (
+                          <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap text-sm">
+                              <div className="flex flex-col md:flex-row md:items-center">
+                                <span className="font-medium text-gray-900 dark:text-white">{user.username}</span>
+                                <span className="text-gray-500 dark:text-gray-400 md:hidden">{user.email}</span>
+                              </div>
+                            </td>
+                            <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm">
+                              {user.email}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                              {new Date(user.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                ${user.isEmailVerified 
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}
+                              >
+                                {user.isEmailVerified ? 'Verified' : 'Pending'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {user.email !== process.env.REACT_APP_ADMIN_EMAIL && (
+                                <button
+                                  onClick={() => handleDeleteUser(user._id)}
+                                  className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                >
+                                  <Trash2 className="h-5 w-5" />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -391,19 +426,20 @@ const AdminPanel = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Courses Management</h2>
+              {/* Course Management Header - Modified for mobile */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Courses Management</h2>
                 <button
                   onClick={() => setShowAddCourse(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center space-x-2"
+                  className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center space-x-2"
                 >
                   <Plus className="h-5 w-5" />
                   <span>Add Course</span>
                 </button>
               </div>
 
-              {/* Course List */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Course Grid - Modified for mobile */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {courses.map(course => (
                   <div key={course._id} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
                     <div className="flex justify-between items-start mb-4">
@@ -436,13 +472,13 @@ const AdminPanel = () => {
                 ))}
               </div>
 
-              {/* Add/Edit Course Modal */}
+              {/* Course Modal - Modified for mobile */}
               {(showAddCourse || editingCourse) && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                   <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="bg-white dark:bg-gray-800 p-6 rounded-xl w-full max-w-md"
+                    className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
                   >
                     <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
                       {editingCourse ? 'Edit Course' : 'Add New Course'}

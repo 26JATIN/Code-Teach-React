@@ -59,6 +59,35 @@ const AuthPage = () => {
     navigate(redirectUrl);
   };
 
+  const handleLogin = async (values) => {
+    try {
+      const response = await fetch(`${config.api.baseUrl}/auth/signin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      // Store user data and token
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Handle redirect based on user type
+      navigate(data.redirectTo || '/learning-dashboard');
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      // Handle error display
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setVerificationError('');
@@ -68,35 +97,7 @@ const AuthPage = () => {
     }
 
     if (isLogin) {
-      try {
-        const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.auth.signin}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ email, password }),
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Authentication failed');
-        }
-
-        setAuthToken(data.token);
-        setUser(data.user);
-
-        // Check if user is admin
-        if (data.user.isAdmin) {
-          navigate('/admin');
-        } else {
-          onAuthSuccess();
-        }
-        
-      } catch (error) {
-        console.error('Auth error:', error);
-        alert(error.message || 'An unexpected error occurred');
-      }
+      handleLogin({ email, password });
       return;
     }
 

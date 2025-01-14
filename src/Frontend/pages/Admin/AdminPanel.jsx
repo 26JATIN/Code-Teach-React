@@ -5,15 +5,25 @@ import { Users, BookOpen, LineChart, Settings, LogOut } from 'lucide-react';
 import config from '../../../config/config';
 
 const AdminPanel = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
+    checkAdminSession();
     fetchAdminData();
   }, []);
+
+  const checkAdminSession = () => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const token = localStorage.getItem('token');
+    
+    if (!user || !token || !user.isAdmin) {
+      handleLogout();
+    }
+  };
 
   const fetchAdminData = async () => {
     try {
@@ -38,9 +48,10 @@ const AdminPanel = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/auth');
+    // Clear all session data
+    localStorage.clear();
+    // Force navigation to auth page
+    window.location.href = '/auth';
   };
 
   const StatCard = ({ title, value, icon: Icon }) => (

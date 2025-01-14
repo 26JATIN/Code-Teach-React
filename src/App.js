@@ -108,43 +108,45 @@ const App = () => {
       <Router>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
-            {isAdmin ? (
-              // Admin Routes
-              <Route path="/*" element={
-                <AdminRoute>
-                  <AdminPanel />
-                </AdminRoute>
-              } />
-            ) : (
-              // Regular User Routes
+            {/* Public Routes */}
+            <Route path="/auth" element={
+              <PublicRoute>
+                <Auth />
+              </PublicRoute>
+            } />
+
+            {/* Admin Routes */}
+            <Route path="/admin/*" element={
+              <AdminRoute>
+                <AdminPanel />
+              </AdminRoute>
+            } />
+
+            {/* User Routes - Only accessible if not admin */}
+            {!isAdmin && (
               <>
                 <Route path="/" element={<Home />} />
                 <Route path="/homepage" element={<Home />} />
                 <Route path="/courses" element={<Courses />} />
-                <Route path="/auth" element={
-                  <PublicRoute>
-                    <Auth />
-                  </PublicRoute>
-                } />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
-
-                {/* Protected Routes */}
-                <Route path="/course/:courseId/*" element={
-                  <ProtectedRoute>
-                    <CourseSelector />
-                  </ProtectedRoute>
-                } />
                 <Route path="/learning-dashboard" element={
                   <ProtectedRoute>
                     <LearningDashboard />
                   </ProtectedRoute>
                 } />
-
-                {/* Catch all route */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="/course/:courseId/*" element={
+                  <ProtectedRoute>
+                    <CourseSelector />
+                  </ProtectedRoute>
+                } />
               </>
             )}
+
+            {/* Redirect admin to admin panel, others to home */}
+            <Route path="*" element={
+              <Navigate to={isAdmin ? "/admin" : "/"} replace />
+            } />
           </Routes>
         </Suspense>
       </Router>

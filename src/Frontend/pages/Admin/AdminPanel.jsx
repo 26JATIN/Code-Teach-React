@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Users, BookOpen, LineChart, Settings, LogOut } from 'lucide-react';
+import { Users, BookOpen, LineChart, Settings, LogOut, Plus, Edit, Trash2 } from 'lucide-react';
 import config from '../../../config/config';
 
 const AdminPanel = () => {
@@ -10,6 +10,16 @@ const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [showAddCourse, setShowAddCourse] = useState(false);
+  const [editingCourse, setEditingCourse] = useState(null);
+  const [courseForm, setCourseForm] = useState({
+    title: '',
+    description: '',
+    category: '',
+    duration: '',
+    price: '',
+    image: ''
+  });
 
   useEffect(() => {
     checkAdminSession();
@@ -52,6 +62,83 @@ const AdminPanel = () => {
     localStorage.clear();
     // Force navigation to auth page
     window.location.href = '/auth';
+  };
+
+  const handleAddCourse = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`${config.api.baseUrl}/admin/courses`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(courseForm)
+      });
+
+      if (!response.ok) throw new Error('Failed to add course');
+      
+      fetchAdminData();
+      setShowAddCourse(false);
+      setCourseForm({
+        title: '',
+        description: '',
+        category: '',
+        duration: '',
+        price: '',
+        image: ''
+      });
+    } catch (error) {
+      console.error('Add course error:', error);
+    }
+  };
+
+  const handleEditCourse = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`${config.api.baseUrl}/admin/courses/${editingCourse._id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(courseForm)
+      });
+
+      if (!response.ok) throw new Error('Failed to update course');
+      
+      fetchAdminData();
+      setEditingCourse(null);
+      setCourseForm({
+        title: '',
+        description: '',
+        category: '',
+        duration: '',
+        price: '',
+        image: ''
+      });
+    } catch (error) {
+      console.error('Edit course error:', error);
+    }
+  };
+
+  const handleDeleteCourse = async (courseId) => {
+    if (!window.confirm('Are you sure you want to delete this course?')) return;
+    
+    try {
+      const response = await fetch(`${config.api.baseUrl}/admin/courses/${courseId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to delete course');
+      
+      fetchAdminData();
+    } catch (error) {
+      console.error('Delete course error:', error);
+    }
   };
 
   const StatCard = ({ title, value, icon: Icon }) => (
@@ -175,6 +262,123 @@ const AdminPanel = () => {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'courses' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <div className="flex justify-between items-center">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Courses Management</h2>
+                <button
+                  onClick={() => setShowAddCourse(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center space-x-2"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span>Add Course</span>
+                </button>
+              </div>
+
+              {/* Course List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses.map(course => (
+                  <div key={course._id} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">{course.title}</h3>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            setEditingCourse(course);
+                            setCourseForm(course);
+                          }}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                        >
+                          <Edit className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCourse(course._id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300">{course.description}</p>
+                    <div className="mt-4 space-y-2">
+                      <p className="text-sm text-gray-500">Category: {course.category}</p>
+                      <p className="text-sm text-gray-500">Duration: {course.duration}</p>
+                      <p className="text-sm text-gray-500">Price: ${course.price}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add/Edit Course Modal */}
+              {(showAddCourse || editingCourse) && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="bg-white dark:bg-gray-800 p-6 rounded-xl w-full max-w-md"
+                  >
+                    <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+                      {editingCourse ? 'Edit Course' : 'Add New Course'}
+                    </h3>
+                    <form onSubmit={editingCourse ? handleEditCourse : handleAddCourse} className="space-y-4">
+                      {/* Form fields */}
+                      <div className="space-y-4">
+                        {Object.keys(courseForm).map(key => (
+                          <div key={key}>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              {key.charAt(0).toUpperCase() + key.slice(1)}
+                            </label>
+                            <input
+                              type={key === 'price' ? 'number' : 'text'}
+                              value={courseForm[key]}
+                              onChange={(e) => setCourseForm(prev => ({
+                                ...prev,
+                                [key]: e.target.value
+                              }))}
+                              className="w-full px-3 py-2 border rounded-lg"
+                              required
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="flex space-x-4">
+                        <button
+                          type="submit"
+                          className="flex-1 py-2 bg-blue-600 text-white rounded-lg"
+                        >
+                          {editingCourse ? 'Update' : 'Add'} Course
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddCourse(false);
+                            setEditingCourse(null);
+                            setCourseForm({
+                              title: '',
+                              description: '',
+                              category: '',
+                              duration: '',
+                              price: '',
+                              image: ''
+                            });
+                          }}
+                          className="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                </div>
+              )}
             </motion.div>
           )}
 

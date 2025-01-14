@@ -164,6 +164,33 @@ const AdminPanel = () => {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${config.api.baseUrl}/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete user');
+      }
+
+      // Remove user from state
+      setUsers(users.filter(user => user._id !== userId));
+      alert('User deleted successfully');
+    } catch (error) {
+      console.error('Delete user error:', error);
+      alert(error.message || 'Failed to delete user');
+    }
+  };
+
   const StatCard = ({ title, value, icon: Icon }) => (
     <motion.div
       whileHover={{ scale: 1.05 }}
@@ -313,6 +340,9 @@ const AdminPanel = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           Status
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
@@ -335,6 +365,16 @@ const AdminPanel = () => {
                             >
                               {user.isEmailVerified ? 'Verified' : 'Pending'}
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {user.email !== process.env.REACT_APP_ADMIN_EMAIL && (
+                              <button
+                                onClick={() => handleDeleteUser(user._id)}
+                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                              >
+                                <Trash2 className="h-5 w-5" />
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}

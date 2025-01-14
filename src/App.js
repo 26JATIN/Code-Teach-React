@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'rea
 import { ThemeProvider } from './Frontend/Components/ThemeProvider';
 import config from './config/config';  // Default import
 import { isAuthenticated, apiRequest } from './config/config';  // Named imports
+import AdminRoute from './Frontend/Components/AdminRoute';
 
 // Custom loading component
 const LoadingSpinner = memo(() => (
@@ -99,42 +100,51 @@ const CourseSelector = () => {
 };
 
 const App = () => {
+  const user = JSON.parse(localStorage.getItem('user'));
+  const isAdmin = user?.isAdmin;
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="app-theme">
       <Router>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/homepage" element={<Home />} />
-            <Route path="/courses" element={<Courses />} /> {/* Remove ProtectedRoute wrapper */}
-            <Route path="/auth" element={
-              <PublicRoute>
-                <Auth />
-              </PublicRoute>
-            } />
-            <Route path="/about" element={<About />} /> {/* Add About route */}
-            <Route path="/contact" element={<Contact />} /> {/* Add Contact route */}
+            {isAdmin ? (
+              // Admin Routes
+              <Route path="/*" element={
+                <AdminRoute>
+                  <AdminPanel />
+                </AdminRoute>
+              } />
+            ) : (
+              // Regular User Routes
+              <>
+                <Route path="/" element={<Home />} />
+                <Route path="/homepage" element={<Home />} />
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/auth" element={
+                  <PublicRoute>
+                    <Auth />
+                  </PublicRoute>
+                } />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
 
-            {/* Protected Routes */}
-            <Route path="/course/:courseId/*" element={
-              <ProtectedRoute>
-                <CourseSelector />
-              </ProtectedRoute>
-            } />
-            <Route path="/learning-dashboard" element={
-              <ProtectedRoute>
-                <LearningDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin" element={
-              <ProtectedRoute>
-                <AdminPanel />
-              </ProtectedRoute>
-            } />
+                {/* Protected Routes */}
+                <Route path="/course/:courseId/*" element={
+                  <ProtectedRoute>
+                    <CourseSelector />
+                  </ProtectedRoute>
+                } />
+                <Route path="/learning-dashboard" element={
+                  <ProtectedRoute>
+                    <LearningDashboard />
+                  </ProtectedRoute>
+                } />
 
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+                {/* Catch all route */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </>
+            )}
           </Routes>
         </Suspense>
       </Router>

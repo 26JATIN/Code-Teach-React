@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Users, BookOpen, LineChart, Settings } from 'lucide-react';
+import { Users, BookOpen, LineChart, Settings, LogOut } from 'lucide-react';
 import config from '../../../config/config';
 
 const AdminPanel = () => {
@@ -35,6 +35,12 @@ const AdminPanel = () => {
       console.error('Admin fetch error:', error);
       navigate('/auth');
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/auth');
   };
 
   const StatCard = ({ title, value, icon: Icon }) => (
@@ -84,6 +90,15 @@ const AdminPanel = () => {
                 <span>{tab.label}</span>
               </button>
             ))}
+            
+            {/* Add logout button at the bottom */}
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center space-x-4 px-6 py-4 mt-auto text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Logout</span>
+            </button>
           </nav>
         </div>
 

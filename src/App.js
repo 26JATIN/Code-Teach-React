@@ -20,6 +20,7 @@ const LearningDashboard = lazy(() => import('./Frontend/pages/EnrolledCourse/lea
 const Auth = lazy(() => import('./Frontend/pages/Authentication/signup&&login'));
 const About = lazy(() => import('./Frontend/pages/About/About')); // Add About to lazy imports
 const Contact = lazy(() => import('./Frontend/pages/Contact/Contact')); // Add Contact to lazy imports
+const AdminPanel = lazy(() => import('./Frontend/pages/Admin/AdminPanel')); // Add AdminPanel to lazy imports
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -124,6 +125,11 @@ const App = () => {
             <Route path="/learning-dashboard" element={
               <ProtectedRoute>
                 <LearningDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AdminPanel />
               </ProtectedRoute>
             } />
 

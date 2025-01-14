@@ -68,16 +68,8 @@ const AuthPage = () => {
     }
 
     if (isLogin) {
-      // Existing login logic
-      if (password.length < 6) {
-        alert('Password must be at least 6 characters long');
-        return;
-      }
-
-      const endpoint = config.api.endpoints.auth.signin;
-      
       try {
-        const response = await fetch(`${config.api.baseUrl}${endpoint}`, {
+        const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.auth.signin}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -88,25 +80,22 @@ const AuthPage = () => {
         const data = await response.json();
         
         if (!response.ok) {
-          // Handle specific error cases
-          if (response.status === 401) {
-            throw new Error('Invalid email or password');
-          } else {
-            throw new Error(data.message || data.error || 'Authentication failed');
-          }
-        }
-
-        if (!data.token || !data.user) {
-          throw new Error('Invalid response from server');
+          throw new Error(data.error || 'Authentication failed');
         }
 
         setAuthToken(data.token);
         setUser(data.user);
-        onAuthSuccess();
+
+        // Check if user is admin
+        if (data.user.isAdmin) {
+          navigate('/admin');
+        } else {
+          onAuthSuccess();
+        }
         
       } catch (error) {
         console.error('Auth error:', error);
-        alert(error.message || 'An unexpected error occurred. Please try again.');
+        alert(error.message || 'An unexpected error occurred');
       }
       return;
     }

@@ -104,73 +104,112 @@ const ModuleFormNew = () => {
         throw new Error(`ContentBlock at index ${index} is missing required 'type' field`);
       }
       
-      // Create cleaned block with only required fields and type-specific fields
+      // Create cleaned block with only required fields
       const cleaned = {
         type: block.type,
         order: block.order !== undefined ? block.order : index
       };
       
-      // Type-specific fields - only include if they exist and are non-empty
-      const typeFields = {
-        // Summary
-        summaryTitle: block.summaryTitle,
-        summaryDescription: block.summaryDescription,
-        
-        // Key Features
-        featuresTitle: block.featuresTitle,
-        features: block.features,
-        featuresVariant: block.featuresVariant,
-        
-        // Code Snippet
-        codeSnippet: block.codeSnippet,
-        
-        // Concept Explanation
-        conceptSections: block.conceptSections,
-        
-        // Important Note
-        importantNote: block.importantNote,
-        
-        // Mistakes to Avoid
-        mistakesToAvoid: block.mistakesToAvoid,
-        
-        // Timeline
-        timelineTitle: block.timelineTitle,
-        timelineEvents: block.timelineEvents,
-        
-        // Hands-On
-        handsOn: block.handsOn,
-        
-        // MCQ
-        mcqQuestions: block.mcqQuestions,
-        
-        // Coding Exercise
-        codingExercise: block.codingExercise,
-        
-        // Text
-        text: block.text,
-        
-        // Heading
-        heading: block.heading,
-        headingLevel: block.headingLevel,
-        
-        // List
-        listItems: block.listItems,
-        listType: block.listType,
-        
-        // Generic content
-        content: block.content
-      };
-      
-      // Only include defined, non-null, non-empty fields
-      Object.keys(typeFields).forEach(key => {
-        const value = typeFields[key];
-        if (value !== undefined && value !== null) {
-          // Skip empty arrays and empty objects
-          if (Array.isArray(value) && value.length === 0) return;
-          if (typeof value === 'object' && Object.keys(value).length === 0) return;
-          cleaned[key] = value;
-        }
-      });
+      // Add ONLY the fields relevant to this specific type
+      switch (block.type) {
+        case 'summary':
+          if (block.summaryTitle) cleaned.summaryTitle = block.summaryTitle;
+          if (block.summaryDescription) cleaned.summaryDescription = block.summaryDescription;
+          break;
+          
+        case 'keyFeatures':
+          if (block.featuresTitle) cleaned.featuresTitle = block.featuresTitle;
+          if (block.features && Array.isArray(block.features) && block.features.length > 0) {
+            cleaned.features = block.features;
+          }
+          if (block.featuresVariant) cleaned.featuresVariant = block.featuresVariant;
+          break;
+          
+        case 'codeSnippet':
+          if (block.codeSnippet) cleaned.codeSnippet = block.codeSnippet;
+          break;
+          
+        case 'conceptExplanation':
+          if (block.conceptSections && Array.isArray(block.conceptSections) && block.conceptSections.length > 0) {
+            cleaned.conceptSections = block.conceptSections;
+          }
+          break;
+          
+        case 'importantNote':
+          if (block.importantNote) cleaned.importantNote = block.importantNote;
+          break;
+          
+        case 'mistakesToAvoid':
+          if (block.mistakesToAvoid) cleaned.mistakesToAvoid = block.mistakesToAvoid;
+          break;
+          
+        case 'timeline':
+          if (block.timelineTitle) cleaned.timelineTitle = block.timelineTitle;
+          if (block.timelineEvents && Array.isArray(block.timelineEvents) && block.timelineEvents.length > 0) {
+            cleaned.timelineEvents = block.timelineEvents;
+          }
+          break;
+          
+        case 'handsOn':
+          if (block.handsOn) cleaned.handsOn = block.handsOn;
+          break;
+          
+        case 'mcq':
+          if (block.mcqQuestions && Array.isArray(block.mcqQuestions) && block.mcqQuestions.length > 0) {
+            cleaned.mcqQuestions = block.mcqQuestions;
+          }
+          break;
+          
+        case 'codingExercise':
+          if (block.codingExercise) cleaned.codingExercise = block.codingExercise;
+          break;
+          
+        case 'text':
+          // For text type, check both text field and content.text
+          if (block.text) {
+            cleaned.text = block.text;
+          } else if (block.content && block.content.text) {
+            cleaned.text = block.content.text;
+          }
+          break;
+          
+        case 'heading':
+          if (block.heading) {
+            cleaned.heading = block.heading;
+          } else if (block.content && block.content.heading) {
+            cleaned.heading = block.content.heading;
+          }
+          if (block.headingLevel) cleaned.headingLevel = block.headingLevel;
+          break;
+          
+        case 'list':
+          if (block.listItems && Array.isArray(block.listItems) && block.listItems.length > 0) {
+            cleaned.listItems = block.listItems;
+          } else if (block.content && block.content.items && Array.isArray(block.content.items)) {
+            cleaned.listItems = block.content.items;
+          }
+          if (block.listType) cleaned.listType = block.listType;
+          break;
+          
+        case 'image':
+        case 'video':
+        case 'link':
+        case 'example':
+        case 'quiz':
+        case 'comparison':
+          // Generic content types - use content field
+          if (block.content && Object.keys(block.content).length > 0) {
+            cleaned.content = block.content;
+          }
+          break;
+          
+        default:
+          console.warn(`Unknown contentBlock type: ${block.type}`);
+          // For unknown types, include content if it exists
+          if (block.content && Object.keys(block.content).length > 0) {
+            cleaned.content = block.content;
+          }
+      }
       
       return cleaned;
     });

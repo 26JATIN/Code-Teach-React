@@ -75,15 +75,18 @@ const ModuleFormNew = () => {
   };
 
   const addNewModule = () => {
+    const nextOrder = modules.length + 1;
     const newModule = {
       tempId: Date.now(),
       courseId: selectedCourse._id,
-      id: `${modules.length + 1}`,
-      order: modules.length + 1,
+      id: `${nextOrder}`, // Simple numeric id
+      order: nextOrder,
       title: '',
       description: '',
       icon: '📚',
       subModules: [],
+      isPublished: true,
+      totalEstimatedTime: 0,
       isNew: true
     };
     setModules([...modules, newModule]);
@@ -93,7 +96,58 @@ const ModuleFormNew = () => {
   const saveModule = async (module) => {
     try {
       setSaving(true);
-      console.log('Saving module:', module);
+      
+      // Validate required fields
+      if (!module.title?.trim()) {
+        throw new Error('Module title is required');
+      }
+      if (!module.courseId) {
+        throw new Error('Course ID is missing');
+      }
+      if (!module.id) {
+        throw new Error('Module ID is missing');
+      }
+      
+      // Clean up the module data
+      const cleanedModule = {
+        ...module,
+        title: module.title.trim(),
+        description: module.description || '',
+        order: module.order || 1,
+        icon: module.icon || '📚',
+        isPublished: module.isPublished !== undefined ? module.isPublished : true,
+        subModules: (module.subModules || []).map(sub => {
+          // Clean each submodule
+          const cleaned = {
+            id: sub.id,
+            title: sub.title,
+            description: sub.description || '',
+            order: sub.order,
+            estimatedTime: sub.estimatedTime || 15,
+            difficulty: sub.difficulty || 'beginner',
+            contentBlocks: sub.contentBlocks || [],
+            isPublished: sub.isPublished !== undefined ? sub.isPublished : true
+          };
+          
+          // Include _id if it exists (for updates)
+          if (sub._id) {
+            cleaned._id = sub._id;
+          }
+          
+          // Remove temporary fields
+          delete cleaned.tempId;
+          delete cleaned.isNew;
+          
+          return cleaned;
+        })
+      };
+      
+      // Remove temporary fields from module
+      delete cleanedModule.tempId;
+      delete cleanedModule.isNew;
+      
+      console.log('Saving cleaned module:', cleanedModule);
+      
       const endpoint = module._id 
         ? `/api/modules/${module._id}` 
         : '/api/modules';
@@ -103,7 +157,7 @@ const ModuleFormNew = () => {
       console.log(`Making ${method} request to ${endpoint}`);
       const result = await apiRequest(endpoint, {
         method,
-        body: JSON.stringify(module)
+        body: JSON.stringify(cleanedModule)
       });
       console.log('Save result:', result);
 
@@ -138,14 +192,17 @@ const ModuleFormNew = () => {
   };
 
   const createNewSubModule = (module) => {
+    const nextOrder = (module.subModules || []).length + 1;
     const newSubModule = {
       tempId: Date.now(),
+      id: `${module.id || 'mod'}-sub-${nextOrder}`, // Generate proper id
       title: '',
       description: '',
-      order: (module.subModules || []).length + 1,
+      order: nextOrder,
       estimatedTime: 15,
       difficulty: 'beginner',
       contentBlocks: [],
+      isPublished: true,
       isNew: true
     };
     setSelectedModule(module);
@@ -156,28 +213,59 @@ const ModuleFormNew = () => {
   const saveSubModule = async (updatedSubModule) => {
     try {
       setSaving(true);
+      console.log('Saving submodule:', updatedSubModule);
       
       // Update the module with the new/updated submodule
       const moduleIndex = modules.findIndex(m => 
         m._id === selectedModule._id || m.tempId === selectedModule.tempId
       );
       
+      if (moduleIndex === -1) {
+        throw new Error('Module not found');
+      }
+      
       const updatedModule = { ...modules[moduleIndex] };
+      
+      // Remove temporary fields and ensure required fields
+      const cleanedSubModule = {
+        ...updatedSubModule,
+        id: updatedSubModule.id || `${updatedModule.id}-sub-${(updatedModule.subModules?.length || 0) + 1}`,
+        title: updatedSubModule.title?.trim() || 'Untitled SubModule',
+        description: updatedSubModule.description || '',
+        order: updatedSubModule.order || (updatedModule.subModules?.length || 0) + 1,
+        estimatedTime: updatedSubModule.estimatedTime || 15,
+        difficulty: updatedSubModule.difficulty || 'beginner',
+        contentBlocks: updatedSubModule.contentBlocks || [],
+        isPublished: updatedSubModule.isPublished !== undefined ? updatedSubModule.isPublished : true
+      };
+      
+      // Remove temp fields
+      delete cleanedSubModule.tempId;
+      delete cleanedSubModule.isNew;
       
       if (updatedSubModule.isNew) {
         // Add new submodule
         updatedModule.subModules = [
           ...(updatedModule.subModules || []),
-          updatedSubModule
+          cleanedSubModule
         ];
+        console.log('Adding new submodule to module');
       } else {
         // Update existing submodule
         const subIndex = updatedModule.subModules.findIndex(s => 
-          s._id === updatedSubModule._id || s.tempId === updatedSubModule.tempId
+          s._id === updatedSubModule._id || s.id === updatedSubModule.id || s.tempId === updatedSubModule.tempId
         );
-        updatedModule.subModules[subIndex] = updatedSubModule;
+        
+        if (subIndex === -1) {
+          throw new Error('Submodule not found in module');
+        }
+        
+        updatedModule.subModules[subIndex] = cleanedSubModule;
+        console.log('Updating existing submodule at index:', subIndex);
       }
 
+      console.log('Saving module with updated submodules:', updatedModule);
+      
       // Save the entire module
       await saveModule(updatedModule);
       
@@ -186,7 +274,7 @@ const ModuleFormNew = () => {
       setEditingSubModule(null);
     } catch (error) {
       console.error('Error saving submodule:', error);
-      alert('Failed to save submodule');
+      alert('Failed to save submodule: ' + error.message);
     } finally {
       setSaving(false);
     }

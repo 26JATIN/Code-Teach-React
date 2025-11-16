@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Users, BookOpen, LineChart, Settings, LogOut, Plus, Edit, Trash2, Menu, X } from 'lucide-react';
+import { Users, BookOpen, LineChart, Settings, LogOut, Plus, Edit, Trash2, Menu, X, Layers } from 'lucide-react';
 import config from '../../../config/config';
 import UsersComponent from './Components/Users';
 import CoursesComponent from './Components/Courses';
+import ModuleManager from './Components/ModuleFormNew';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -16,11 +17,20 @@ const AdminPanel = () => {
   const [editingCourse, setEditingCourse] = useState(null);
   const [courseForm, setCourseForm] = useState({
     title: '',
+    shortName: '',
     description: '',
-    category: '',
+    longDescription: '',
+    difficulty: 'Beginner',
     duration: '',
-    price: '',
-    image: ''
+    category: 'programming',
+    language: 'java',
+    path: '',
+    thumbnail: '',
+    icon: '📚',
+    color: '#3B82F6',
+    prerequisites: [],
+    learningOutcomes: [],
+    tags: []
   });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -29,6 +39,8 @@ const AdminPanel = () => {
     fetchAdminData();
     if (activeTab === 'users') {
       fetchUsers();
+    } else if (activeTab === 'courses') {
+      fetchCourses();
     }
   }, [activeTab]);
 
@@ -82,6 +94,25 @@ const AdminPanel = () => {
     }
   };
 
+  const fetchCourses = async () => {
+    try {
+      const response = await fetch(`${config.api.baseUrl}/admin/courses`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch courses');
+      }
+
+      const data = await response.json();
+      setCourses(data);
+    } catch (error) {
+      console.error('Fetch courses error:', error);
+    }
+  };
+
   const handleLogout = () => {
     // Clear all session data
     localStorage.clear();
@@ -103,15 +134,24 @@ const AdminPanel = () => {
 
       if (!response.ok) throw new Error('Failed to add course');
       
-      fetchAdminData();
+      fetchCourses();
       setShowAddCourse(false);
       setCourseForm({
         title: '',
+        shortName: '',
         description: '',
-        category: '',
+        longDescription: '',
+        difficulty: 'Beginner',
         duration: '',
-        price: '',
-        image: ''
+        category: 'programming',
+        language: 'java',
+        path: '',
+        thumbnail: '',
+        icon: '📚',
+        color: '#3B82F6',
+        prerequisites: [],
+        learningOutcomes: [],
+        tags: []
       });
     } catch (error) {
       console.error('Add course error:', error);
@@ -132,15 +172,24 @@ const AdminPanel = () => {
 
       if (!response.ok) throw new Error('Failed to update course');
       
-      fetchAdminData();
+      fetchCourses();
       setEditingCourse(null);
       setCourseForm({
         title: '',
+        shortName: '',
         description: '',
-        category: '',
+        longDescription: '',
+        difficulty: 'Beginner',
         duration: '',
-        price: '',
-        image: ''
+        category: 'programming',
+        language: 'java',
+        path: '',
+        thumbnail: '',
+        icon: '📚',
+        color: '#3B82F6',
+        prerequisites: [],
+        learningOutcomes: [],
+        tags: []
       });
     } catch (error) {
       console.error('Edit course error:', error);
@@ -219,6 +268,7 @@ const AdminPanel = () => {
     { id: 'dashboard', label: 'Dashboard', icon: LineChart },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'courses', label: 'Courses', icon: BookOpen },
+    { id: 'modules', label: 'Modules', icon: Layers },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -368,6 +418,10 @@ const AdminPanel = () => {
               handleAddCourse={handleAddCourse}
               handleDeleteCourse={handleDeleteCourse}
             />
+          )}
+
+          {activeTab === 'modules' && (
+            <ModuleManager />
           )}
         </div>
       </div>

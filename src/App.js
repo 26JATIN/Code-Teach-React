@@ -15,13 +15,12 @@ const LoadingSpinner = memo(() => (
 // Lazy load components
 const Home = lazy(() => import('./Frontend/pages/home/homepage'));
 const Courses = lazy(() => import('./Frontend/pages/Courses/Courses'));
-const LearnJava = lazy(() => import('./Course Modules/Java/LearnJava'));
-const LearnCpp = lazy(() => import('./Course Modules/Cpp/LearnCpp'));
+const DynamicCourseModule = lazy(() => import('./Course Modules/DynamicCourseModule'));
 const LearningDashboard = lazy(() => import('./Frontend/pages/EnrolledCourse/learningdashboard'));
 const Auth = lazy(() => import('./Frontend/pages/Authentication/signup&&login'));
-const About = lazy(() => import('./Frontend/pages/About/About')); // Add About to lazy imports
-const Contact = lazy(() => import('./Frontend/pages/Contact/Contact')); // Add Contact to lazy imports
-const AdminPanel = lazy(() => import('./Frontend/pages/Admin/AdminPanel')); // Add AdminPanel to lazy imports
+const About = lazy(() => import('./Frontend/pages/About/About'));
+const Contact = lazy(() => import('./Frontend/pages/Contact/Contact'));
+const AdminPanel = lazy(() => import('./Frontend/pages/Admin/AdminPanel'));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -38,62 +37,13 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
+// All courses now use dynamic module system
 const CourseSelector = () => {
   const { courseId } = useParams();
-  const [courseType, setCourseType] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCourseDetails = async () => {
-      try {
-        setLoading(true);
-        const coursesData = await apiRequest(config.api.endpoints.courses.list);
-        const course = coursesData.find(c => c._id === courseId);
-        
-        if (course) {
-          const title = course.title.toLowerCase();
-          if (title.includes('java')) {
-            setCourseType('java');
-          } else if (title.includes('c++')) {
-            setCourseType('cpp');
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching course details:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (courseId) {
-      fetchCourseDetails();
-    }
-  }, [courseId]);
-
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  const getCourseComponent = () => {
-    switch (courseType) {
-      case 'java':
-        return LearnJava;
-      case 'cpp':
-        return LearnCpp;
-      default:
-        return null;
-    }
-  };
-
-  const CourseComponent = getCourseComponent();
-  
-  if (!CourseComponent) {
-    return <Navigate to="/courses" replace />;
-  }
 
   return (
     <Routes>
-      <Route path="modules/*" element={<CourseComponent />} />
+      <Route path="modules/*" element={<DynamicCourseModule />} />
       <Route path="*" element={<Navigate to={`/course/${courseId}/modules`} replace />} />
     </Routes>
   );

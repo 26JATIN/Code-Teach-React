@@ -6,6 +6,7 @@ import CodingArea from './codingarea';  // Add this import
 import { motion, AnimatePresence } from 'framer-motion'; // Add this import
 import config from '../../../config/config';  // Default import
 import { apiRequest } from '../../../config/config';  // Named import
+import DynamicContentRenderer from '../DynamicContentRenderer'; // Import the renderer
 // Internal ModuleButton component
 const ModuleButton = ({ module, isExpanded, toggleModule, completedModules }) => {
   const allSubModulesCompleted = module.subModules.every(
@@ -105,6 +106,62 @@ const WelcomePage = () => {
   );
 };
 
+// Component to render dynamic submodule content from backend
+const DynamicSubModuleRenderer = ({ courseId, moduleId, subModuleId }) => {
+  const [content, setContent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        setLoading(true);
+        const response = await apiRequest(
+          `/api/modules/course/${courseId}/module/${moduleId}/submodule/${subModuleId}`
+        );
+        setContent(response.subModule);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching submodule content:', err);
+        setError('Failed to load content');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (courseId && moduleId && subModuleId) {
+      fetchContent();
+    }
+  }, [courseId, moduleId, subModuleId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-400">{error}</p>
+      </div>
+    );
+  }
+
+  if (!content) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-400">No content available</p>
+      </div>
+    );
+  }
+
+  return <DynamicContentRenderer contentBlocks={content.contentBlocks} />;
+};
+
+// Component for not found page
 const NotFoundPage = () => (
   <div className="text-center py-16">
     <h1 className="text-3xl font-bold text-gray-100 mb-4">Topic Not Found</h1>
@@ -125,7 +182,8 @@ const CourseLayout = ({
   courseName, 
   courseShortName, 
   modules, 
-  basePath = "" 
+  basePath = "",
+  isDynamic = true // Always dynamic now - revamp complete
 }) => {
   
   const isMobile = useMediaQuery({ maxWidth: 768 });
@@ -807,7 +865,11 @@ const CourseLayout = ({
                                 <ErrorBoundary>
                                   <React.Suspense fallback={<LoadingSpinner />}>
                                     <>
-                                      <subModule.component />
+                                      <DynamicSubModuleRenderer 
+                                        courseId={extractCourseId(location.pathname)}
+                                        moduleId={module.id}
+                                        subModuleId={subModule.id}
+                                      />
                                       <div className="mt-8 flex justify-end">
                                         <Routes>
                                           <Route

@@ -7,24 +7,15 @@ import config from '../../../config/config';  // Default import
 import { apiRequest } from '../../../config/config';  // Named import
 import { useNavigate } from 'react-router-dom';
 
-const getModulesForCourse = (courseTitle) => {
-  // Map course titles to their respective module files
-  const moduleMap = {
-    'Java': require('../../Components/Module Component/Java Modules').modules,
-    'C++': require('../../Components/Module Component/Cpp Modules').modules,
-    'DSA': require('../../Components/Module Component/DSA Modules').modules,
-    "web development": require('../../Components/Module Component/WebDev Modules').modules,
-    // Add other courses here as they are created
-    // 'Python': require('../../Components/Module Component/Python Modules').modules,
-    // 'JavaScript': require('../../Components/Module Component/JavaScript Modules').modules,
-  };
-
-  // Get the course key (e.g., "Java" from "Java Programming")
-  const courseKey = Object.keys(moduleMap).find(key => 
-    courseTitle.toLowerCase().includes(key.toLowerCase())
-  );
-
-  return courseKey ? moduleMap[courseKey] : null;
+// Function to fetch modules from backend API
+const fetchModulesForCourse = async (courseId) => {
+  try {
+    const response = await apiRequest(`/api/modules/course/${courseId}`);
+    return response.modules || [];
+  } catch (error) {
+    console.error('Error fetching modules:', error);
+    return [];
+  }
 };
 
 function LearningDashboard() {
@@ -43,26 +34,26 @@ function LearningDashboard() {
         // Handle the new response format
         const courses = Array.isArray(data) ? data : (data.courses || []);
         
-        // Add module and test set counts for each course
-        const coursesWithCounts = courses.map(course => {
+        // Add module and test set counts for each course by fetching from API
+        const coursesWithCounts = await Promise.all(courses.map(async (course) => {
           let totalModules = 0;
           let testSets = 0;
 
           try {
-            const courseModules = getModulesForCourse(course.title);
+            const courseModules = await fetchModulesForCourse(course._id);
             
-            if (courseModules) {
-              // Count total modules
+            if (courseModules && courseModules.length > 0) {
+              // Count total submodules across all modules
               totalModules = courseModules.reduce((sum, module) => 
-                sum + module.subModules.length, 0
+                sum + (module.subModules?.length || 0), 0
               );
               
-              // Count test sets
+              // Count test sets (submodules with "practice" or "test" in title)
               testSets = courseModules.reduce((sum, module) => {
-                return sum + module.subModules.filter(sub => 
-                  sub.title.toLowerCase().includes('practice set') || 
-                  sub.title.toLowerCase().includes('test')
-                ).length;
+                return sum + (module.subModules?.filter(sub => 
+                  sub.title?.toLowerCase().includes('practice') || 
+                  sub.title?.toLowerCase().includes('test')
+                ).length || 0);
               }, 0);
             }
           } catch (err) {
@@ -74,7 +65,7 @@ function LearningDashboard() {
             totalModules,
             testSets
           };
-        });
+        }));
         
         setEnrolledCourses(coursesWithCounts);
       } catch (err) {
@@ -172,15 +163,16 @@ function LearningDashboard() {
       console.error('Invalid course object:', course);
       return;
     }
-  
-    // Get course modules - Move this outside try block so it's available in catch
-    const courseModules = getModulesForCourse(course.title);
-    if (!courseModules) {
-      console.error('No modules found for course:', course.title);
-      return;
-    }
 
     try {
+      // Fetch course modules from API
+      const courseModules = await fetchModulesForCourse(course._id);
+      
+      if (!courseModules || courseModules.length === 0) {
+        console.error('No modules found for course:', course.title);
+        return;
+      }
+
       // Update last accessed time
       await apiRequest(config.api.endpoints.courses.lastAccessed(course._id), {
         method: 'PUT'
@@ -207,12 +199,12 @@ function LearningDashboard() {
         // Search through modules to find the next uncompleted one
         for (const module of courseModules) {
           for (const subModule of module.subModules) {
-            if (found && !progressResponse.completedModules.includes(`${module.id}.${subModule.id}`)) {
+            if (found && !progressResponse.completedModules.includes(`${module.moduleNumber}.${subModule.subModuleNumber}`)) {
               nextModule = module;
               nextSubModule = subModule;
               break;
             }
-            if (module.id === lastModuleId && subModule.id === lastSubModuleId) {
+            if (module.moduleNumber === lastModuleId && subModule.subModuleNumber === lastSubModuleId) {
               found = true;
             }
           }
@@ -221,7 +213,7 @@ function LearningDashboard() {
   
         if (nextModule && nextSubModule) {
           // Navigate to next uncompleted module
-          navigate(`/course/${course._id}/modules/${nextModule.id}/${nextSubModule.id}`);
+          navigate(`/course/${course._id}/modules/${nextModule.moduleNumber}/${nextSubModule.subModuleNumber}`);
           return;
         }
       }
@@ -236,16 +228,18 @@ function LearningDashboard() {
       // If no progress at all, start from first module
       const firstModule = courseModules[0];
       const firstSubModule = firstModule.subModules[0];
-      navigate(`/course/${course._id}/modules/${firstModule.id}/${firstSubModule.id}`);
+      navigate(`/course/${course._id}/modules/${firstModule.moduleNumber}/${firstSubModule.subModuleNumber}`);
   
     } catch (error) {
       console.error('Error handling course navigation:', error);
-      // Now courseModules is available in catch block
+      // Fallback: try to navigate to first module
       try {
-        // Navigate to first module as fallback
-        const firstModule = courseModules[0];
-        const firstSubModule = firstModule.subModules[0];
-        navigate(`/course/${course._id}/modules/${firstModule.id}/${firstSubModule.id}`);
+        const courseModules = await fetchModulesForCourse(course._id);
+        if (courseModules && courseModules.length > 0) {
+          const firstModule = courseModules[0];
+          const firstSubModule = firstModule.subModules[0];
+          navigate(`/course/${course._id}/modules/${firstModule.moduleNumber}/${firstSubModule.subModuleNumber}`);
+        }
       } catch (fallbackError) {
         console.error('Failed to navigate to first module:', fallbackError);
         // Final fallback - just go to modules page

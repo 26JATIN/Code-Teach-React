@@ -1,11 +1,32 @@
+// Get environment variables from either Vite or Create React App
+const getEnvVar = (viteKey, reactKey, defaultValue) => {
+  try {
+    // Try Vite first
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[viteKey]) {
+      return import.meta.env[viteKey];
+    }
+    // Fallback to Create React App
+    if (typeof process !== 'undefined' && process.env && process.env[reactKey]) {
+      return process.env[reactKey];
+    }
+  } catch (error) {
+    console.warn('Error accessing environment variables:', error);
+  }
+  return defaultValue;
+};
+
 // Define default values
-const DEFAULT_API_URL = 'https://code-teach-backend.vercel.app';
+const DEFAULT_API_URL = 'http://localhost:5000';
 const DEFAULT_APP_NAME = 'Code Teach';
+
+// Get configuration from environment variables
+const API_BASE_URL = getEnvVar('VITE_API_URL', 'REACT_APP_API_URL', DEFAULT_API_URL);
+const APP_NAME = getEnvVar('VITE_APP_NAME', 'REACT_APP_NAME', DEFAULT_APP_NAME);
 
 // Basic config object with defaults
 const config = {
   api: {
-    baseUrl: process.env.REACT_APP_API_BASE_URL || DEFAULT_API_URL,
+    baseUrl: API_BASE_URL,
     endpoints: {
       auth: {
         signin: '/auth/signin',
@@ -29,7 +50,7 @@ const config = {
     }
   },
   app: {
-    name: DEFAULT_APP_NAME,
+    name: APP_NAME,
     routes: {
       home: '/',
       auth: '/auth',
@@ -159,17 +180,13 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
-// Try to update config with environment variables if they exist
-try {
-  if (import.meta?.env?.VITE_API_URL) {
-    config.api.baseUrl = import.meta.env.VITE_API_URL;
-  }
-  if (import.meta?.env?.VITE_APP_NAME) {
-    config.app.name = import.meta.env.VITE_APP_NAME;
-  }
-} catch (error) {
-  console.warn('Error loading environment variables:', error);
-  // Continue using defaults
+// Log configuration on startup (only in development)
+if (getEnvVar('VITE_NODE_ENV', 'NODE_ENV', 'development') === 'development') {
+  console.log('App Configuration:', {
+    apiBaseUrl: config.api.baseUrl,
+    appName: config.app.name,
+    environment: getEnvVar('VITE_NODE_ENV', 'NODE_ENV', 'development')
+  });
 }
 
 // Export config as default and named

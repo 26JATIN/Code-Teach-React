@@ -110,14 +110,15 @@ const ModuleFormNew = () => {
       
       // Clean up the module data
       const cleanedModule = {
-        ...module,
+        courseId: module.courseId,
+        id: module.id,
         title: module.title.trim(),
         description: module.description || '',
         order: module.order || 1,
         icon: module.icon || '📚',
         isPublished: module.isPublished !== undefined ? module.isPublished : true,
         subModules: (module.subModules || []).map(sub => {
-          // Clean each submodule
+          // Clean each submodule - only include defined fields
           const cleaned = {
             id: sub.id,
             title: sub.title,
@@ -134,17 +135,14 @@ const ModuleFormNew = () => {
             cleaned._id = sub._id;
           }
           
-          // Remove temporary fields
-          delete cleaned.tempId;
-          delete cleaned.isNew;
+          // Include prerequisites if they exist
+          if (sub.prerequisites && Array.isArray(sub.prerequisites)) {
+            cleaned.prerequisites = sub.prerequisites;
+          }
           
           return cleaned;
         })
       };
-      
-      // Remove temporary fields from module
-      delete cleanedModule.tempId;
-      delete cleanedModule.isNew;
       
       console.log('Saving cleaned module:', cleanedModule);
       

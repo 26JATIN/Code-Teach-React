@@ -104,14 +104,29 @@ const ModuleFormNew = () => {
         throw new Error(`ContentBlock at index ${index} is missing required 'type' field`);
       }
       
+      // MIGRATION: Convert old 'code' type to 'codeSnippet'
+      let blockType = block.type;
+      if (blockType === 'code') {
+        blockType = 'codeSnippet';
+        // Migrate content.code/content.language to codeSnippet structure
+        if (block.content && !block.codeSnippet) {
+          block.codeSnippet = {
+            language: block.content.language || 'javascript',
+            code: block.content.code || '',
+            title: block.content.title || '',
+            explanation: block.content.caption || block.content.explanation || ''
+          };
+        }
+      }
+      
       // Create cleaned block with only required fields
       const cleaned = {
-        type: block.type,
+        type: blockType,
         order: block.order !== undefined ? block.order : index
       };
       
       // Add ONLY the fields relevant to this specific type
-      switch (block.type) {
+      switch (blockType) {
         case 'summary':
           if (block.summaryTitle) cleaned.summaryTitle = block.summaryTitle;
           if (block.summaryDescription) cleaned.summaryDescription = block.summaryDescription;
@@ -126,7 +141,25 @@ const ModuleFormNew = () => {
           break;
           
         case 'codeSnippet':
-          if (block.codeSnippet) cleaned.codeSnippet = block.codeSnippet;
+          if (block.codeSnippet && block.codeSnippet.code && block.codeSnippet.language) {
+            cleaned.codeSnippet = {
+              title: block.codeSnippet.title || 'Code Example', // Required field with default
+              language: block.codeSnippet.language,
+              code: block.codeSnippet.code
+            };
+            // Optional fields (only those that exist in backend schema)
+            if (block.codeSnippet.highlightLines && Array.isArray(block.codeSnippet.highlightLines) && block.codeSnippet.highlightLines.length > 0) {
+              cleaned.codeSnippet.highlightLines = block.codeSnippet.highlightLines;
+            }
+            if (block.codeSnippet.showLineNumbers !== undefined) {
+              cleaned.codeSnippet.showLineNumbers = block.codeSnippet.showLineNumbers;
+            }
+            if (block.codeSnippet.showCopyButton !== undefined) {
+              cleaned.codeSnippet.showCopyButton = block.codeSnippet.showCopyButton;
+            }
+          } else {
+            console.warn('CodeSnippet block missing required fields (code, language):', block);
+          }
           break;
           
         case 'conceptExplanation':
@@ -304,6 +337,8 @@ const ModuleFormNew = () => {
       // Refresh modules
       await fetchModules(selectedCourse._id);
       alert('Module saved successfully!');
+      
+      return result; // Return success result
     } catch (error) {
       console.error('Error saving module:', error);
       
@@ -317,6 +352,9 @@ const ModuleFormNew = () => {
       }
       
       alert('Failed to save module:\n\n' + errorMessage);
+      
+      // Re-throw the error so calling functions know it failed
+      throw error;
     } finally {
       setSaving(false);
     }
@@ -419,12 +457,14 @@ const ModuleFormNew = () => {
       // Save the entire module
       await saveModule(updatedModule);
       
-      // Go back to module list
+      // ONLY go back if save was successful
+      // (saveModule will throw error if it fails)
       setStep(2);
       setEditingSubModule(null);
     } catch (error) {
       console.error('Error saving submodule:', error);
       alert('Failed to save submodule: ' + error.message);
+      // DON'T redirect on error - stay on the editing page
     } finally {
       setSaving(false);
     }

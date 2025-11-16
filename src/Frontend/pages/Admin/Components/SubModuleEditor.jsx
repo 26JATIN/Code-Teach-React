@@ -37,6 +37,12 @@ const SubModuleEditor = ({
     contentBlocks: subModule?.contentBlocks || []
   });
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('SubModuleEditor received subModule:', JSON.stringify(subModule, null, 2));
+    console.log('Initialized formData:', JSON.stringify(formData, null, 2));
+  }, []);
+
   const [activeTab, setActiveTab] = useState('details'); // details, content, preview
   const [expandedBlock, setExpandedBlock] = useState(null);
 
@@ -53,7 +59,7 @@ const SubModuleEditor = ({
       tempId: Date.now(),
       type: 'text',
       order: formData.contentBlocks.length + 1,
-      content: {}
+      text: '' // Initialize with empty text field for text type
     };
     setFormData({
       ...formData,

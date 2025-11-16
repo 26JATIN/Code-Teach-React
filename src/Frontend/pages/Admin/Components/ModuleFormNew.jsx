@@ -118,12 +118,22 @@ const ModuleFormNew = () => {
         icon: module.icon || '📚',
         isPublished: module.isPublished !== undefined ? module.isPublished : true,
         subModules: (module.subModules || []).map(sub => {
+          // Validate submodule has required fields
+          if (!sub.id) {
+            console.error('SubModule missing id:', sub);
+            throw new Error('SubModule must have an id');
+          }
+          if (!sub.title || !sub.title.trim()) {
+            console.error('SubModule missing title:', sub);
+            throw new Error('SubModule must have a title');
+          }
+          
           // Clean each submodule - only include defined fields
           const cleaned = {
             id: sub.id,
-            title: sub.title,
+            title: sub.title.trim(),
             description: sub.description || '',
-            order: sub.order,
+            order: sub.order || 1,
             estimatedTime: sub.estimatedTime || 15,
             difficulty: sub.difficulty || 'beginner',
             contentBlocks: sub.contentBlocks || [],
@@ -140,6 +150,7 @@ const ModuleFormNew = () => {
             cleaned.prerequisites = sub.prerequisites;
           }
           
+          console.log('Cleaned submodule:', cleaned);
           return cleaned;
         })
       };
@@ -164,7 +175,17 @@ const ModuleFormNew = () => {
       alert('Module saved successfully!');
     } catch (error) {
       console.error('Error saving module:', error);
-      alert('Failed to save module: ' + error.message);
+      
+      // Try to get detailed error message
+      let errorMessage = error.message;
+      if (error.details) {
+        errorMessage += '\n\nDetails: ' + error.details;
+      }
+      if (error.fields && Array.isArray(error.fields)) {
+        errorMessage += '\n\nValidation Errors:\n' + error.fields.map(f => `- ${f.field}: ${f.message}`).join('\n');
+      }
+      
+      alert('Failed to save module:\n\n' + errorMessage);
     } finally {
       setSaving(false);
     }

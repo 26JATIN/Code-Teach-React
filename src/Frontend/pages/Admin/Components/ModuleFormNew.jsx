@@ -93,6 +93,89 @@ const ModuleFormNew = () => {
     setSelectedModule(newModule);
   };
 
+  // Helper function to clean contentBlocks
+  const cleanContentBlocks = (contentBlocks) => {
+    if (!Array.isArray(contentBlocks)) return [];
+    
+    return contentBlocks.map((block, index) => {
+      // Must have type and order
+      if (!block.type) {
+        console.error('ContentBlock missing type:', block);
+        throw new Error(`ContentBlock at index ${index} is missing required 'type' field`);
+      }
+      
+      // Create cleaned block with only required fields and type-specific fields
+      const cleaned = {
+        type: block.type,
+        order: block.order !== undefined ? block.order : index
+      };
+      
+      // Type-specific fields - only include if they exist and are non-empty
+      const typeFields = {
+        // Summary
+        summaryTitle: block.summaryTitle,
+        summaryDescription: block.summaryDescription,
+        
+        // Key Features
+        featuresTitle: block.featuresTitle,
+        features: block.features,
+        featuresVariant: block.featuresVariant,
+        
+        // Code Snippet
+        codeSnippet: block.codeSnippet,
+        
+        // Concept Explanation
+        conceptSections: block.conceptSections,
+        
+        // Important Note
+        importantNote: block.importantNote,
+        
+        // Mistakes to Avoid
+        mistakesToAvoid: block.mistakesToAvoid,
+        
+        // Timeline
+        timelineTitle: block.timelineTitle,
+        timelineEvents: block.timelineEvents,
+        
+        // Hands-On
+        handsOn: block.handsOn,
+        
+        // MCQ
+        mcqQuestions: block.mcqQuestions,
+        
+        // Coding Exercise
+        codingExercise: block.codingExercise,
+        
+        // Text
+        text: block.text,
+        
+        // Heading
+        heading: block.heading,
+        headingLevel: block.headingLevel,
+        
+        // List
+        listItems: block.listItems,
+        listType: block.listType,
+        
+        // Generic content
+        content: block.content
+      };
+      
+      // Only include defined, non-null, non-empty fields
+      Object.keys(typeFields).forEach(key => {
+        const value = typeFields[key];
+        if (value !== undefined && value !== null) {
+          // Skip empty arrays and empty objects
+          if (Array.isArray(value) && value.length === 0) return;
+          if (typeof value === 'object' && Object.keys(value).length === 0) return;
+          cleaned[key] = value;
+        }
+      });
+      
+      return cleaned;
+    });
+  };
+
   const saveModule = async (module) => {
     try {
       setSaving(true);
@@ -128,6 +211,15 @@ const ModuleFormNew = () => {
             throw new Error('SubModule must have a title');
           }
           
+          // Clean contentBlocks
+          let cleanedContentBlocks = [];
+          try {
+            cleanedContentBlocks = cleanContentBlocks(sub.contentBlocks || []);
+          } catch (error) {
+            console.error('Error cleaning contentBlocks for submodule:', sub.id, error);
+            throw new Error(`Error in submodule "${sub.title}": ${error.message}`);
+          }
+          
           // Clean each submodule - only include defined fields
           const cleaned = {
             id: sub.id,
@@ -136,7 +228,7 @@ const ModuleFormNew = () => {
             order: sub.order || 1,
             estimatedTime: sub.estimatedTime || 15,
             difficulty: sub.difficulty || 'beginner',
-            contentBlocks: sub.contentBlocks || [],
+            contentBlocks: cleanedContentBlocks,
             isPublished: sub.isPublished !== undefined ? sub.isPublished : true
           };
           
@@ -145,17 +237,17 @@ const ModuleFormNew = () => {
             cleaned._id = sub._id;
           }
           
-          // Include prerequisites if they exist
-          if (sub.prerequisites && Array.isArray(sub.prerequisites)) {
+          // Include prerequisites only if not empty
+          if (sub.prerequisites && Array.isArray(sub.prerequisites) && sub.prerequisites.length > 0) {
             cleaned.prerequisites = sub.prerequisites;
           }
           
-          console.log('Cleaned submodule:', cleaned);
+          console.log('Cleaned submodule:', JSON.stringify(cleaned, null, 2));
           return cleaned;
         })
       };
       
-      console.log('Saving cleaned module:', cleanedModule);
+      console.log('Saving cleaned module:', JSON.stringify(cleanedModule, null, 2));
       
       const endpoint = module._id 
         ? `/api/modules/${module._id}` 

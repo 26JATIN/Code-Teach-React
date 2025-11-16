@@ -1,33 +1,30 @@
-// Get environment variables from either Vite or Create React App
-const getEnvVar = (viteKey, reactKey, defaultValue) => {
-  try {
-    // Try Vite first
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[viteKey]) {
-      return import.meta.env[viteKey];
-    }
-    // Fallback to Create React App
-    if (typeof process !== 'undefined' && process.env && process.env[reactKey]) {
-      return process.env[reactKey];
-    }
-  } catch (error) {
-    console.warn('Error accessing environment variables:', error);
-  }
-  return defaultValue;
+// ============================================
+// ENVIRONMENT CONFIGURATION
+// ============================================
+
+// Default values
+const DEFAULTS = {
+  API_URL: 'http://localhost:5000',
+  APP_NAME: 'Code Teach'
 };
 
-// Define default values
-const DEFAULT_API_URL = 'http://localhost:5000';
-const DEFAULT_APP_NAME = 'Code Teach';
+// Get environment variables (works with Create React App)
+const ENV = {
+  API_URL: process.env.REACT_APP_API_URL || DEFAULTS.API_URL,
+  APP_NAME: process.env.REACT_APP_NAME || DEFAULTS.APP_NAME,
+  NODE_ENV: process.env.NODE_ENV || 'development'
+};
 
-// Get configuration from environment variables
-const API_BASE_URL = getEnvVar('VITE_API_URL', 'REACT_APP_API_URL', DEFAULT_API_URL);
-const APP_NAME = getEnvVar('VITE_APP_NAME', 'REACT_APP_NAME', DEFAULT_APP_NAME);
+// ============================================
+// APPLICATION CONFIGURATION
+// ============================================
 
-// Basic config object with defaults
 const config = {
+  // API Configuration
   api: {
-    baseUrl: API_BASE_URL,
+    baseUrl: ENV.API_URL,
     endpoints: {
+      // Authentication
       auth: {
         signin: '/auth/signin',
         signup: '/auth/signup',
@@ -37,27 +34,50 @@ const config = {
         resetPassword: '/auth/reset-password',
         verifyResetOtp: '/auth/verify-reset-otp'
       },
+      // Courses
       courses: {
         list: '/api/courses',
+        all: '/api/courses/all',
         enroll: (courseId) => `/api/courses/enroll/${courseId}`,
         enrolled: '/api/courses/enrolled',
         progress: (courseId) => `/api/courses/progress/${courseId}`,
         lastAccessed: (courseId) => `/api/courses/lastAccessed/${courseId}`
       },
+      // Modules
+      modules: {
+        byCourse: (courseId) => `/api/modules/course/${courseId}`,
+        byCourseAdmin: (courseId) => `/api/modules/course/${courseId}/admin`,
+        create: '/api/modules',
+        update: (moduleId) => `/api/modules/${moduleId}`,
+        delete: (moduleId) => `/api/modules/${moduleId}`
+      },
+      // Admin
+      admin: {
+        stats: '/admin/stats',
+        courses: '/admin/courses',
+        users: '/admin/users'
+      },
+      // Contact
       contact: {
         send: '/api/contact/send'
       }
     }
   },
+
+  // App Configuration
   app: {
-    name: APP_NAME,
+    name: ENV.APP_NAME,
+    environment: ENV.NODE_ENV,
     routes: {
       home: '/',
       auth: '/auth',
       courses: '/courses',
-      dashboard: '/learning-dashboard'
+      dashboard: '/learning-dashboard',
+      admin: '/admin'
     }
   },
+
+  // Local Storage Keys
   storage: {
     keys: {
       token: 'token',
@@ -66,8 +86,14 @@ const config = {
   }
 };
 
-// Helper functions
-const getAuthToken = () => {
+// ============================================
+// STORAGE HELPER FUNCTIONS
+// ============================================
+
+/**
+ * Get authentication token from localStorage
+ */
+export const getAuthToken = () => {
   try {
     return localStorage.getItem(config.storage.keys.token);
   } catch (error) {
@@ -76,7 +102,10 @@ const getAuthToken = () => {
   }
 };
 
-const setAuthToken = (token) => {
+/**
+ * Set authentication token in localStorage
+ */
+export const setAuthToken = (token) => {
   try {
     if (token) {
       localStorage.setItem(config.storage.keys.token, token);
@@ -86,7 +115,10 @@ const setAuthToken = (token) => {
   }
 };
 
-const getUser = () => {
+/**
+ * Get user data from localStorage
+ */
+export const getUser = () => {
   try {
     const userStr = localStorage.getItem(config.storage.keys.user);
     return userStr ? JSON.parse(userStr) : null;
@@ -96,7 +128,10 @@ const getUser = () => {
   }
 };
 
-const setUser = (user) => {
+/**
+ * Set user data in localStorage
+ */
+export const setUser = (user) => {
   try {
     if (user) {
       localStorage.setItem(config.storage.keys.user, JSON.stringify(user));
@@ -106,7 +141,10 @@ const setUser = (user) => {
   }
 };
 
-const clearAuth = () => {
+/**
+ * Clear all authentication data
+ */
+export const clearAuth = () => {
   try {
     localStorage.removeItem(config.storage.keys.token);
     localStorage.removeItem(config.storage.keys.user);
@@ -115,7 +153,10 @@ const clearAuth = () => {
   }
 };
 
-const isAuthenticated = () => {
+/**
+ * Check if user is authenticated
+ */
+export const isAuthenticated = () => {
   try {
     const token = getAuthToken();
     return Boolean(token);
@@ -125,80 +166,87 @@ const isAuthenticated = () => {
   }
 };
 
-const apiRequest = async (endpoint, options = {}) => {
+// ============================================
+// API REQUEST FUNCTION
+// ============================================
+
+/**
+ * Make authenticated API request
+ * @param {string} endpoint - API endpoint
+ * @param {object} options - Fetch options
+ * @returns {Promise} Response data
+ */
+export const apiRequest = async (endpoint, options = {}) => {
   const token = getAuthToken();
   
-  const defaultOptions = {
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
+  };
+
+  if (token) {
+    defaultHeaders['Authorization'] = `Bearer ${token}`;
+  }
+
+  const requestOptions = {
+    mode: 'cors',
+    ...options,
     headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'ngrok-skip-browser-warning': 'true',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...defaultHeaders,
       ...(options.headers || {})
-    },
-    mode: 'cors'
+    }
   };
 
   try {
-    const response = await fetch(
-      `${config.api.baseUrl}${endpoint}`,
-      { 
-        ...defaultOptions,
-        ...options,
-        headers: { ...defaultOptions.headers, ...(options.headers || {}) }
-      }
-    );
+    const url = `${config.api.baseUrl}${endpoint}`;
+    const response = await fetch(url, requestOptions);
 
-    if (!response) {
-      throw new Error('No response received from server');
-    }
-
+    // Handle 401 Unauthorized
     if (response.status === 401) {
       clearAuth();
       window.location.href = config.app.routes.auth;
-      throw new Error('Session expired');
+      throw new Error('Session expired. Please login again.');
     }
 
+    // Parse response
     const responseText = await response.text();
-    let data;
-    
-    try {
-      data = responseText ? JSON.parse(responseText) : null;
-    } catch (parseError) {
-      console.error('Failed to parse response as JSON:', responseText);
-      throw new Error('Invalid JSON response from server');
-    }
+    const data = responseText ? JSON.parse(responseText) : null;
 
+    // Handle non-OK responses
     if (!response.ok) {
-      throw new Error(data?.error || data?.message || `API request failed with status ${response.status}`);
+      const errorMessage = data?.error || data?.message || `Request failed with status ${response.status}`;
+      throw new Error(errorMessage);
     }
 
     return data;
   } catch (error) {
-    console.error('API Request error:', error);
+    // Log error in development
+    if (ENV.NODE_ENV === 'development') {
+      console.error('API Request Error:', {
+        endpoint,
+        error: error.message
+      });
+    }
     throw error;
   }
 };
 
-// Log configuration on startup (only in development)
-if (getEnvVar('VITE_NODE_ENV', 'NODE_ENV', 'development') === 'development') {
-  console.log('App Configuration:', {
+// ============================================
+// DEVELOPMENT LOGGING
+// ============================================
+
+if (ENV.NODE_ENV === 'development') {
+  console.log('🚀 App Configuration Loaded:', {
     apiBaseUrl: config.api.baseUrl,
     appName: config.app.name,
-    environment: getEnvVar('VITE_NODE_ENV', 'NODE_ENV', 'development')
+    environment: ENV.NODE_ENV
   });
 }
 
-// Export config as default and named
-export { 
-  getAuthToken, 
-  setAuthToken,
-  getUser,
-  setUser,
-  clearAuth,
-  isAuthenticated,
-  apiRequest
-};
+// ============================================
+// EXPORTS
+// ============================================
 
-// Export config object as default
 export default config;
+
